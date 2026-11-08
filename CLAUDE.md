@@ -180,5 +180,6 @@ Không bỏ qua, không tắt rule, không `--no-verify`. Lỗi của test có s
 ## 13. Tài liệu theo dõi
 
 - [client/docs/TIEN-DO.md](client/docs/TIEN-DO.md): giai đoạn, trạng thái từng UC, bảng lỗi, câu hỏi mở. Cập nhật khi bắt đầu và khi xong mỗi phần.
+- [client/docs/NHAT-KY-TIEN-DO.md](client/docs/NHAT-KY-TIEN-DO.md): **nhật ký theo thời gian, bắt buộc ghi**. Mỗi agent thêm một dòng (không sửa dòng cũ) khi: bắt đầu nhiệm vụ, xong mỗi việc/UC, mỗi commit (hash + message), mỗi lần chạy test (số pass/fail), phát hiện lỗi hoặc câu hỏi mở, và khi kết thúc. File này được commit cùng commit của việc vừa ghi.
 - [client/docs/QUYET-DINH.md](client/docs/QUYET-DINH.md): mọi chỗ làm khác thiết kế/code cũ và lý do.
 - [client/docs/API-CONTRACT.md](client/docs/API-CONTRACT.md): hợp đồng API cho BE.
