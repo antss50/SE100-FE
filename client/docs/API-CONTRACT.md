@@ -23,3 +23,228 @@ type PaginatedData<T> = { items: T[]; page: number; pageSize: number; totalItems
 ```
 
 <!-- Agent thêm các mục theo module bên dưới: AUTH, PRODUCT, SUPPLIER, INVENTORY, CUSTOMER, PROMOTION, POS, REPORT, SYSTEM -->
+
+## Quy ước chung cho mọi endpoint dưới đây
+
+- Header `Authorization: Bearer <accessToken>` cho mọi endpoint, trừ endpoint ghi **Công khai**.
+- `401 AUTH_UNAUTHORIZED`: thiếu/sai token, phiên bị thu hồi, tài khoản bị khóa. FE gọi `POST /auth/refresh-token` một lần rồi gọi lại; vẫn 401 thì đăng xuất.
+- `403 AUTH_FORBIDDEN`: thiếu quyền ghi ở mục **Quyền** (mã quyền khai báo trong `src/domain/permissions.ts`).
+- `400 COMMON_VALIDATION_FAILED`: body sai kiểu/thiếu trường; `errors = [{ field, message }]`.
+- `404 COMMON_NOT_FOUND`: không có API.
+- Danh sách: query `page` (từ 1), `pageSize` (mặc định 20), `keyword`; trả `PaginatedData<T>`.
+- Kiểu dữ liệu (`AuthUser`, `UserItem`, `CustomerItem`, `ProductItem`…) lấy theo `src/types/api.ts`.
+
+> **GĐ0:** các endpoint dưới đây ghi **đúng như service hiện tại đang gọi** (code sprint 1–2). Chỗ lệch DATABASE.md/KHUYEN_MAI.md (5 loại khuyến mãi cũ, trường hiển thị phụ trong `UserItem`/`CustomerItem`…) sửa ở GĐ3 và ghi lý do vào QUYET-DINH.md.
+
+## AUTH
+
+### `POST /auth/login` — AUTH-01
+- **Quyền:** Công khai
+- **Request:** `{ username: string, password: string }` — `username` nhận username hoặc mã nhân viên (`LUM-084`, `LUM084`).
+- **Response 200:** `{ accessToken, refreshToken, user: AuthUser }`; `user.permissions` là danh sách mã quyền hiệu lực.
+- **Lỗi:** `401 AUTH_INVALID_CREDENTIALS` (kèm số lần sai), `403 AUTH_ACCOUNT_LOCKED` (Admin khóa), `403 AUTH_ACCOUNT_TEMP_LOCKED` (sai 5 lần → khóa 15 phút, luật 46).
+- **Ghi chú:** `user.mustChangePassword = true` thì FE bắt đổi mật khẩu trước khi dùng (luật 47).
+
+### `POST /auth/refresh-token`
+- **Quyền:** Công khai
+- **Request:** `{ refreshToken }` · **Response 200:** `{ accessToken, refreshToken }` (xoay vòng, token cũ hết hiệu lực)
+- **Lỗi:** `401 AUTH_REFRESH_TOKEN_INVALID`
+
+### `POST /auth/logout` — AUTH-02
+- **Quyền:** Công khai (có token thì thu hồi phiên của token đó)
+- **Request:** `{ refreshToken }` · **Response 200:** `null`
+
+### `POST /auth/change-password` — AUTH-03
+- **Quyền:** đã đăng nhập
+- **Request:** `{ oldPassword, newPassword }` · **Response 200:** `null`; đặt `mustChangePassword = false`
+- **Lỗi:** `400 AUTH_OLD_PASSWORD_INCORRECT`, `422 AUTH_PASSWORD_POLICY_VIOLATED` (≥ 8 ký tự, có hoa, thường, số)
+
+### `GET /users/me`
+- **Quyền:** đã đăng nhập · **Response 200:** `AuthUser`
+
+### `GET /users` — AUTH-04
+- **Quyền:** `USER_MANAGE`
+- **Query:** `keyword` (họ tên, mã NV, username, email, SĐT), `role`, `status` (`ACTIVE`/`LOCKED`), `page`, `pageSize`
+- **Response 200:** `PaginatedData<UserItem>`
+
+### `POST /users` — AUTH-04
+- **Quyền:** `USER_MANAGE`
+- **Request:** `{ employeeCode, username, password, fullName, email, phoneNumber, roleIds: number[] }`
+- **Response 201:** `{ id, employeeCode, username }`; tài khoản mới có `mustChangePassword = true`
+- **Lỗi:** `409 USER_EXISTED` (trùng username/mã NV/email), `400 ROLE_NOT_FOUND`
+
+### `GET /users/{idOrCode}` — AUTH-04
+- **Quyền:** `USER_MANAGE` · `idOrCode`: id, mã nhân viên hoặc username · **Response 200:** `UserItem`
+- **Lỗi:** `404 USER_NOT_FOUND`
+
+### `PATCH /users/{id}` — AUTH-04
+- **Quyền:** `USER_MANAGE`
+- **Request:** `{ fullName?, email?, phoneNumber?, jobTitle? }` · **Response 200:** `UserItem`
+- **Lỗi:** `404 USER_NOT_FOUND`, `409 USER_EXISTED` (email trùng)
+
+### `POST /users/{id}/lock` — AUTH-04
+- **Quyền:** `USER_MANAGE`
+- **Request:** `{ reason?: string }` · **Response 200:** `UserItem` (`status = LOCKED`)
+- **Lỗi:** `404 USER_NOT_FOUND`, `409 USER_ALREADY_LOCKED`, `422 AUTH_CANNOT_LOCK_SELF` (luật 48)
+- **Ghi chú:** thu hồi mọi phiên của tài khoản ngay (luật 52).
+
+### `POST /users/{id}/unlock` — AUTH-04
+- **Quyền:** `USER_MANAGE` · **Request:** `{}` · **Response 200:** `UserItem` (xóa cả khóa tạm `lockedUntil`, đặt lại số lần sai)
+- **Lỗi:** `404 USER_NOT_FOUND`, `409 USER_NOT_LOCKED`
+
+### `GET /rbac/roles` — AUTH-05
+- **Quyền:** `ROLE_MANAGE`
+- **Response 200:** `RbacRole[]` = `{ id, roleCode, roleName, isSystem, description, shortCode, badgeNote, permissionIds: number[], _count: { userRoles } }`
+
+### `GET /rbac/permissions` — AUTH-05
+- **Quyền:** `ROLE_MANAGE`
+- **Response 200:** `Record<module, RbacPermissionItem[]>`, `RbacPermissionItem = { id, permissionCode, permissionName, module, moduleTitle, immutableForRoles? }`
+- **Ghi chú:** danh sách quyền seed sẵn theo `src/domain/permissions.ts`, không có API thêm/xóa quyền (luật 51).
+
+### `PUT /rbac/roles/{roleId}/permissions` — AUTH-05
+- **Quyền:** `ROLE_MANAGE`
+- **Request:** `{ permissionIds: number[] }` · **Response 200:** `{ roleId, totalPermissions }`
+- **Lỗi:** `404 ROLE_NOT_FOUND`, `400 PERMISSION_NOT_FOUND`, `422 AUTH_ADMIN_PERMISSION_REQUIRED` (bỏ `USER_MANAGE`/`ROLE_MANAGE` của ADMIN, luật 49)
+- **Ghi chú:** ghi audit log.
+
+### `POST /rbac/roles/reset-default` — AUTH-05
+- **Quyền:** `ROLE_MANAGE` · **Request:** `{}` · **Response 200:** `RbacRole[]` (ma trận về mặc định của `domain/permissions.ts`). Ghi audit log.
+
+### `GET /audit-logs` — AUTH-06
+- **Quyền:** `AUDIT_LOG_VIEW`
+- **Query:** `roleCode`, `page`, `pageSize` (mặc định 50) · **Response 200:** `PaginatedData<AuditLogItem>`
+- **Ghi chú:** cấu trúc `AuditLogItem` hiện theo màn RBAC cũ; GĐ6 đổi theo bảng AUDIT_LOGS.
+
+## PRODUCT
+
+### `GET /products` — PROD-01
+- **Quyền:** `PRODUCT_VIEW`
+- **Query:** `keyword` (tên, SKU, barcode, thương hiệu), `brandCode`, `categoryCode`, `status` (`ACTIVE`/`INACTIVE`/`LOW_STOCK`), `page`, `pageSize`
+- **Response 200:** `PaginatedData<ProductItem>` (kèm `categoryName`, `brandName`)
+
+### `GET /products/{sku}` — PROD-01
+- **Quyền:** `PRODUCT_VIEW` · **Response 200:** `ProductItem` · **Lỗi:** `404 PROD_NOT_FOUND`
+
+### `POST /products` — PROD-01
+- **Quyền:** `PRODUCT_MANAGE`
+- **Request:** `{ sku, productName, categoryCode, brandCode, unit, volume?, skinType?, retailPrice (>0), taxRate (≥0), minStockAlert?, barcode?, images?: string[], packagingDetail?, shelfLifeMonths?, description? }`
+- **Response 201:** `ProductItem`
+- **Lỗi:** `409 PROD_SKU_DUPLICATED`, `409 PROD_BARCODE_DUPLICATED`, `404 PROD_CATEGORY_NOT_FOUND`, `404 PROD_BRAND_NOT_FOUND`
+
+### `PUT /products/{sku}` — PROD-01
+- **Quyền:** `PRODUCT_MANAGE` · **Request:** như POST, bỏ `sku`, `images` · **Response 200:** `ProductItem`
+- **Lỗi:** `404 PROD_NOT_FOUND`, `404 PROD_CATEGORY_NOT_FOUND`, `404 PROD_BRAND_NOT_FOUND`, `409 PROD_BARCODE_DUPLICATED`
+
+### `PATCH /products/{sku}/deactivate` — PROD-01
+- **Quyền:** `PRODUCT_MANAGE` · **Response 200:** `{ sku, status: 'INACTIVE' }`
+- **Lỗi:** `404 PROD_NOT_FOUND`, `409 PROD_HAS_STOCK` (còn tồn)
+
+### `PATCH /products/{sku}/restore` — PROD-01
+- **Quyền:** `PRODUCT_MANAGE` · **Response 200:** `{ sku, status: 'ACTIVE' }` · **Lỗi:** `404 PROD_NOT_FOUND`
+
+### `POST /products/{sku}/images` — PROD-01
+- **Quyền:** `PRODUCT_MANAGE`
+- **Request:** `multipart/form-data`, trường `files` (1–5 tệp JPEG/PNG/WEBP, ≤ 5 MB/tệp)
+- **Response 201:** `{ sku, images: { imageId, url }[] }`
+- **Lỗi:** `404 PROD_NOT_FOUND`, `422 PROD_IMAGE_INVALID`
+
+### `DELETE /products/{sku}/images/{imageId}` — PROD-01
+- **Quyền:** `PRODUCT_MANAGE` · **Response 200:** `null` · **Lỗi:** `404 PROD_NOT_FOUND`, `404 PROD_IMAGE_NOT_FOUND`
+
+### `GET /categories`, `GET /categories/{categoryCode}` — PROD-02
+- **Quyền:** `PRODUCT_VIEW` · **Query:** `keyword`, `status`, `page`, `pageSize`
+- **Response 200:** `PaginatedData<CategoryItem>` / `CategoryItem` (kèm `productCount`) · **Lỗi:** `404 PROD_CATEGORY_NOT_FOUND`
+
+### `POST /categories` — PROD-02
+- **Quyền:** `PRODUCT_MANAGE` · **Request:** `{ categoryCode, categoryName, description? }` · **Response 201:** `CategoryItem`
+- **Lỗi:** `409 PROD_CATEGORY_DUPLICATED`
+
+### `PUT /categories/{categoryCode}` — PROD-02
+- **Quyền:** `PRODUCT_MANAGE` · **Request:** `{ categoryName, description? }` · **Response 200:** `CategoryItem` · **Lỗi:** `404 PROD_CATEGORY_NOT_FOUND`
+
+### `PATCH /categories/{categoryCode}/deactivate`, `PATCH /categories/{categoryCode}/restore` — PROD-02
+- **Quyền:** `PRODUCT_MANAGE` · **Response 200:** `{ categoryCode, status }`
+- **Lỗi:** `404 PROD_CATEGORY_NOT_FOUND`, `409 PROD_CATEGORY_HAS_PRODUCTS` (còn sản phẩm đang kinh doanh, chỉ khi deactivate)
+
+### `GET /brands`, `GET /brands/{brandCode}` — PROD-03
+- Như danh mục: **Quyền** `PRODUCT_VIEW`; `PaginatedData<BrandItem>` / `BrandItem`; `404 PROD_BRAND_NOT_FOUND`
+
+### `POST /brands`, `PUT /brands/{brandCode}` — PROD-03
+- **Quyền:** `PRODUCT_MANAGE` · **Request:** `{ brandCode, brandName, description? }` / `{ brandName, description? }`
+- **Response:** `201`/`200 BrandItem` · **Lỗi:** `409 PROD_BRAND_DUPLICATED`, `404 PROD_BRAND_NOT_FOUND`
+
+### `PATCH /brands/{brandCode}/deactivate`, `PATCH /brands/{brandCode}/restore` — PROD-03
+- **Quyền:** `PRODUCT_MANAGE` · **Response 200:** `{ brandCode, status }`
+- **Lỗi:** `404 PROD_BRAND_NOT_FOUND`, `409 PROD_BRAND_HAS_PRODUCTS`
+
+## CUSTOMER
+
+### `GET /customers` — CUS-01
+- **Quyền:** `CUSTOMER_VIEW`
+- **Query:** `keyword` (mã, SĐT, tên, email), `phone` (khớp đúng SĐT, dùng kiểm trùng), `tierId`, `status`, `sortBy` (mặc định chi tiêu giảm dần, `SPENT_ASC`, `POINTS_DESC`), `page`, `pageSize`
+- **Response 200:** `PaginatedData<CustomerItem>`
+
+### `GET /customers/{customerCode}` — CUS-01
+- **Quyền:** `CUSTOMER_VIEW` · **Response 200:** `CustomerItem` · **Lỗi:** `404 CUS_NOT_FOUND`
+
+### `POST /customers` — CUS-02
+- **Quyền:** `CUSTOMER_EDIT`
+- **Request:** `{ fullName, phoneNumber (10–11 số), email?, dateOfBirth? (YYYY-MM-DD), gender?, address?, skinType?, note?, status? }`
+- **Response 201:** `CustomerItem` (hạng mặc định BRONZE, 0 điểm)
+- **Lỗi:** `409 CUS_PHONE_DUPLICATED`
+
+### `PUT /customers/{customerCode}` — CUS-02
+- **Quyền:** `CUSTOMER_EDIT` · **Request:** các trường như POST, đều tùy chọn, **không có `status`** · **Response 200:** `CustomerItem`
+- **Lỗi:** `404 CUS_NOT_FOUND`, `409 CUS_PHONE_DUPLICATED`
+
+### `POST /customers/{customerCode}/deactivate`, `POST /customers/{customerCode}/activate` — CUS-02
+- **Quyền:** `CUSTOMER_LOCK` (thu ngân không có) · **Request:** `{}` · **Response 200:** `CustomerItem` · **Lỗi:** `404 CUS_NOT_FOUND`
+
+### `GET /loyalty-config` — CUS-05
+- **Quyền:** đã đăng nhập (POS cần đọc) · **Response 200:** `LoyaltyConfigData`
+
+### `PUT /loyalty-config` — CUS-05
+- **Quyền:** `LOYALTY_CONFIG`
+- **Request:** `{ amountPerPoint (>0), redemptionValuePerPoint?, tiers: { tier: BRONZE|SILVER|GOLD|DIAMOND, minSpend }[] }`
+- **Response 200:** `LoyaltyConfigData`
+- **Lỗi:** `422 CUS_TIER_SPEND_INVALID` (BRONZE = 0, hạng sau lớn hơn hạng trước)
+
+## PROMOTION
+
+### `GET /promotions` — PROM-01
+- **Quyền:** `PROMOTION_VIEW` · **Query:** `keyword` (mã, tên), `status`, `page`, `pageSize` · **Response 200:** `PaginatedData<PromotionItem>`
+
+### `POST /promotions` — PROM-02
+- **Quyền:** `PROMOTION_MANAGE`
+- **Request:** `CreatePromotionRequest` (kiểu cũ: `PERCENT_ORDER`, `FIXED_ORDER`, `BUY_X_GET_Y`, `COMBO`, `STEP_DISCOUNT`)
+- **Response 201:** `PromotionItem`
+- **Lỗi:** `409 PROM_VOUCHER_DUPLICATED`, `422 PROM_DATE_RANGE_INVALID`, `422 PROM_LIMIT_PER_CUSTOMER_INVALID`, `422 PROM_DISCOUNT_VALUE_INVALID`
+- **Ghi chú:** GĐ3 đổi sang 7 loại theo KHUYEN_MAI.md.
+
+### `PUT /promotions/{voucherCode}` — PROM-02
+- **Quyền:** `PROMOTION_MANAGE` · **Request:** `Partial<CreatePromotionRequest>` · **Response 200:** `PromotionItem`
+- **Lỗi:** `404 PROM_NOT_FOUND`, `409 PROM_FIELD_LOCKED` (đã có đơn dùng: chỉ được gia hạn, tăng lượt — luật 10)
+
+### `PATCH /promotions/{voucherCode}/pause` — PROM-02
+- **Quyền:** `PROMOTION_MANAGE` · **Response 200:** `{ voucherCode, status }` (đảo `ACTIVE` ↔ `PAUSED`)
+- **Lỗi:** `404 PROM_NOT_FOUND`, `409 PROM_STATUS_INVALID`
+
+### `GET /promotions/{voucherCode}/report` — PROM-04
+- **Quyền:** `PROMOTION_REPORT` · **Response 200:** `PromotionReportData` · **Lỗi:** `404 PROM_NOT_FOUND`
+- **Ghi chú:** mock trả số liệu minh họa; tính thật từ đơn hàng ở GĐ6.
+
+## POS
+
+### `GET /shifts/current` — POS-01
+- **Quyền:** `POS_VIEW` · **Response 200:** `{ hasOpenShift, shift: ShiftInfo | null }` — ca `OPEN` của người đăng nhập
+
+### `POST /shifts/open` — POS-01
+- **Quyền:** `POS_SHIFT_OPEN`
+- **Request:** `{ openingCash: number }` (số nguyên ≥ 0) · **Response 201:** `ShiftInfo`
+- **Lỗi:** `409 POS_SHIFT_ALREADY_OPEN` (luật 35)
+
+### `POST /shifts/{shiftId}/close` — POS-05 (tạm)
+- **Quyền:** `POS_SHIFT_CLOSE`
+- **Request:** `{}` · **Response 200:** `ShiftInfo` (`status = CLOSED`)
+- **Lỗi:** `404 POS_SHIFT_NOT_FOUND`, `403 POS_SHIFT_NOT_OWNER`, `409 POS_SHIFT_NOT_OPEN`
+- **Ghi chú:** GĐ5 bổ sung kiểm đếm tiền, giải trình lệch (luật 37), chặn khi còn đơn nháp (luật 36).

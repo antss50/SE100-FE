@@ -298,10 +298,7 @@ export function CreateProductModal({
 
     try {
       if (status === 'ACTIVE') {
-        const res = await productsService.deactivateProduct(
-          editingProduct.sku,
-          clearStockFirst
-        )
+        const res = await productsService.deactivateProduct(editingProduct.sku)
         setStatus(res.data.status)
         if (clearStockFirst) setCurrentStock(0)
         setSuccessMsg(`${res.message} (${res.data.sku} -> ${res.data.status})`)

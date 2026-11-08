@@ -29,3 +29,7 @@ Không xóa hay sửa dòng cũ; ghi sai thì thêm dòng mới đính chính.
 | 2026-11-08 22:48 | fe-coder | 0 | Commit | `a80f710` feat: port domain tính giá và trả hàng từ code mẫu kèm 12 test (ghi bù bởi điều phối) |
 | 2026-11-08 22:48 | fe-coder | 0 | Commit | `8a63110` feat: domain phân quyền theo ma trận DANH_GIA_USECASE mục 4 (ghi bù bởi điều phối) |
 | 2026-11-08 22:48 | fe-coder | 0 | Xong việc | Đang làm mock adapter (`src/mocks/`, chưa commit) |
+| 2026-11-08 22:49 | fe-coder | 0 | Test | Sau commit 8a63110: vitest 34/34 pass (12 giá + 22 phân quyền), lint 0 lỗi, tsc qua |
+| 2026-11-08 22:59 | fe-coder | 0 | Xong việc | Mock adapter src/mocks (router method+path, db localStorage se100_mock_*_v2, giao dịch, độ trễ VITE_MOCK_DELAY_MS, resetMockDb, window.__SE100_MOCK__); api-client bỏ fallbackHandler; service chỉ gọi apiRequest; xóa lib/mock-db.ts; POS bỏ ghi mockDb; API-CONTRACT.md ghi AUTH/PRODUCT/CUSTOMER/PROMOTION/POS |
+| 2026-11-08 22:59 | fe-coder | 0 | Test | lint 0 lỗi; build qua; vitest 46/46 pass (thêm 12 test mock adapter) |
+| 2026-11-08 22:59 | fe-coder | 0 | Commit | refactor: mock adapter VITE_USE_MOCK, chuyển logic mock khỏi service (hash ghi ở dòng sau) |

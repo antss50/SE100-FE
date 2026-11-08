@@ -83,7 +83,7 @@ export function UsersListPage() {
 
   const handleToggleLock = async (user: UserItem) => {
     try {
-      const updated = await usersService.toggleUserLock(user.id)
+      const updated = await usersService.toggleUserLock(user)
       showToast(
         updated.status === 'LOCKED'
           ? `Đã tạm khóa tài khoản ${updated.fullName} (${updated.employeeCode})`

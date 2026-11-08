@@ -13,8 +13,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useUiStore } from '../../app/store'
-import { mockDb } from '../../lib/mock-db'
-import { authService } from '../../services/auth.service'
+import { shiftsService } from '../../services/shifts.service'
 import { customersService } from '../../services/customers.service'
 import { productsService } from '../../services/products.service'
 import { promotionsService } from '../../services/promotions.service'
@@ -57,7 +56,7 @@ export function PosPage() {
       customersService.getCustomers({ pageSize: 50 }),
       promotionsService.getPromotions({ status: 'ACTIVE' }),
       promotionsService.getLoyaltyConfig(),
-      authService.getCurrentShift(),
+      shiftsService.getCurrentShift(),
     ]).then(([prodRes, cusRes, promoRes, loyaltyRes, shiftRes]) => {
       if (!active) return
       setProducts(prodRes.data.items)
@@ -153,64 +152,7 @@ export function PosPage() {
 
     const orderCode = `#HD-${Math.floor(90000 + Math.random() * 9999)}`
 
-    // UC-CUS-08: Cập nhật điểm, lịch sử điểm (EARN) và tự động nâng hạng thẻ nếu đủ minSpend
-    if (selectedCustomer && loyaltyConfig) {
-      const allCustomers = mockDb.getCustomers()
-      const targetCus = allCustomers.find(
-        (c) => c.customerCode === selectedCustomer.customerCode
-      )
-      if (targetCus) {
-        const nextTotalSpent =
-          parseFloat(targetCus.totalSpent || '0') + eligibleSpend
-        const nextPoints = targetCus.rewardPoints + earnedPoints
-        targetCus.totalSpent = nextTotalSpent.toFixed(2)
-        targetCus.rewardPoints = nextPoints
-        targetCus.completedOrdersCount =
-          (targetCus.completedOrdersCount || 0) + 1
-        targetCus.lastOrderText = 'Vừa xong'
-        targetCus.lastOrderCode = orderCode
-
-        // Tự động nâng lên hạng thẻ cao nhất thỏa mãn minSpend <= totalSpent
-        const sortedTiers = [...loyaltyConfig.tiers].sort(
-          (a, b) => b.minSpend - a.minSpend
-        )
-        const matchedTier = sortedTiers.find(
-          (t) => nextTotalSpent >= t.minSpend
-        )
-        if (matchedTier) {
-          const tierNames: Record<string, string> = {
-            BRONZE: 'Hạng Đồng',
-            SILVER: 'Hạng Bạc',
-            GOLD: 'Hạng Vàng',
-            DIAMOND: 'Hạng Kim Cương',
-          }
-          targetCus.tier = {
-            ...targetCus.tier,
-            tierCode: matchedTier.tier,
-            tierName: tierNames[matchedTier.tier] || matchedTier.tier,
-          }
-        }
-
-        if (earnedPoints > 0) {
-          targetCus.pointHistories = [
-            {
-              id: Date.now(),
-              orderId: orderCode.replace('#', ''),
-              actionType: 'EARN',
-              pointsChanged: earnedPoints,
-              balanceAfter: nextPoints,
-              createdAt: new Date().toLocaleString('vi-VN'),
-              description: `Tích điểm tự động đơn ${orderCode} (UC-CUS-08)`,
-            },
-            ...(targetCus.pointHistories || []),
-          ]
-        }
-
-        mockDb.saveCustomers(allCustomers)
-        setCustomers(allCustomers)
-      }
-    }
-
+    // Màn POS cũ: chưa có API lập đơn nên không ghi dữ liệu. Viết lại theo POS-02/03 ở GĐ4.
     setCheckoutSuccess(
       `Hoàn tất đơn hàng ${orderCode} (${formatCurrency(totalPayable)})${
         selectedCustomer

@@ -16,15 +16,15 @@ import {
 import { type FormEvent, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiClientError } from '../../lib/api-client'
-import { INITIAL_LOYALTY_CONFIG } from '../../lib/mock-db'
 import { promotionsService } from '../../services/promotions.service'
 import type { CustomerTierCode, LoyaltyConfigData } from '../../types/api'
 import { formatNumber } from '../../utils/format'
 
+/** Trạng thái rỗng trong lúc chờ tải cấu hình từ API. */
+const EMPTY_CONFIG: LoyaltyConfigData = { amountPerPoint: 0, redemptionValuePerPoint: 0, tiers: [] }
+
 export function LoyaltyPage() {
-  const [config, setConfig] = useState<LoyaltyConfigData>(
-    INITIAL_LOYALTY_CONFIG
-  )
+  const [config, setConfig] = useState<LoyaltyConfigData>(EMPTY_CONFIG)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [focusedTier, setFocusedTier] = useState<CustomerTierCode | null>(null)
 

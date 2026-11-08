@@ -15,9 +15,11 @@ import {
   User,
   X,
 } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { type FormEvent, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ApiClientError } from '../../lib/api-client'
+import { queryKeys } from '../../lib/query-keys'
 import { customersService } from '../../services/customers.service'
 import type { GenderType, SkinType } from '../../types/api'
 import { serializeCustomerNote } from '../../utils/customer-note'
@@ -64,8 +66,12 @@ export function CreateCustomerPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  const duplicateCustomer = customersService.findDuplicateByPhone(phoneNumber)
   const cleanPhone = phoneNumber.replace(/\s+/g, '')
+  const { data: duplicateCustomer } = useQuery({
+    queryKey: queryKeys.customers.byPhone(cleanPhone),
+    queryFn: () => customersService.findByPhone(cleanPhone),
+    enabled: /^[0-9]{10,11}$/.test(cleanPhone),
+  })
   const isPhoneValid = /^[0-9]{10,11}$/.test(cleanPhone) && !duplicateCustomer
 
   const toggleSkinConcern = (concern: string) => {

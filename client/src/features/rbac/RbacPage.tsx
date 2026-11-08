@@ -62,7 +62,7 @@ export function RbacPage() {
         if (active) {
           setRoles(rolesRes.data)
           setPermissionsGrouped(permsRes.data)
-          setAuditLogs(rbacService.getAuditLogs())
+          rbacService.getAuditLogs().then(setAuditLogs).catch(() => setAuditLogs([]))
         }
       }
     )
@@ -136,7 +136,7 @@ export function RbacPage() {
           permissionIds: role.permissionIds || [],
         })
       }
-      setAuditLogs(rbacService.getAuditLogs())
+      setAuditLogs(await rbacService.getAuditLogs())
       showFeedback(
         'success',
         'Cập nhật quyền hạn cho vai trò thành công (PUT /api/v1/rbac/roles/:roleId/permissions)'
@@ -152,10 +152,14 @@ export function RbacPage() {
     }
   }
 
-  const handleResetDefault = () => {
-    const reset = rbacService.resetDefaultMatrix()
-    setRoles(reset)
-    showFeedback('success', 'Đã khôi phục ma trận phân quyền về mặc định chuẩn')
+  const handleResetDefault = async () => {
+    try {
+      setRoles(await rbacService.resetDefaultMatrix())
+      setAuditLogs(await rbacService.getAuditLogs())
+      showFeedback('success', 'Đã khôi phục ma trận phân quyền về mặc định chuẩn')
+    } catch (err) {
+      showFeedback('error', err instanceof ApiClientError ? err.message : 'Không thể khôi phục ma trận phân quyền')
+    }
   }
 
   const totalPermissionsCount = Object.values(permissionsGrouped).flat().length || 24

@@ -31,7 +31,6 @@ interface RequireRolesProps extends PropsWithChildren {
 
 function RequireRoles({ allowedRoles, children }: RequireRolesProps) {
   const user = useAuthStore((s) => s.user)
-  const switchDemoRole = useAuthStore((s) => s.switchDemoRole)
 
   const userRoles = user?.roles || []
   const isAllowed = userRoles.some((r) => allowedRoles.includes(r))
@@ -58,13 +57,6 @@ function RequireRoles({ allowedRoles, children }: RequireRolesProps) {
           .
         </p>
         <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2">
-          <button
-            type="button"
-            onClick={() => switchDemoRole(allowedRoles[0])}
-            className="px-4 py-2 rounded-xl bg-[#9a462d] hover:bg-[#823821] text-white text-xs font-bold cursor-pointer"
-          >
-            Chuyển nhanh sang vai trò {allowedRoles[0]}
-          </button>
           <Link
             to="/"
             className="px-4 py-2 rounded-xl border border-[#e3d2c7] text-xs font-semibold text-[#543e33] hover:bg-[#faf3ee]"

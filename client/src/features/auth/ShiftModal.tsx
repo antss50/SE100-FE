@@ -2,7 +2,7 @@ import { Banknote, Clock, X } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { useUiStore } from '../../app/store'
 import { ApiClientError } from '../../lib/api-client'
-import { authService } from '../../services/auth.service'
+import { shiftsService } from '../../services/shifts.service'
 import type { ShiftInfo } from '../../types/api'
 import { formatCurrency } from '../../utils/format'
 
@@ -19,7 +19,7 @@ export function ShiftModal() {
   useEffect(() => {
     if (!isOpen) return
     let active = true
-    authService
+    shiftsService
       .getCurrentShift()
       .then((res) => {
         if (active) {
@@ -44,7 +44,7 @@ export function ShiftModal() {
 
     try {
       const cashNum = Number(openingCash)
-      const res = await authService.openShift(cashNum)
+      const res = await shiftsService.openShift(cashNum)
       setCurrentShift(res.data)
       setStatusMsg(res.message || 'Mở ca làm việc thành công')
     } catch (err) {
@@ -59,9 +59,15 @@ export function ShiftModal() {
   }
 
   const handleCloseShift = async () => {
-    await authService.closeShift()
-    setCurrentShift(null)
-    setStatusMsg('Đã chốt bàn giao ca hiện tại. Bạn có thể mở ca mới.')
+    if (!currentShift) return
+    setErrorMsg(null)
+    try {
+      await shiftsService.closeShift(currentShift.shiftId)
+      setCurrentShift(null)
+      setStatusMsg('Đã chốt bàn giao ca hiện tại. Bạn có thể mở ca mới.')
+    } catch (err) {
+      setErrorMsg(err instanceof ApiClientError ? `${err.message} (${err.errorCode})` : 'Không thể chốt ca')
+    }
   }
 
   return (

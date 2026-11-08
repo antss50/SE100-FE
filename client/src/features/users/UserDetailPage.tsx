@@ -68,7 +68,7 @@ export function UserDetailPage() {
 
   const handleToggleLock = async () => {
     try {
-      const updated = await usersService.toggleUserLock(staff.id)
+      const updated = await usersService.toggleUserLock(staff)
       setStaff(updated)
       showNotice(
         updated.status === 'LOCKED'

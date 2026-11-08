@@ -111,9 +111,7 @@ export function CustomerDetailPage() {
   }
 
   const handleToggleStatus = async () => {
-    const updated = await customersService.toggleCustomerStatus(
-      customer.customerCode
-    )
+    const updated = await customersService.toggleCustomerStatus(customer)
     setCustomer(updated)
     setToastMsg(
       updated.status === 'INACTIVE'

@@ -213,17 +213,11 @@ export function InventoryPage() {
   }
 
   // UC-PROD-07 & UC-PROD-08: Ngừng kinh doanh / Khôi phục sản phẩm
-  const handleToggleProductStatus = async (
-    product: ProductItem,
-    clearStockFirst = false
-  ) => {
+  const handleToggleProductStatus = async (product: ProductItem) => {
     setPageError(null)
     try {
       if (product.status === 'ACTIVE') {
-        const res = await productsService.deactivateProduct(
-          product.sku,
-          clearStockFirst
-        )
+        const res = await productsService.deactivateProduct(product.sku)
         setReloadTick((t) => t + 1)
         showToast(`${res.message} (${res.data.sku} → ${res.data.status})`)
       } else {
@@ -374,7 +368,7 @@ export function InventoryPage() {
                 onClick={() => {
                   const prod = products.find((p) => p.sku === pageError.sku)
                   if (prod) {
-                    handleToggleProductStatus(prod, true)
+                    handleToggleProductStatus(prod)
                   }
                 }}
                 className="px-3 py-1.5 rounded-xl bg-red-700 hover:bg-red-800 text-white text-[11px] font-bold transition cursor-pointer"
@@ -719,7 +713,7 @@ export function InventoryPage() {
                               type="button"
                               title="Ngừng kinh doanh sản phẩm (UC-PROD-07)"
                               onClick={() =>
-                                handleToggleProductStatus(prod, false)
+                                handleToggleProductStatus(prod)
                               }
                               className="p-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 transition cursor-pointer"
                             >
@@ -730,7 +724,7 @@ export function InventoryPage() {
                               type="button"
                               title="Khôi phục sản phẩm (UC-PROD-08)"
                               onClick={() =>
-                                handleToggleProductStatus(prod, false)
+                                handleToggleProductStatus(prod)
                               }
                               className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition cursor-pointer"
                             >

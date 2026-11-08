@@ -115,7 +115,6 @@ export function AppLayout() {
   const user = useAuthStore((state) => state.user)
   const refreshToken = useAuthStore((state) => state.refreshToken)
   const clearSession = useAuthStore((state) => state.clearSession)
-  const switchDemoRole = useAuthStore((state) => state.switchDemoRole)
 
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
 
@@ -257,17 +256,7 @@ export function AppLayout() {
             {/* Active Role Pill with Quick Role Switcher */}
             <div className="hidden sm:flex items-center gap-2 rounded-full bg-[#f5e3d8] border border-[#e6cbbd] px-3.5 py-1 text-xs">
               <span className="font-bold text-[#7c3d25]">ROLE:</span>
-              <select
-                aria-label="Chuyển đổi vai trò kiểm thử"
-                value={primaryRole}
-                onChange={(e) => switchDemoRole(e.target.value as RoleCode)}
-                className="bg-transparent font-mono font-extrabold text-[#9a462d] outline-none cursor-pointer"
-              >
-                <option value="STORE_MANAGER">STORE_MANAGER</option>
-                <option value="ADMIN">ADMIN</option>
-                <option value="CASHIER">CASHIER</option>
-                <option value="INVENTORY_STAFF">INVENTORY_STAFF</option>
-              </select>
+              <span className="font-mono font-extrabold text-[#9a462d]">{primaryRole}</span>
             </div>
 
             {/* Current Shift Pill */}
