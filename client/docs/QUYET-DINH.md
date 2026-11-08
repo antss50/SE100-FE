@@ -22,3 +22,5 @@ Ghi mọi chỗ làm khác thiết kế, khác code cũ, hoặc chọn một tro
 | D16 | 2026-11-08 | Màn POS cũ bấm hoàn tất không còn ghi điểm/chi tiêu khách vào dữ liệu (trước đây ghi thẳng localStorage). Chỉ hiện thông báo cho tới khi viết lại POS ở GĐ4 | Màn hình không được import mock (CLAUDE.md mục 4); chưa có API lập đơn | fe-coder (GĐ0) |
 | D17 | 2026-11-08 | `GET /loyalty-config` chỉ cần đăng nhập (không cần `LOYALTY_CONFIG`) vì POS của thu ngân cần đọc tỷ lệ điểm | CUS-04 thu ngân dùng điểm | fe-coder (GĐ0) |
 | D18 | 2026-11-08 | Mock đổi vai trò nhanh = đăng nhập lại tài khoản seed tương ứng (không giả quyền phía client) | Mock phải kiểm quyền theo token như server thật (CLAUDE.md 5.2) | fe-coder (GĐ0) |
+| D19 | 2026-11-08 | Q1: nút "Quét FEFO" trên header chuyển tới màn Tồn kho theo lô (STK-02), ô quét barcode focus sẵn; quét xong hiện các lô của sản phẩm theo thứ tự FEFO. Chỉ hiện với người có quyền xem tồn | Trả lời Q1 | Chủ dự án |
+| D20 | 2026-11-08 | Thay D6: tài khoản đã có quyền push. Nhánh `demo` push lên `origin/demo`; điều phối push sau mỗi giai đoạn qua cổng chất lượng, agent không push | Chủ dự án | Chủ dự án |

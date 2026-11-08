@@ -26,7 +26,7 @@ Thiết kế hoặc code cũ trái tài liệu thì **làm theo tài liệu**, v
 | D3 | Code cũ lệch tài liệu | **Sửa cho khớp tài liệu** (type, mock, màn hình). Màn POS cũ viết lại theo thiết kế |
 | D4 | Kiểm thử | Vitest + Testing Library cho logic và component; Playwright cho E2E |
 | D5 | Mock | Cờ `VITE_USE_MOCK`. Bỏ cơ chế "lỗi mạng thì rơi về mock" |
-| D6 | Git | Làm trên nhánh `demo` (tách từ `feat/sprint1-2`) trong repo `SE100-FE`. Commit ở máy, **không push** |
+| D6 | Git | Làm trên nhánh `demo` (tách từ `feat/sprint1-2`) trong repo `SE100-FE`. Từ 2026-11-08 được push lên `origin/demo`; chỉ **điều phối** push, sau khi cổng chất lượng của giai đoạn qua. Agent code/kiểm thử không push |
 | D7 | Nhịp chạy | Agent tự chạy, tự test hết các giai đoạn; chỉ dừng khi có câu hỏi cần chủ dự án quyết |
 
 ## 3. Bản đồ UC → thiết kế
@@ -165,7 +165,7 @@ Không bỏ qua, không tắt rule, không `--no-verify`. Lỗi của test có s
 
 ## 11. Git
 
-- Repo: `SE100-FE` (repo riêng). Nhánh làm việc: **`demo`**. Không tạo nhánh khác, không push, không force, không amend commit đã có, không sửa lịch sử.
+- Repo: `SE100-FE` (repo riêng). Nhánh làm việc: **`demo`** (theo dõi `origin/demo`). Không tạo nhánh khác. Agent code/kiểm thử không push; điều phối push lên `origin/demo` khi giai đoạn qua cổng chất lượng. Không force push, không amend commit đã có, không sửa lịch sử.
 - Mỗi UC hoặc nhóm UC ít nhất 1 commit riêng: `feat(stk-01): lập phiếu nhập kho theo lô`, `test(stk-01): e2e nhập kho`, `fix(pos-03): …`, `refactor: …`, `chore: …` (QUY-TAC-GIT mục 6). Cuối commit message thêm dòng:
   `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`
 - Không commit `node_modules/`, `dist/`, `test-results/`, `playwright-report/`, `.env`.
