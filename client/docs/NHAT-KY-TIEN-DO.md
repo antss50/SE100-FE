@@ -39,3 +39,5 @@ Không xóa hay sửa dòng cũ; ghi sai thì thêm dòng mới đính chính.
 | 2026-11-08 23:07 | fe-coder | 0 | Commit | 87201c8 feat: component ui dùng chung và token màu @theme |
 | 2026-11-08 23:07 | fe-coder | 0 | Xong việc | Layout LUMINA POS (Sidebar 5 nhóm, đủ mục 40 UC, ẩn mục thiếu quyền; Header role/ca/Quét FEFO/Mở-Chốt ca), guard quyền RequirePermission + HomeGate, route lazy, trang Đang phát triển dùng chung; đăng nhập không tự động, 5 tài khoản seed, đổi vai trò nhanh chỉ khi mock |
 | 2026-11-08 23:07 | fe-coder | 0 | Test | lint 0 lỗi; build qua; vitest 64/64 pass; playwright 2/2 pass |
+| 2026-11-08 23:07 | fe-coder | 0 | Commit | 2431667 feat: layout LUMINA POS, guard quyền, route lazy và đăng nhập theo mock |
+| 2026-11-08 23:07 | fe-coder | 0 | Xong việc | Smoke E2E e2e/smoke.spec.ts (chưa đăng nhập về /login; admin đăng nhập thấy dashboard, đăng xuất về /login); tsconfig.e2e.json kiểm kiểu e2e |
