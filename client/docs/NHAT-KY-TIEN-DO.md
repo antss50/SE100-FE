@@ -50,3 +50,5 @@ Không xóa hay sửa dòng cũ; ghi sai thì thêm dòng mới đính chính.
 | 2026-11-08 23:18 | fe-tester | 0 | Lỗi | B1 (Low): vào URL bảo vệ khi chưa đăng nhập, đăng nhập xong không quay lại trang đó mà về / |
 | 2026-11-08 23:23 | fe-tester | 0 | Test | Cổng chất lượng: lint 0 lỗi; build qua; vitest 229/229 pass (8 file); playwright 2 lần liên tiếp: mỗi lần 54 pass, 0 fail, 1 fixme (B1), không chập chờn |
 | 2026-11-08 23:23 | fe-tester | 0 | Xong việc | Đối chiếu: permissions.ts khớp từng ô ma trận mục 4; 12 test giá port nguyên văn (so từng dòng, thuật toán pricing/returns giống hệt code mẫu); mock đúng envelope/errorCode/status mẫu mọi module, 401/403, reset() và seed tất định; sidebar/header khớp bản LUMINA (D9); 8 màn cũ mở không lỗi console. newstaff: hộp đổi mật khẩu mở sau đăng nhập (chặn dùng app để GĐ3) |
+| 2026-11-08 23:23 | fe-tester | 0 | Commit | ad9287c test: kiểm thử GĐ0 nền tảng (phân quyền, mock adapter, đăng nhập, layout) |
+| 2026-11-08 23:23 | fe-tester | 0 | Kết thúc | GĐ0 → Xong (không còn lỗi Critical/High; B1 Low mở). Commit ad9287c và commit nhật ký này |
