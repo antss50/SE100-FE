@@ -1,7 +1,9 @@
 import { Banknote, Clock, X } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { type FormEvent, useEffect, useState } from 'react'
 import { useUiStore } from '../../app/store'
 import { ApiClientError } from '../../lib/api-client'
+import { queryKeys } from '../../lib/query-keys'
 import { shiftsService } from '../../services/shifts.service'
 import type { ShiftInfo } from '../../types/api'
 import { formatCurrency } from '../../utils/format'
@@ -9,6 +11,7 @@ import { formatCurrency } from '../../utils/format'
 export function ShiftModal() {
   const isOpen = useUiStore((s) => s.isShiftModalOpen)
   const closeShiftModal = useUiStore((s) => s.closeShiftModal)
+  const queryClient = useQueryClient()
 
   const [currentShift, setCurrentShift] = useState<ShiftInfo | null>(null)
   const [openingCash, setOpeningCash] = useState('2000000')
@@ -46,6 +49,7 @@ export function ShiftModal() {
       const cashNum = Number(openingCash)
       const res = await shiftsService.openShift(cashNum)
       setCurrentShift(res.data)
+      queryClient.invalidateQueries({ queryKey: queryKeys.shifts.current })
       setStatusMsg(res.message || 'Mở ca làm việc thành công')
     } catch (err) {
       if (err instanceof ApiClientError) {
@@ -64,6 +68,7 @@ export function ShiftModal() {
     try {
       await shiftsService.closeShift(currentShift.shiftId)
       setCurrentShift(null)
+      queryClient.invalidateQueries({ queryKey: queryKeys.shifts.current })
       setStatusMsg('Đã chốt bàn giao ca hiện tại. Bạn có thể mở ca mới.')
     } catch (err) {
       setErrorMsg(err instanceof ApiClientError ? `${err.message} (${err.errorCode})` : 'Không thể chốt ca')

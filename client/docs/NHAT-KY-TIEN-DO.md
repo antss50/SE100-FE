@@ -36,3 +36,6 @@ Không xóa hay sửa dòng cũ; ghi sai thì thêm dòng mới đính chính.
 | 2026-11-08 22:59 | fe-coder | 0 | Commit | 043a8e4 refactor: mock adapter VITE_USE_MOCK, chuyển logic mock khỏi service |
 | 2026-11-08 23:01 | fe-coder | 0 | Xong việc | Component dùng chung src/components/ui (Button, Input, Select, Modal giữ focus + Esc, ConfirmDialog, DataTable 3 trạng thái, Pagination, StatusBadge, StatCard, PageHeader, EmptyState, Toast) và token màu @theme trong index.css |
 | 2026-11-08 23:01 | fe-coder | 0 | Test | lint 0 lỗi; build qua; vitest 57/57 pass (thêm 11 test component) |
+| 2026-11-08 23:07 | fe-coder | 0 | Commit | 87201c8 feat: component ui dùng chung và token màu @theme |
+| 2026-11-08 23:07 | fe-coder | 0 | Xong việc | Layout LUMINA POS (Sidebar 5 nhóm, đủ mục 40 UC, ẩn mục thiếu quyền; Header role/ca/Quét FEFO/Mở-Chốt ca), guard quyền RequirePermission + HomeGate, route lazy, trang Đang phát triển dùng chung; đăng nhập không tự động, 5 tài khoản seed, đổi vai trò nhanh chỉ khi mock |
+| 2026-11-08 23:07 | fe-coder | 0 | Test | lint 0 lỗi; build qua; vitest 64/64 pass; playwright 2/2 pass |

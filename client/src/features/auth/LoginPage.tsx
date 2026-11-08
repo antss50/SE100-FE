@@ -10,18 +10,22 @@ import {
   Zap,
 } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore, useUiStore } from '../../app/store'
-import { ApiClientError } from '../../lib/api-client'
+import { ApiClientError, USE_MOCK } from '../../lib/api-client'
+import { homePathFor } from '../../routes/nav-config'
 import { authService } from '../../services/auth.service'
+import { DEMO_ACCOUNTS, DEMO_PASSWORD } from './demo-accounts'
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const setSession = useAuthStore((s) => s.setSession)
   const openChangePassword = useUiStore((s) => s.openChangePassword)
 
-  const [username, setUsername] = useState('LUM084')
-  const [password, setPassword] = useState('Password@123')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -42,7 +46,10 @@ export function LoginPage() {
         openChangePassword()
       }
 
-      navigate('/users')
+      const from = (location.state as { from?: string } | null)?.from
+      navigate(from && from !== '/login' ? from : (homePathFor(response.data.user.permissions) ?? '/'), {
+        replace: true,
+      })
     } catch (err) {
       if (err instanceof ApiClientError) {
         setErrorMsg(err.message)
@@ -57,10 +64,12 @@ export function LoginPage() {
 
   const fillDemoAccount = (demoUsername: string) => {
     setUsername(demoUsername)
-    setPassword('Password@123')
+    setPassword(DEMO_PASSWORD)
     setErrorMsg(null)
     setErrorCode(null)
   }
+
+  if (isAuthenticated) return <Navigate to="/" replace />
 
   return (
     <div className="min-h-screen bg-[#f5ede7] flex items-center justify-center p-4 sm:p-8">
@@ -282,25 +291,20 @@ export function LoginPage() {
               </button>
             </form>
 
-            {/* Quick Demo Account Selector */}
+            {/* Tài khoản mẫu: chỉ hiện ở chế độ mock */}
+            {USE_MOCK && (
             <div className="mt-8 pt-6 border-t border-[#f2e6de]">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-[#8e7467]">
                 Tài khoản thử nghiệm nhanh (Mật khẩu: Password@123)
               </p>
               <div className="mt-2.5 flex flex-wrap gap-2">
-                {[
-                  { code: 'LUM084', label: 'Thu ngân (LUM-084)' },
-                  { code: 'manager01', label: 'Quản lý (STORE_MGR)' },
-                  { code: 'admin', label: 'Chủ cửa hàng (ADMIN)' },
-                  { code: 'inventory01', label: 'Nhân viên kho (FEFO)' },
-                  { code: 'trang.bui', label: 'Tài khoản bị khóa (403)' },
-                ].map((acc) => (
+                {DEMO_ACCOUNTS.map((acc) => (
                   <button
-                    key={acc.code}
+                    key={acc.username}
                     type="button"
-                    onClick={() => fillDemoAccount(acc.code)}
+                    onClick={() => fillDemoAccount(acc.username)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition cursor-pointer ${
-                      username === acc.code
+                      username === acc.username
                         ? 'bg-[#fbeae2] border-[#d57252] text-[#9e3f22]'
                         : 'bg-[#faf6f3] border-[#eaddd4] text-[#654d42] hover:bg-[#f4eae3]'
                     }`}
@@ -310,6 +314,7 @@ export function LoginPage() {
                 ))}
               </div>
             </div>
+            )}
           </div>
         </div>
       </div>

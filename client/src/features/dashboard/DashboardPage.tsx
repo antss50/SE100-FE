@@ -35,7 +35,7 @@ const moduleCards = [
     subtitle: 'POST /api/v1/products · /categories · /brands',
     description:
       'Quản lý 1.240 SKU mỹ phẩm, khởi tạo danh mục nội bộ, thương hiệu phân phối, quy cách đóng gói, thuế VAT và định mức tồn an toàn.',
-    to: '/inventory',
+    to: '/products',
     icon: Boxes,
     badge: 'UC-PROD-01..03',
   },
@@ -104,7 +104,7 @@ export function DashboardPage() {
             Sprint 02 · G02 & G06 · Lumina Beauty POS & ERP
           </span>
           <h1 className="mt-3 text-2xl sm:text-3xl font-extrabold tracking-tight">
-            Trung tâm Quản trị Xác thực, Nhân sự, Phân quyền & Khách hàng
+            Dashboard tổng quan
           </h1>
           <p className="mt-2 text-xs sm:text-sm text-amber-100/90 max-w-2xl leading-relaxed">
             Chọn nhanh các phân hệ bên dưới hoặc từ thanh điều hướng bên trái để
@@ -113,12 +113,6 @@ export function DashboardPage() {
         </div>
 
         <div className="flex flex-wrap gap-3 shrink-0">
-          <Link
-            to="/login"
-            className="px-4 py-2.5 rounded-xl bg-white text-[#8f422a] text-xs font-extrabold shadow-xs hover:bg-amber-50 transition"
-          >
-            Màn hình Đăng nhập POS →
-          </Link>
           <Link
             to="/customers/new"
             className="px-4 py-2.5 rounded-xl bg-black/25 border border-white/25 text-white text-xs font-bold hover:bg-black/35 transition"

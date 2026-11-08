@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { PERMISSION_MODULE_TITLES } from '../../domain/permissions'
 import { ApiClientError } from '../../lib/api-client'
 import { rbacService } from '../../services/rbac.service'
 import type {
@@ -24,16 +25,11 @@ import type {
   RoleCode,
 } from '../../types/api'
 
-const MODULE_ORDER = ['AUTH', 'PRODUCT', 'FEFO', 'CUSTOMER', 'POS', 'REPORT']
-
-const MODULE_TITLES: Record<string, string> = {
-  AUTH: 'NHÓM 1: QUẢN TRỊ HỆ THỐNG & TÀI KHOẢN',
-  PRODUCT: 'NHÓM 2: QUẢN LÝ SẢN PHẨM & DANH MỤC',
-  FEFO: 'NHÓM 3: KHO & LÔ HẠN DÙNG (FEFO ENFORCEMENT)',
-  CUSTOMER: 'NHÓM 4: KHUYẾN MÃI 4 TẦNG & HẠNG THẺ THÀNH VIÊN',
-  POS: 'NHÓM 5: BÁN HÀNG POS & CA TRỰC THU NGÂN',
-  REPORT: 'NHÓM 6: BÁO CÁO & TÀI CHÍNH CỬA HÀNG',
-}
+/** Thứ tự và tên nhóm quyền lấy từ domain/permissions.ts. */
+const MODULE_ORDER = Object.keys(PERMISSION_MODULE_TITLES)
+const MODULE_TITLES: Record<string, string> = Object.fromEntries(
+  Object.entries(PERMISSION_MODULE_TITLES).map(([k, v], i) => [k, `NHÓM ${i + 1}: ${v.toUpperCase()}`])
+)
 
 export function RbacPage() {
   const [roles, setRoles] = useState<RbacRole[]>([])
