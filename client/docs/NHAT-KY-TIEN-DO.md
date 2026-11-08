@@ -45,3 +45,8 @@ Không xóa hay sửa dòng cũ; ghi sai thì thêm dòng mới đính chính.
 | 2026-11-08 23:08 | fe-coder | 0 | Câu hỏi | Q1: nút Quét FEFO trên header làm gì (đề xuất: mở tra cứu tồn STK-02 với ô quét barcode); tạm chuyển tới /stock |
 | 2026-11-08 23:08 | fe-coder | 0 | Test | Cổng chất lượng cuối GĐ0: lint 0 lỗi; build qua; vitest 64/64 pass (5 file); playwright 2/2 pass |
 | 2026-11-08 23:08 | fe-coder | 0 | Kết thúc | GĐ0 → Đang test. Ghi QUYET-DINH D9–D18, TIEN-DO Q1. Commit: d065626, a80f710, 8a63110, 043a8e4, 87201c8, 2431667, 92096f7 và commit docs này |
+| 2026-11-08 23:09 | fe-tester | 0 | Bắt đầu | Kiểm thử GĐ0 nền tảng (d065626 → 0ac157d): đăng nhập/phiên, phân quyền đối chiếu ma trận mục 4, mock adapter, 12 test giá, layout, cổng chất lượng |
+| 2026-11-08 23:18 | fe-tester | 0 | Test | Lần chạy E2E đầu (54 test): 53 pass, 1 fail (quay lại trang cũ sau đăng nhập) → lỗi B1, đánh test.fixme. Vitest 229/229 pass (thêm 3 file: ma trận quyền từng ô, mock contract qua apiRequest, chế độ không mock) |
+| 2026-11-08 23:18 | fe-tester | 0 | Lỗi | B1 (Low): vào URL bảo vệ khi chưa đăng nhập, đăng nhập xong không quay lại trang đó mà về / |
+| 2026-11-08 23:23 | fe-tester | 0 | Test | Cổng chất lượng: lint 0 lỗi; build qua; vitest 229/229 pass (8 file); playwright 2 lần liên tiếp: mỗi lần 54 pass, 0 fail, 1 fixme (B1), không chập chờn |
+| 2026-11-08 23:23 | fe-tester | 0 | Xong việc | Đối chiếu: permissions.ts khớp từng ô ma trận mục 4; 12 test giá port nguyên văn (so từng dòng, thuật toán pricing/returns giống hệt code mẫu); mock đúng envelope/errorCode/status mẫu mọi module, 401/403, reset() và seed tất định; sidebar/header khớp bản LUMINA (D9); 8 màn cũ mở không lỗi console. newstaff: hộp đổi mật khẩu mở sau đăng nhập (chặn dùng app để GĐ3) |

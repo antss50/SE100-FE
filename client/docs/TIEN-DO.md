@@ -8,7 +8,7 @@ Trạng thái: `Chưa làm` · `Đang code` · `Đang test` · `Đang sửa` · 
 
 | GĐ | Nội dung | UC | Trạng thái |
 |---|---|---|---|
-| 0 | Nền tảng: mock adapter + `VITE_USE_MOCK`, chuyển service cũ sang adapter, bỏ tự đăng nhập, `domain/permissions.ts` + guard, component `ui/`, token màu, lazy route, sidebar theo thiết kế, cài Vitest + Playwright, port `pricing.ts` và `returns.ts` từ code mẫu kèm 12 test | Nền | Đang test |
+| 0 | Nền tảng: mock adapter + `VITE_USE_MOCK`, chuyển service cũ sang adapter, bỏ tự đăng nhập, `domain/permissions.ts` + guard, component `ui/`, token màu, lazy route, sidebar theo thiết kế, cài Vitest + Playwright, port `pricing.ts` và `returns.ts` từ code mẫu kèm 12 test | Nền | Xong |
 | 1 | Nhà cung cấp, nhập kho | SUPP-01..03, STK-01 | Chưa làm |
 | 2 | Tồn kho, cận hạn, kiểm kho, xuất đặc biệt | STK-02..07 | Chưa làm |
 | 3 | Rà và sửa phần cũ cho khớp tài liệu; cấu hình | AUTH-01..05, AUTH-07, PROD-01..03, CUS-01..05, PROM-01..02 | Chưa làm |
@@ -66,6 +66,7 @@ Trạng thái: `Chưa làm` · `Đang code` · `Đang test` · `Đang sửa` · 
 
 | Mã | GĐ | UC | Mức | Mô tả và bước tái hiện | Trạng thái |
 |---|---|---|---|---|---|
+| B1 | 0 | AUTH-01 | Low | Vào URL bảo vệ khi chưa đăng nhập (ví dụ `/customers`) → về `/login`; đăng nhập `manager01` xong về `/` thay vì quay lại `/customers`. `RequireAuth` có lưu `state.from` và `LoginPage` có `navigate(from)`, nhưng nghi `<Navigate to="/">` (nhánh `isAuthenticated`) chạy sau và đè. Tài liệu không bắt buộc tính năng này, nhưng code đã hứa trong comment guard. Test: `e2e/auth/login-session.spec.ts` › "B1: vào URL bảo vệ khi chưa đăng nhập, đăng nhập xong quay lại đúng trang" (`test.fixme`) | Mở |
 
 ## Câu hỏi mở
 
