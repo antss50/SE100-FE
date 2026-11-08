@@ -33,3 +33,6 @@ Không xóa hay sửa dòng cũ; ghi sai thì thêm dòng mới đính chính.
 | 2026-11-08 22:59 | fe-coder | 0 | Xong việc | Mock adapter src/mocks (router method+path, db localStorage se100_mock_*_v2, giao dịch, độ trễ VITE_MOCK_DELAY_MS, resetMockDb, window.__SE100_MOCK__); api-client bỏ fallbackHandler; service chỉ gọi apiRequest; xóa lib/mock-db.ts; POS bỏ ghi mockDb; API-CONTRACT.md ghi AUTH/PRODUCT/CUSTOMER/PROMOTION/POS |
 | 2026-11-08 22:59 | fe-coder | 0 | Test | lint 0 lỗi; build qua; vitest 46/46 pass (thêm 12 test mock adapter) |
 | 2026-11-08 22:59 | fe-coder | 0 | Commit | refactor: mock adapter VITE_USE_MOCK, chuyển logic mock khỏi service (hash ghi ở dòng sau) |
+| 2026-11-08 22:59 | fe-coder | 0 | Commit | 043a8e4 refactor: mock adapter VITE_USE_MOCK, chuyển logic mock khỏi service |
+| 2026-11-08 23:01 | fe-coder | 0 | Xong việc | Component dùng chung src/components/ui (Button, Input, Select, Modal giữ focus + Esc, ConfirmDialog, DataTable 3 trạng thái, Pagination, StatusBadge, StatCard, PageHeader, EmptyState, Toast) và token màu @theme trong index.css |
+| 2026-11-08 23:01 | fe-coder | 0 | Test | lint 0 lỗi; build qua; vitest 57/57 pass (thêm 11 test component) |
