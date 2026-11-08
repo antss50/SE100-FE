@@ -41,3 +41,7 @@ Không xóa hay sửa dòng cũ; ghi sai thì thêm dòng mới đính chính.
 | 2026-11-08 23:07 | fe-coder | 0 | Test | lint 0 lỗi; build qua; vitest 64/64 pass; playwright 2/2 pass |
 | 2026-11-08 23:07 | fe-coder | 0 | Commit | 2431667 feat: layout LUMINA POS, guard quyền, route lazy và đăng nhập theo mock |
 | 2026-11-08 23:07 | fe-coder | 0 | Xong việc | Smoke E2E e2e/smoke.spec.ts (chưa đăng nhập về /login; admin đăng nhập thấy dashboard, đăng xuất về /login); tsconfig.e2e.json kiểm kiểu e2e |
+| 2026-11-08 23:08 | fe-coder | 0 | Commit | 92096f7 test: smoke e2e đăng nhập admin và đăng xuất |
+| 2026-11-08 23:08 | fe-coder | 0 | Câu hỏi | Q1: nút Quét FEFO trên header làm gì (đề xuất: mở tra cứu tồn STK-02 với ô quét barcode); tạm chuyển tới /stock |
+| 2026-11-08 23:08 | fe-coder | 0 | Test | Cổng chất lượng cuối GĐ0: lint 0 lỗi; build qua; vitest 64/64 pass (5 file); playwright 2/2 pass |
+| 2026-11-08 23:08 | fe-coder | 0 | Kết thúc | GĐ0 → Đang test. Ghi QUYET-DINH D9–D18, TIEN-DO Q1. Commit: d065626, a80f710, 8a63110, 043a8e4, 87201c8, 2431667, 92096f7 và commit docs này |

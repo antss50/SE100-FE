@@ -8,7 +8,7 @@ Trạng thái: `Chưa làm` · `Đang code` · `Đang test` · `Đang sửa` · 
 
 | GĐ | Nội dung | UC | Trạng thái |
 |---|---|---|---|
-| 0 | Nền tảng: mock adapter + `VITE_USE_MOCK`, chuyển service cũ sang adapter, bỏ tự đăng nhập, `domain/permissions.ts` + guard, component `ui/`, token màu, lazy route, sidebar theo thiết kế, cài Vitest + Playwright, port `pricing.ts` và `returns.ts` từ code mẫu kèm 12 test | Nền | Chưa làm |
+| 0 | Nền tảng: mock adapter + `VITE_USE_MOCK`, chuyển service cũ sang adapter, bỏ tự đăng nhập, `domain/permissions.ts` + guard, component `ui/`, token màu, lazy route, sidebar theo thiết kế, cài Vitest + Playwright, port `pricing.ts` và `returns.ts` từ code mẫu kèm 12 test | Nền | Đang test |
 | 1 | Nhà cung cấp, nhập kho | SUPP-01..03, STK-01 | Chưa làm |
 | 2 | Tồn kho, cận hạn, kiểm kho, xuất đặc biệt | STK-02..07 | Chưa làm |
 | 3 | Rà và sửa phần cũ cho khớp tài liệu; cấu hình | AUTH-01..05, AUTH-07, PROD-01..03, CUS-01..05, PROM-01..02 | Chưa làm |
@@ -73,3 +73,4 @@ Agent ghi câu hỏi ở đây thay vì tự đoán. Chủ dự án trả lời 
 
 | Mã | GĐ | Câu hỏi | Phương án đề xuất | Trả lời |
 |---|---|---|---|---|
+| Q1 | 0 | Nút "Quét FEFO" trên header (thiết kế LUMINA) làm gì? Tài liệu không mô tả. | Mở màn tra cứu tồn theo lô (STK-02) với ô quét barcode được focus sẵn. GĐ0 tạm cho nút chuyển tới `/stock`, chỉ hiện với người có quyền xem tồn. | |
