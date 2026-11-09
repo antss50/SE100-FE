@@ -85,3 +85,4 @@ Không xóa hay sửa dòng cũ; ghi sai thì thêm dòng mới đính chính.
 | 2026-11-09 10:25 | fe-coder | 3 | Commit | 9a691c8 fix(b2,b3): seed tất định theo giây, hộp đổi mật khẩu role=dialog; đóng B2, B3. Bắt đầu GĐ3 báo cáo |
 | 2026-11-09 10:28 | fe-coder | 3 | Commit | e2035d0 feat(rep-02,rep-03): báo cáo doanh thu, lợi nhuận gộp và bán hàng |
 | 2026-11-09 10:28 | fe-coder | 3 | Xong | REP-02, REP-03 code xong (build qua). Mock: /reports/revenue, /reports/sales |
+| 2026-11-09 10:29 | fe-coder | 3 | Commit | 67197fa feat(rep-04,rep-05,rep-06): báo cáo tồn kho hạn dùng, nhập hàng, khách hàng |

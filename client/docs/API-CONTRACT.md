@@ -493,3 +493,7 @@ Chung: query `fromDate`, `toDate` (`YYYY-MM-DD`, mặc định 30 ngày gần nh
 ### `GET /reports/customers` — REP-06
 - **Quyền:** `REPORT_CUSTOMER` · **Query:** `fromDate`, `toDate`, `granularity`.
 - **Response 200:** `CustomerReport = { range, granularity, summary {totalCustomers, newCustomers (theo joinedAt/created_at), activeBuyers, returningBuyers (người mua trong kỳ đã có đơn COMPLETED trước fromDate), pointsEarned, pointsRedeemed, pointsRevoked}, byTier[] {tierCode, tierName, customerCount, totalSpent}, topSpenders[] {customerId, customerCode, fullName, tierName, orderCount, spent (Σ totalAmount − tiền hoàn)}, series[] {periodStart, label, newCustomers} }`.
+
+### `GET /reports/dashboard` — REP-01
+- **Quyền:** `REPORT_DASHBOARD` (Admin, Manager: đủ widget) hoặc `REPORT_DASHBOARD_STOCK` (NV kho: `sales = null`, chỉ widget kho). Thu ngân không có quyền (403).
+- **Response 200:** `DashboardData = { generatedAt, sales: { todayRevenue (doanh thu thuần hôm nay), todayOrders, yesterdayRevenue, openShifts, last7Days[] {date,label,netRevenue,orderCount} } | null, stock: { expiryWarningDays, nearExpiry[], expired[] (batchId, sku, productName, lotCode, expDate, daysToExpiry, onHandQty), lowStock[] {productId, sku, productName, onHandQty, minStockAlert} }, pending: { waitingChecks, waitingDisposals } }`.

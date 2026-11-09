@@ -1,4 +1,5 @@
 import { buildRevenueSeries, computeRevenueFigures, withoutProfit } from '../../domain/reports/revenue'
+import { buildDashboard } from '../../domain/reports/dashboard'
 import { buildCustomerReport } from '../../domain/reports/customers'
 import { buildPurchaseReport } from '../../domain/reports/purchase'
 import { buildSalesReport } from '../../domain/reports/sales'
@@ -8,7 +9,7 @@ import type { ReportGranularity, ReportRange, RevenueReport } from '../../types/
 import { MockHttpError, ok } from '../http'
 import type { MockRoute } from '../router'
 import { expiryWarningDays, todayOf } from '../stock-ledger'
-import { toDateOnly } from '../time'
+import { toDateOnly, toIsoLocal } from '../time'
 
 /** Đọc `fromDate`/`toDate` từ query (mặc định 30 ngày gần nhất) và kiểm `fromDate ≤ toDate`. */
 export function rangeFromQuery(query: URLSearchParams, now: Date): ReportRange {
@@ -109,6 +110,29 @@ export const reportRoutes: MockRoute[] = [
           { customers: db.read('customers'), orders: db.read('orders'), returns: db.read('returns') },
           rangeFromQuery(query, now),
           granularityFromQuery(query)
+        )
+      ),
+  },
+  {
+    method: 'GET',
+    path: '/reports/dashboard',
+    permission: ['REPORT_DASHBOARD', 'REPORT_DASHBOARD_STOCK'],
+    handler: ({ db, now, permissions }) =>
+      ok(
+        buildDashboard(
+          {
+            orders: db.read('orders'),
+            returns: db.read('returns'),
+            shifts: db.read('shifts'),
+            batches: db.read('batches'),
+            products: db.read('products'),
+            inventoryChecks: db.read('inventoryChecks'),
+            disposals: db.read('disposals'),
+          },
+          todayOf(now),
+          expiryWarningDays(db),
+          toIsoLocal(now),
+          permissions.includes('REPORT_DASHBOARD')
         )
       ),
   },
