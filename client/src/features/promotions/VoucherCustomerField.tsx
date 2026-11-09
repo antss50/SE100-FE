@@ -16,7 +16,7 @@ interface VoucherCustomerFieldProps {
   disabled?: boolean
 }
 
-/** PROM-02 (D42): voucher riêng 1 khách. Tìm khách theo SĐT; để trống = voucher chung. */
+/** PROM-02 (D43): voucher riêng 1 khách. Tìm khách theo SĐT; để trống = voucher chung. */
 export function VoucherCustomerField({ value, onChange, disabled }: VoucherCustomerFieldProps) {
   const [phone, setPhone] = useState('')
   const [searching, setSearching] = useState(false)

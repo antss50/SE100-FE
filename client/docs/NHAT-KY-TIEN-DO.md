@@ -71,3 +71,8 @@ Không xóa hay sửa dòng cũ; ghi sai thì thêm dòng mới đính chính.
 | 2026-11-09 09:33 | fe-coder | 2 | Câu hỏi | Q4 (discount_rate từng hạng chỉnh ở đâu), Q5 (voucher riêng 1 khách chọn khách ở đâu), Q6 (đơn đổi hàng có được dùng voucher) ghi vào TIEN-DO.md; QUYET-DINH D30-D39 |
 | 2026-11-09 09:33 | fe-coder | 2 | Commit | e8ed8f7 feat(auth-07,...): settings page, luật 47 guard + mock chặn API, PRODUCTS.status DISCONTINUED, bỏ nút đặt tồn = 0, lịch sử điểm, bỏ chi nhánh; build qua. Còn dở: rà users/rbac/inventory/customers cũ chưa hết, seed đơn mẫu, PROM-04 (GĐ3) |
 | 2026-11-09 09:33 | fe-coder | 2 | Hash đính chính | QUYET-DINH: các quyết định GĐ2 của fe-coder đánh lại số D31-D40 (D30 là trả lời Q2 do điều phối ghi); dòng nhật ký trước ghi D30-D39 nay là D31-D40 |
+| 2026-11-09 09:46 | fe-coder | 2 | Commit | 33428e8 feat(cus-05,prom-02): % giảm từng hạng sửa được (D41), voucher riêng 1 khách (D42), Q4-Q6 đóng; build qua |
+| 2026-11-09 09:54 | fe-coder | 2 | Commit | f86ece2 fix(auth-01..05,prod-02,03,cus-02): rà khớp DATABASE.md (NV0001/KH0001, USERS ACTIVE/LOCKED, ẩn khóa với chính mình và thu ngân, productCount tính thật) |
+| 2026-11-09 09:54 | fe-coder | 2 | Commit | 5c543ac feat(pos): seed đơn mẫu bằng engine thật, MOCK_DB_VERSION 8; đã chạy thử 6 ngày mẫu: thẻ kho khớp tồn lô, 12 đơn, 3 ca đóng |
+| 2026-11-09 09:54 | fe-coder | 2 | Commit | a08b76f fix(pos-03,pos-02): in bằng iframe ẩn; lô tay trong nháp hết hạn quay về FEFO |
+| 2026-11-09 09:54 | fe-coder | 2 | Kết thúc | Hoàn tất GĐ2: AUTH-01,02,04,05, PROD-02,03, CUS-02, CUS-05 chuyển Đang test; QUYET-DINH D42-D44 (số D41 trùng nên đánh lại) |
