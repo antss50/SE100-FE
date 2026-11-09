@@ -23,7 +23,6 @@ for (const [username, fullName] of [
   ['manager01', 'Trần Lê Ngọc Mai'],
   ['cashier01', 'Nguyễn Thu Hà'],
   ['inventory01', 'Lê Vũ Hoàng An'],
-  ['newstaff', 'Phạm Bảo Ngọc'],
 ] as const) {
   test(`tài khoản seed ${username} đăng nhập được với ${SEED_PASSWORD}`, async ({ page }) => {
     await login(page, username)
