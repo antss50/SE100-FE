@@ -51,9 +51,9 @@
 | REP-01 | Dashboard | 6 | Chưa làm | Có code cũ |
 | REP-02 | Doanh thu & lợi nhuận gộp | 6 | Đang test | Báo cáo tab Doanh thu/Bán hàng, Manager không thấy lợi nhuận |
 | REP-03 | Bán hàng | 6 | Đang test | Báo cáo tab Doanh thu/Bán hàng, Manager không thấy lợi nhuận |
-| REP-04 | Tồn kho & hạn dùng | 6 | Chưa làm | |
-| REP-05 | Nhập hàng | 6 | Chưa làm | |
-| REP-06 | Khách hàng | 6 | Chưa làm | |
+| REP-04 | Tồn kho & hạn dùng | 6 | Đang test | Tab Tồn kho/Nhập hàng/Khách hàng ở /reports |
+| REP-05 | Nhập hàng | 6 | Đang test | Tab Tồn kho/Nhập hàng/Khách hàng ở /reports |
+| REP-06 | Khách hàng | 6 | Đang test | Tab Tồn kho/Nhập hàng/Khách hàng ở /reports |
 
 ## Lỗi
 

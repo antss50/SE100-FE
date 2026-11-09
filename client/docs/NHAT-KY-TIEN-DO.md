@@ -83,3 +83,5 @@ Không xóa hay sửa dòng cũ; ghi sai thì thêm dòng mới đính chính.
 | 2026-11-09 10:18 | fe-tester | T1 | Test | E2E mới e2e/t1: main-flows 5 test (a,b,c+d+e,f,h) + screens 23 test; chạy full 2 lần: 82 pass / 0 fail / 0 chập chờn. Unit: stock-flows 22, sales-flows 29, legacy-flows 19 (đều pass). g (phân quyền URL) đã có sẵn e2e/rbac |
 | 2026-11-09 10:18 | fe-tester | T1 | Kết thúc | Lint 0 lỗi, build qua, vitest 298 pass/1 skip, e2e 82/82. 32 UC Kho + bán hàng + phần cũ chuyển Xong (chỉ còn B2, B3 Low, Q7) |
 | 2026-11-09 10:25 | fe-coder | 3 | Commit | 9a691c8 fix(b2,b3): seed tất định theo giây, hộp đổi mật khẩu role=dialog; đóng B2, B3. Bắt đầu GĐ3 báo cáo |
+| 2026-11-09 10:28 | fe-coder | 3 | Commit | e2035d0 feat(rep-02,rep-03): báo cáo doanh thu, lợi nhuận gộp và bán hàng |
+| 2026-11-09 10:28 | fe-coder | 3 | Xong | REP-02, REP-03 code xong (build qua). Mock: /reports/revenue, /reports/sales |

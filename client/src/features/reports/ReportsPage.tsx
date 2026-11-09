@@ -1,10 +1,12 @@
 import { useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../../app/store'
-import { PageHeader, cn } from '../../components/ui'
+import { EmptyState, PageHeader, cn } from '../../components/ui'
 import { hasPermission, type PermissionRequirement } from '../../domain/permissions'
-import { EmptyState } from '../../components/ui'
+import { CustomerTab } from './CustomerTab'
+import { PurchaseTab } from './PurchaseTab'
 import { RevenueTab } from './RevenueTab'
 import { SalesTab } from './SalesTab'
+import { StockTab } from './StockTab'
 import { useReportRange } from './report-range'
 
 interface TabDef {
@@ -17,6 +19,9 @@ interface TabDef {
 const TABS: TabDef[] = [
   { id: 'revenue', label: 'Doanh thu & lợi nhuận', uc: 'REP-02', permission: 'REPORT_REVENUE' },
   { id: 'sales', label: 'Bán hàng', uc: 'REP-03', permission: ['REPORT_SALES', 'REPORT_SALES_OWN_SHIFT'] },
+  { id: 'stock', label: 'Tồn kho & hạn dùng', uc: 'REP-04', permission: 'REPORT_STOCK' },
+  { id: 'purchase', label: 'Nhập hàng', uc: 'REP-05', permission: 'REPORT_PURCHASE' },
+  { id: 'customer', label: 'Khách hàng', uc: 'REP-06', permission: 'REPORT_CUSTOMER' },
 ]
 
 /** REP-02..06: báo cáo theo tab; tab nào người dùng không có quyền thì ẩn. */
@@ -59,6 +64,9 @@ export function ReportsPage() {
           <div role="tabpanel" aria-label={active.label}>
             {active.id === 'revenue' && <RevenueTab controller={controller} />}
             {active.id === 'sales' && <SalesTab controller={controller} />}
+            {active.id === 'stock' && <StockTab controller={controller} />}
+            {active.id === 'purchase' && <PurchaseTab controller={controller} />}
+            {active.id === 'customer' && <CustomerTab controller={controller} />}
           </div>
         </>
       )}

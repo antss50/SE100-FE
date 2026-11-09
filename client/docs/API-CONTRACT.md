@@ -481,3 +481,15 @@ Chung: query `fromDate`, `toDate` (`YYYY-MM-DD`, mặc định 30 ngày gần nh
 ### `GET /reports/sales` — REP-03
 - **Quyền:** `REPORT_SALES` (mọi ca) hoặc `REPORT_SALES_OWN_SHIFT` (thu ngân: server lọc theo `cashierId` của người gọi, `scope = "OWN"`).
 - **Response 200:** `SalesReport = { range, scope, summary {orderCount,totalAmount,averageOrderValue,itemsSold,returnCount,returnedAmount}, topProducts[] (SalesProductRow: productId,sku,productName,quantity,returnedQuantity,revenue,returnedAmount; tối đa 10, theo số lượng giảm dần), slowProducts[] (bán ít nhất, kể cả SKU chưa bán được), byPayment[] {method,orderCount,amount}, byCashier[] {cashierId,cashierName,orderCount,amount,returnCount,returnedAmount}, byShift[] {shiftId,shiftCode,cashierName,openedAt,closedAt,status,orderCount,amount,differenceAmount} }`.
+
+### `GET /reports/stock` — REP-04
+- **Quyền:** `REPORT_STOCK` (Admin, Manager, NV kho) · **Query:** `fromDate`, `toDate` (chỉ áp cho hàng hủy; tồn chụp tại lúc xem).
+- **Response 200:** `StockReport = { range, expiryWarningDays, summary {skuCount, lotCount, totalQty, inventoryValue (Σ onHandQty × costPrice), blockedQty, belowMinCount, nearExpiryLots, nearExpiryValue, expiredLots, expiredValue, disposalLoss (Σ totalCost phiếu DESTROY đã duyệt trong kỳ)}, products[] (onHandQty, blockedQty, availableQty, value, minStockAlert, belowMin), belowMinProducts[], nearExpiryLots[] / expiredLots[] (batchId, sku, productName, lotCode, expDate, daysToExpiry, onHandQty, blockedQty, value, daysInStock), disposals[] {issueType, count, quantity, totalCost} }`. Ngưỡng cận hạn = `EXPIRY_WARNING_DAYS`; SKU `isSellable=false` không tính "dưới ngưỡng".
+
+### `GET /reports/purchases` — REP-05
+- **Quyền:** `REPORT_PURCHASE` · **Query:** `fromDate`, `toDate`, `granularity`.
+- **Response 200:** `PurchaseReport = { range, granularity, summary {orderCount, quantity, totalAmount, supplierCount}, bySupplier[] {supplierId, supplierName, orderCount, quantity, amount}, byBrand[] {brandName, quantity, amount}, series[] {periodStart, label, orderCount, amount} }`. Chỉ phiếu `COMPLETED`, tính theo `confirmedAt`.
+
+### `GET /reports/customers` — REP-06
+- **Quyền:** `REPORT_CUSTOMER` · **Query:** `fromDate`, `toDate`, `granularity`.
+- **Response 200:** `CustomerReport = { range, granularity, summary {totalCustomers, newCustomers (theo joinedAt/created_at), activeBuyers, returningBuyers (người mua trong kỳ đã có đơn COMPLETED trước fromDate), pointsEarned, pointsRedeemed, pointsRevoked}, byTier[] {tierCode, tierName, customerCount, totalSpent}, topSpenders[] {customerId, customerCode, fullName, tierName, orderCount, spent (Σ totalAmount − tiền hoàn)}, series[] {periodStart, label, newCustomers} }`.

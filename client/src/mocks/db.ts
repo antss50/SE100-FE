@@ -19,6 +19,7 @@ import { seedPromotions } from './seed/promotions'
 import { seedSales } from './seed/sales'
 import { SEED_SYSTEM_SETTINGS, seedStock } from './seed/stock'
 import { seedSuppliers } from './seed/suppliers'
+import { addDays, toDateOnly } from './time'
 import { seedPermissions, seedRoles, type MockPermission, type MockRole } from './seed/rbac'
 import { SEED_PASSWORD, SEED_USERS, type MockUser } from './seed/users'
 
@@ -126,6 +127,12 @@ export function buildSeed(now: Date = new Date()): MockTables {
     systemSettings: { ...SEED_SYSTEM_SETTINGS },
     idempotencyKeys: {},
     counters: {},
+  }
+  // Vài khách tham gia gần đây để báo cáo khách hàng (REP-06) có dữ liệu "khách mới" theo kỳ.
+  const joinedDaysAgo: Record<number, number> = { 4: 3, 5: 10, 6: 35 }
+  for (const c of tables.customers) {
+    const ago = joinedDaysAgo[c.id]
+    if (ago !== undefined) c.joinedAt = toDateOnly(addDays(today, -ago))
   }
   seedSales(new MockTransaction(tables), today)
   return tables

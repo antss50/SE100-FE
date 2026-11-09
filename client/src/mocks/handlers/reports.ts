@@ -1,9 +1,13 @@
 import { buildRevenueSeries, computeRevenueFigures, withoutProfit } from '../../domain/reports/revenue'
+import { buildCustomerReport } from '../../domain/reports/customers'
+import { buildPurchaseReport } from '../../domain/reports/purchase'
 import { buildSalesReport } from '../../domain/reports/sales'
+import { buildStockReport } from '../../domain/reports/stock'
 import { addDaysTo, previousRange, validateRange } from '../../domain/reports/period'
 import type { ReportGranularity, ReportRange, RevenueReport } from '../../types/reports'
 import { MockHttpError, ok } from '../http'
 import type { MockRoute } from '../router'
+import { expiryWarningDays, todayOf } from '../stock-ledger'
 import { toDateOnly } from '../time'
 
 /** Đọc `fromDate`/`toDate` từ query (mặc định 30 ngày gần nhất) và kiểm `fromDate ≤ toDate`. */
@@ -67,5 +71,45 @@ export const reportRoutes: MockRoute[] = [
       )
       return ok(report)
     },
+  },
+  {
+    method: 'GET',
+    path: '/reports/stock',
+    permission: 'REPORT_STOCK',
+    handler: ({ db, query, now }) =>
+      ok(
+        buildStockReport(
+          { batches: db.read('batches'), products: db.read('products'), disposals: db.read('disposals') },
+          rangeFromQuery(query, now),
+          todayOf(now),
+          expiryWarningDays(db)
+        )
+      ),
+  },
+  {
+    method: 'GET',
+    path: '/reports/purchases',
+    permission: 'REPORT_PURCHASE',
+    handler: ({ db, query, now }) =>
+      ok(
+        buildPurchaseReport(
+          { orders: db.read('purchaseOrders'), products: db.read('products') },
+          rangeFromQuery(query, now),
+          granularityFromQuery(query)
+        )
+      ),
+  },
+  {
+    method: 'GET',
+    path: '/reports/customers',
+    permission: 'REPORT_CUSTOMER',
+    handler: ({ db, query, now }) =>
+      ok(
+        buildCustomerReport(
+          { customers: db.read('customers'), orders: db.read('orders'), returns: db.read('returns') },
+          rangeFromQuery(query, now),
+          granularityFromQuery(query)
+        )
+      ),
   },
 ]
