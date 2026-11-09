@@ -119,7 +119,7 @@ type PaginatedData<T> = { items: T[]; page: number; pageSize: number; totalItems
 
 ### `GET /products` — PROD-01
 - **Quyền:** `PRODUCT_VIEW`
-- **Query:** `keyword` (tên, SKU, barcode, thương hiệu), `brandCode`, `categoryCode`, `status` (`ACTIVE`/`INACTIVE`/`LOW_STOCK`), `page`, `pageSize`
+- **Query:** `keyword` (tên, SKU, barcode, thương hiệu), `brandCode`, `categoryCode`, `status` (`ACTIVE`/`DISCONTINUED`/`LOW_STOCK`), `page`, `pageSize`
 - **Response 200:** `PaginatedData<ProductItem>` (kèm `categoryName`, `brandName`)
 
 ### `GET /products/{sku}` — PROD-01
@@ -136,8 +136,8 @@ type PaginatedData<T> = { items: T[]; page: number; pageSize: number; totalItems
 - **Lỗi:** `404 PROD_NOT_FOUND`, `404 PROD_CATEGORY_NOT_FOUND`, `404 PROD_BRAND_NOT_FOUND`, `409 PROD_BARCODE_DUPLICATED`
 
 ### `PATCH /products/{sku}/deactivate` — PROD-01
-- **Quyền:** `PRODUCT_MANAGE` · **Response 200:** `{ sku, status: 'INACTIVE' }`
-- **Lỗi:** `404 PROD_NOT_FOUND`, `409 PROD_HAS_STOCK` (còn tồn)
+- **Quyền:** `PRODUCT_MANAGE` · **Response 200:** `{ sku, status: 'DISCONTINUED' }`
+- **Lỗi:** `404 PROD_NOT_FOUND`, `409 PROD_HAS_STOCK` (còn tồn: muốn hết tồn phải lập phiếu xuất, không có thao tác đặt tồn = 0, D12)
 
 ### `PATCH /products/{sku}/restore` — PROD-01
 - **Quyền:** `PRODUCT_MANAGE` · **Response 200:** `{ sku, status: 'ACTIVE' }` · **Lỗi:** `404 PROD_NOT_FOUND`
