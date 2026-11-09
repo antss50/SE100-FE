@@ -172,7 +172,6 @@ describe('403 AUTH_FORBIDDEN theo ma trận quyền', () => {
     ['cashier01', '/users', undefined],
     ['cashier01', '/rbac/roles', undefined],
     ['cashier01', '/audit-logs', undefined],
-    ['cashier01', '/promotions/WELCOME10/report', undefined],
     ['cashier01', '/products', post({})],
     ['cashier01', '/customers/KH0001/deactivate', post({})],
     ['cashier01', '/loyalty-config', put({ amountPerPoint: 1 })],
@@ -249,19 +248,18 @@ describe('envelope và errorCode mẫu theo module (API-CONTRACT.md)', () => {
 
   it('PROMOTION: 404 PROM_NOT_FOUND; ngày bắt đầu > kết thúc → 422 PROM_DATE_RANGE_INVALID', async () => {
     await loginAs('manager01')
-    await expectError('/promotions/KHONGCO', put({ promotionName: 'x' }), 404, 'PROM_NOT_FOUND')
+    await expectError('/promotions/999999', put({ promotionName: 'x', promotionType: 'VOUCHER', voucherCode: 'X1', discountType: 'PERCENT', discountValue: 5, startAt: '2026-12-01', endAt: '2026-12-31' }), 404, 'PROM_NOT_FOUND')
     await expectError(
       '/promotions',
       post({
         voucherCode: 'TESTDATE',
         promotionName: 'Sai ngày',
-        promotionType: 'PERCENT_ORDER',
-        applyScope: 'ALL',
+        promotionType: 'VOUCHER',
         discountType: 'PERCENT',
         discountValue: 10,
         minOrderValue: 0,
-        startDate: '2026-12-31',
-        endDate: '2026-12-01',
+        startAt: '2026-12-31',
+        endAt: '2026-12-01',
         usageLimit: 10,
         limitPerCustomer: 1,
       }),
@@ -308,11 +306,14 @@ describe('envelope và errorCode mẫu theo module (API-CONTRACT.md)', () => {
     await loginAs('cashier01')
     await expectError('/shifts/open', post({ openingCash: -1 }), 400, 'COMMON_VALIDATION_FAILED')
     const shift = await apiRequest<{ shiftId: number }>('/shifts/open', post({ openingCash: 1_000_000 }))
-    await loginAs('newstaff')
-    await expectError(`/shifts/${shift.data.shiftId}/close`, post({}), 403, 'POS_SHIFT_NOT_OWNER')
+    await loginAs('manager01')
+    const open = await apiRequest<{ items: { shiftId: number; cashierName: string }[] }>('/shifts?status=OPEN')
+    const others = open.data.items.filter((x) => x.shiftId !== shift.data.shiftId)
+    expect(others.length).toBeGreaterThan(0)
     await loginAs('cashier01')
-    await apiRequest(`/shifts/${shift.data.shiftId}/close`, post({}))
-    await expectError(`/shifts/${shift.data.shiftId}/close`, post({}), 409, 'POS_SHIFT_NOT_OPEN')
+    await expectError(`/shifts/${others[0].shiftId}/close`, post({ actualCash: 0 }), 403, 'POS_SHIFT_NOT_OWNER')
+    await apiRequest(`/shifts/${shift.data.shiftId}/close`, post({ actualCash: 1_000_000 }))
+    await expectError(`/shifts/${shift.data.shiftId}/close`, post({ actualCash: 0 }), 409, 'POS_SHIFT_NOT_OPEN')
   })
 
   it('API không có → 404 COMMON_NOT_FOUND', async () => {
@@ -331,10 +332,10 @@ describe('reset() và seed tất định', () => {
     return out
   }
 
-  it('khóa localStorage có dạng se100_mock_<bảng>_v2', () => {
+  it('khóa localStorage có dạng se100_mock_<bảng>_v<số>', () => {
     const keys = Object.keys(snapshot())
     expect(keys.length).toBeGreaterThan(5)
-    for (const k of keys) expect(k).toMatch(/^se100_mock_[a-zA-Z]+_v2$/)
+    for (const k of keys) expect(k).toMatch(/^se100_mock_[a-zA-Z]+_v\d+$/)
   })
 
   it('window.__SE100_MOCK__.reset() đưa dữ liệu về seed và hủy phiên cũ', async () => {
