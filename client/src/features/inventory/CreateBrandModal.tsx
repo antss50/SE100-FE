@@ -93,7 +93,7 @@ export function CreateBrandModal({
       }
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setErrorMsg(`${err.message} (${err.errorCode})`)
+        setErrorMsg(`${err.message}`)
       } else {
         setErrorMsg('Không thể lưu thương hiệu')
       }
@@ -133,7 +133,7 @@ export function CreateBrandModal({
       }
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setErrorMsg(`${err.message} (${err.errorCode})`)
+        setErrorMsg(`${err.message}`)
       } else {
         setErrorMsg('Không thể thay đổi trạng thái thương hiệu')
       }
@@ -146,7 +146,7 @@ export function CreateBrandModal({
   const currentCount = (detailData || editingBrand)?.productCount ?? 0
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl max-w-lg w-full overflow-hidden border border-[#ead8ce] shadow-2xl">
         {/* Top Modal Header */}
         <div className="bg-[#f9ebe2] px-6 py-4 flex items-center justify-between border-b border-[#edd9cd]">
@@ -159,7 +159,7 @@ export function CreateBrandModal({
             <h3 className="text-base font-extrabold text-[#221712]">
               {editingBrand
                 ? `Chi tiết & Cập nhật Thương hiệu (${editingBrand.brandCode})`
-                : 'Khởi tạo Thương hiệu mới (UC-PROD-03)'}
+                : 'Khởi tạo Thương hiệu mới'}
             </h3>
           </div>
           <button
@@ -209,7 +209,7 @@ export function CreateBrandModal({
 
             <div>
               <label className="block text-xs font-bold text-[#221712]">
-                Tên thương hiệu mỹ phẩm (brandName) *
+                Tên thương hiệu mỹ phẩm *
               </label>
               <input
                 type="text"
@@ -223,7 +223,7 @@ export function CreateBrandModal({
 
             <div>
               <label className="block text-xs font-bold text-[#221712]">
-                Mã Thương hiệu nội bộ (brandCode) *
+                Mã thương hiệu nội bộ *
               </label>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <input
@@ -237,7 +237,7 @@ export function CreateBrandModal({
                 />
                 {editingBrand && (
                   <span className="text-[11px] text-[#8a7062]">
-                    (Không đổi được brandCode theo UC-PROD-18)
+                    (Không đổi được brandCode)
                   </span>
                 )}
               </div>
@@ -245,7 +245,7 @@ export function CreateBrandModal({
 
             <div>
               <label className="block text-xs font-bold text-[#221712]">
-                Mô tả thương hiệu (description)
+                Mô tả thương hiệu
               </label>
               <textarea
                 rows={4}
@@ -260,8 +260,8 @@ export function CreateBrandModal({
               <div className="pt-2 border-t border-[#f1e3d9] flex items-center justify-between gap-3">
                 <div className="text-[11px] text-[#7c6356]">
                   {currentStatus === 'ACTIVE'
-                    ? 'Ngừng sử dụng thương hiệu (UC-PROD-19): Chỉ cho phép khi không còn sản phẩm đang kinh doanh.'
-                    : 'Thương hiệu đang ngừng sử dụng. Bạn có thể khôi phục lại (UC-PROD-20).'}
+                    ? 'Ngừng sử dụng thương hiệu: Chỉ cho phép khi không còn sản phẩm đang kinh doanh.'
+                    : 'Thương hiệu đang ngừng sử dụng. Bạn có thể khôi phục lại.'}
                 </div>
                 <button
                   type="button"
@@ -306,7 +306,7 @@ export function CreateBrandModal({
               {isSubmitting
                 ? 'Đang lưu...'
                 : editingBrand
-                  ? 'Lưu cập nhật (UC-PROD-18)'
+                  ? 'Lưu cập nhật'
                   : 'Lưu & Tiếp tục tạo'}
             </button>
           </div>

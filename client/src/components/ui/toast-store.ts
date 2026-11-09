@@ -14,7 +14,7 @@ interface ToastState {
   dismiss: (id: number) => void
 }
 
-const AUTO_DISMISS_MS = 4000
+const AUTO_DISMISS_MS = 5000
 let nextId = 1
 
 export const useToastStore = create<ToastState>((set, get) => ({

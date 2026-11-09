@@ -381,7 +381,7 @@ export interface CreateProductRequest {
   brandCode: string
   unit: string
   volume?: string
-  skinType?: ProductSkinType
+  skinType?: ProductSkinType | ProductSkinType[]
   retailPrice: number
   taxRate: number
   minStockAlert?: number
@@ -399,7 +399,7 @@ export interface UpdateProductRequest {
   brandCode: string
   unit: string
   volume?: string
-  skinType?: ProductSkinType
+  skinType?: ProductSkinType | ProductSkinType[]
   retailPrice: number
   taxRate: number
   minStockAlert?: number

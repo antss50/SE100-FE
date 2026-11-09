@@ -32,8 +32,9 @@ export function CreateCategoryModal({
     () => editingCategory?.categoryName || ''
   )
   const [categoryCode, setCategoryCode] = useState(
-    () => editingCategory?.categoryCode || 'PERFUME'
+    () => editingCategory?.categoryCode || ''
   )
+  const [isCodeAutoSuggested, setIsCodeAutoSuggested] = useState(!editingCategory)
   const [description, setDescription] = useState(
     () => editingCategory?.description || ''
   )
@@ -73,6 +74,20 @@ export function CreateCategoryModal({
     onClose()
   }
 
+  const handleCategoryNameChange = (name: string) => {
+    setCategoryName(name)
+    if (!isCodeAutoSuggested || editingCategory) return
+    const normalized = name
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/gi, 'd')
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+    const preset = PRESET_CODES.find((code) => code === normalized || code === `CAT_${normalized}`)
+    setCategoryCode(preset || (normalized ? `CAT_${normalized}` : ''))
+  }
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setErrorMsg(null)
@@ -107,7 +122,7 @@ export function CreateCategoryModal({
       }
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setErrorMsg(`${err.message} (${err.errorCode})`)
+        setErrorMsg(`${err.message}`)
       } else {
         setErrorMsg('Không thể lưu danh mục')
       }
@@ -149,7 +164,7 @@ export function CreateCategoryModal({
       }
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setErrorMsg(`${err.message} (${err.errorCode})`)
+        setErrorMsg(`${err.message}`)
       } else {
         setErrorMsg('Không thể thay đổi trạng thái danh mục')
       }
@@ -162,7 +177,7 @@ export function CreateCategoryModal({
   const currentCount = (detailData || editingCategory)?.productCount ?? 0
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl max-w-lg w-full overflow-hidden border border-[#ead8ce] shadow-2xl">
         {/* Top Modal Header */}
         <div className="bg-[#f9ebe2] px-6 py-4 flex items-center justify-between border-b border-[#edd9cd]">
@@ -231,7 +246,7 @@ export function CreateCategoryModal({
               <input
                 type="text"
                 value={categoryName}
-                onChange={(e) => setCategoryName(e.target.value)}
+                onChange={(e) => handleCategoryNameChange(e.target.value)}
                 placeholder="Ví dụ: Nước hoa"
                 className="mt-2 w-full rounded-xl bg-[#fceddf]/70 border border-transparent focus:border-[#d57252] focus:bg-white px-4 py-3 text-sm text-[#221712] placeholder:text-[#9c8478] outline-none transition"
                 required
@@ -239,19 +254,24 @@ export function CreateCategoryModal({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#221712]">
-                Mã Danh mục nội bộ *
-              </label>
+              <div className="flex gap-1">
+                <label className="block text-xs font-bold text-[#221712]">
+                Mã Danh mục nội bộ * 
+                </label>
+                <span className="text-[11px] text-[#8a7062] text-right">
+                  (Nhập mã mới hoặc chọn gợi ý chuẩn)
+                </span></div>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <input
                   type="text"
                   list="category-code-presets"
                   value={categoryCode}
                   disabled={Boolean(editingCategory)}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    setIsCodeAutoSuggested(false)
                     setCategoryCode(e.target.value.toUpperCase())
-                  }
-                  placeholder="VD: PERFUME, CAT_SKINCARE"
+                  }}
+                  placeholder="VD: PERFUME"
                   className="w-56 rounded-xl bg-[#fceddf]/70 disabled:bg-zinc-100 disabled:text-zinc-500 border border-transparent focus:border-[#d57252] focus:bg-white px-4 py-3 font-mono text-sm font-semibold text-[#221712] outline-none transition"
                   required
                 />
@@ -262,11 +282,7 @@ export function CreateCategoryModal({
                     ))}
                   </datalist>
                 )}
-                <span className="text-[11px] text-[#8a7062]">
-                  {editingCategory
-                    ? '(Không đổi được categoryCode theo UC-PROD-13)'
-                    : '(Nhập mã mới hoặc chọn gợi ý chuẩn)'}
-                </span>
+                
               </div>
             </div>
 
@@ -287,8 +303,8 @@ export function CreateCategoryModal({
               <div className="pt-2 border-t border-[#f1e3d9] flex items-center justify-between gap-3">
                 <div className="text-[11px] text-[#7c6356]">
                   {currentStatus === 'ACTIVE'
-                    ? 'Ngừng sử dụng danh mục (UC-PROD-14): Chỉ cho phép khi không còn sản phẩm đang kinh doanh.'
-                    : 'Danh mục đang ngừng sử dụng. Bạn có thể khôi phục lại (UC-PROD-15).'}
+                    ? 'Ngừng sử dụng danh mục: Chỉ cho phép khi không còn sản phẩm đang kinh doanh.'
+                    : 'Danh mục đang ngừng sử dụng. Bạn có thể khôi phục lại.'}
                 </div>
                 <button
                   type="button"
@@ -334,7 +350,7 @@ export function CreateCategoryModal({
               {isSubmitting
                 ? 'Đang lưu...'
                 : editingCategory
-                  ? 'Lưu cập nhật (UC-PROD-13)'
+                  ? 'Lưu cập nhật'
                   : 'Lưu & Tiếp tục tạo'}
             </button>
           </div>

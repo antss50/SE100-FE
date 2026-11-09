@@ -27,6 +27,8 @@ import {
   serializeCustomerNote,
 } from '../../utils/customer-note'
 import type { CustomerItem, SkinType } from '../../types/api'
+import { toast } from '../../components/ui'
+import { getErrorMessage } from '../../utils/error'
 import {
   formatAnyDateTime,
   formatCurrency,
@@ -46,7 +48,6 @@ export function CustomerDetailPage() {
     'ORDERS'
   )
   const [orderSearch, setOrderSearch] = useState('')
-  const [toastMsg, setToastMsg] = useState<string | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editFullName, setEditFullName] = useState('')
   const [editPhone, setEditPhone] = useState('')
@@ -97,32 +98,38 @@ export function CustomerDetailPage() {
       ...parsedNote,
       careNote: editCareNote,
     })
-    const updated = await customersService.updateCustomer(
-      customer.customerCode,
-      {
+    try {
+      const updated = await customersService.updateCustomer(
+        customer.customerCode,
+        {
         fullName: editFullName,
         phoneNumber: editPhone,
         email: editEmail,
         address: editAddress,
         skinType: editSkinType,
         note: nextNote,
-      }
-    )
-    setCustomer(updated)
-    setIsEditModalOpen(false)
-    setToastMsg(`Đã cập nhật hồ sơ khách hàng ${updated.customerCode}`)
-    setTimeout(() => setToastMsg(null), 3200)
+        }
+      )
+      setCustomer(updated)
+      setIsEditModalOpen(false)
+      toast.success(`Đã cập nhật hồ sơ khách hàng ${updated.customerCode}`)
+    } catch (error) {
+      toast.error(getErrorMessage(error))
+    }
   }
 
   const handleToggleStatus = async () => {
-    const updated = await customersService.toggleCustomerStatus(customer)
-    setCustomer(updated)
-    setToastMsg(
-      updated.status === 'INACTIVE'
-        ? `Đã tạm ngừng hoạt động hồ sơ ${updated.customerCode}`
-        : `Đã kích hoạt lại hồ sơ ${updated.customerCode}`
-    )
-    setTimeout(() => setToastMsg(null), 3200)
+    try {
+      const updated = await customersService.toggleCustomerStatus(customer)
+      setCustomer(updated)
+      toast.success(
+        updated.status === 'INACTIVE'
+          ? `Đã tạm ngừng hoạt động hồ sơ ${updated.customerCode}`
+          : `Đã kích hoạt lại hồ sơ ${updated.customerCode}`
+      )
+    } catch (error) {
+      toast.error(getErrorMessage(error))
+    }
   }
 
   const orders = (customer.orderHistories || []).filter((o) => {
@@ -202,12 +209,6 @@ export function CustomerDetailPage() {
           </button>
         </div>
       </div>
-
-      {toastMsg && (
-        <div className="rounded-2xl bg-[#2b1d16] text-amber-50 px-4 py-3 text-xs font-medium shadow-md">
-          {toastMsg}
-        </div>
-      )}
 
       {/* VIP Membership Card + 3 Stat Cards Grid */}
       <div className="grid lg:grid-cols-12 gap-4">
@@ -716,9 +717,9 @@ export function CustomerDetailPage() {
                 Hồ sơ Làn da & Ghi chú tư vấn (Trường `note` đã phân tách)
               </h3>
               <div className="flex justify-between py-1.5">
-                <span className="text-[#7c6255]">Phân loại da (skinType):</span>
+                <span className="text-[#7c6255]">Phân loại da:</span>
                 <span className="font-bold text-[#8f422a]">
-                  {getSkinTypeLabel(customer.skinType)} ({customer.skinType})
+                  {getSkinTypeLabel(customer.skinType)}
                 </span>
               </div>
               <div className="flex justify-between py-1.5">
@@ -777,7 +778,7 @@ export function CustomerDetailPage() {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-[#543e34]">
-                  Loại da (skinType)
+                  Loại da
                 </label>
                 <select
                   value={editSkinType}

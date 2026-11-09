@@ -19,7 +19,6 @@ const moduleCards = [
       'Quản lý khung khuyến mãi 4 tầng (Flash Sale, Hạng thẻ, Bậc thang, Điểm thưởng), tạo/sửa/tạm dừng Voucher và xem báo cáo hiệu quả.',
     to: '/promotions',
     icon: Tag,
-    badge: 'UC-PROM-01..07',
   },
   {
     title: 'Hệ thống 4 Hạng thẻ & Tích điểm (G10)',
@@ -28,7 +27,6 @@ const moduleCards = [
       'Cấu hình tỷ lệ quy đổi điểm thưởng (amountPerPoint) và ngưỡng chi tiêu thăng hạng tự động cho 4 hạng thành viên Lumina VIP.',
     to: '/loyalty',
     icon: Award,
-    badge: 'UC-CUS-09',
   },
   {
     title: 'Sản phẩm, Danh mục & Thương hiệu',
@@ -37,7 +35,6 @@ const moduleCards = [
       'Quản lý 1.240 SKU mỹ phẩm, khởi tạo danh mục nội bộ, thương hiệu phân phối, quy cách đóng gói, thuế VAT và định mức tồn an toàn.',
     to: '/products',
     icon: Boxes,
-    badge: 'UC-PROD-01..03',
   },
   {
     title: 'Xác thực POS & Mở Ca (G02 · G12)',
@@ -137,7 +134,7 @@ export function DashboardPage() {
                     <Icon className="size-5" />
                   </div>
                   <span className="px-2.5 py-1 rounded-full bg-[#faf1ea] text-[#9a462d] font-mono text-[10px] font-bold">
-                    {card.badge}
+                    {card.badge && card.badge}
                   </span>
                 </div>
 

@@ -12,7 +12,10 @@ export class ApiClientError extends Error {
   errors?: unknown[]
 
   constructor(status: number, payload: ApiErrorResponse) {
-    super(payload.message || 'Đã có lỗi xảy ra')
+    super((payload.message || 'Đã có lỗi xảy ra')
+      .replace(/\s*\([A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\)/g, '')
+      .replace(/\s*\(HTTP\s+\d{3}\)/gi, '')
+      .trim())
     this.name = 'ApiClientError'
     this.status = status
     this.errorCode = payload.errorCode || 'UNKNOWN_ERROR'

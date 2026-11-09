@@ -66,7 +66,7 @@ export function CreateUserModal({
       setPhoneNumber('')
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setErrorMsg(`${err.message} (${err.errorCode})`)
+        setErrorMsg(`${err.message}`)
       } else {
         setErrorMsg('Không thể tạo tài khoản nhân viên')
       }
@@ -85,7 +85,7 @@ export function CreateUserModal({
             </div>
             <div>
               <h3 className="text-base font-bold text-[#2b1d16]">
-                Tạo tài khoản nhân viên mới (UC-USER-02)
+                Tạo tài khoản nhân viên mới
               </h3>
               <p className="text-xs text-[#7c6356]">
                 Khởi tạo hồ sơ nhân sự và phân bổ vai trò RBAC ban đầu
@@ -124,7 +124,7 @@ export function CreateUserModal({
 
             <div>
               <label className="block text-xs font-semibold text-[#543e34]">
-                Tên đăng nhập (username) *
+                Tên đăng nhập *
               </label>
               <input
                 type="text"
@@ -154,7 +154,7 @@ export function CreateUserModal({
 
             <div>
               <label className="block text-xs font-semibold text-[#543e34]">
-                Mật khẩu khởi tạo (password) *
+                Mật khẩu khởi tạo *
               </label>
               <input
                 type="text"
@@ -169,7 +169,7 @@ export function CreateUserModal({
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-[#543e34]">
-                Email công việc (email) *
+                Email công việc *
               </label>
               <input
                 type="email"

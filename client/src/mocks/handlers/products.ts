@@ -17,7 +17,7 @@ const productFields = {
   brandCode: z.string().trim().min(1, 'Vui lòng chọn thương hiệu'),
   unit: z.string().trim().min(1, 'Vui lòng nhập đơn vị tính'),
   volume: z.string().trim().optional(),
-  skinType: z.enum(skinTypes).optional(),
+  skinType: z.union([z.enum(skinTypes), z.array(z.enum(skinTypes)).min(1)]).optional(),
   retailPrice: z.number({ error: 'Giá bán phải là số' }).positive('Giá bán phải lớn hơn 0'),
   taxRate: z.number({ error: 'Thuế suất phải là số' }).min(0, 'Thuế suất không được âm'),
   minStockAlert: z.number().int().min(0).optional(),

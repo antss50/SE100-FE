@@ -112,7 +112,7 @@ export function CreateCustomerPage() {
       navigate(`/customers/${res.data.customerCode}`)
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setErrorMsg(`${err.message} (${err.errorCode})`)
+        setErrorMsg(`${err.message}`)
       } else {
         setErrorMsg('Không thể thêm mới khách hàng. Vui lòng kiểm tra lại.')
       }
@@ -274,7 +274,7 @@ export function CreateCustomerPage() {
                 <button
                   type="button"
                   onClick={() => setPhoneNumber('0988776554')}
-                  title="Thử kiểm tra SĐT trùng (HTTP 409)"
+                  title="Thử kiểm tra số điện thoại trùng"
                   className="text-[10px] font-sans font-semibold underline text-red-600 cursor-pointer"
                 >
                   Thử SĐT trùng

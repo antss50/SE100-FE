@@ -19,6 +19,8 @@ import { ApiClientError } from '../../lib/api-client'
 import { promotionsService } from '../../services/promotions.service'
 import type { CustomerTierCode, LoyaltyConfigData } from '../../types/api'
 import { formatNumber } from '../../utils/format'
+import { toast } from '../../components/ui'
+import { getErrorMessage } from '../../utils/error'
 
 /** Trạng thái rỗng trong lúc chờ tải cấu hình từ API. */
 const EMPTY_CONFIG: LoyaltyConfigData = { amountPerPoint: 0, redemptionValuePerPoint: 0, tiers: [] }
@@ -41,7 +43,6 @@ export function LoyaltyPage() {
 
   const [isSaving, setIsSaving] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const [toastMsg, setToastMsg] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
@@ -121,14 +122,14 @@ export function LoyaltyPage() {
       const res = await promotionsService.updateLoyaltyConfig(nextPayload)
       setConfig(res.data)
       setIsModalOpen(false)
-      setToastMsg(
+      toast.success(
         res.message ||
           'Lưu cấu hình tích điểm & ngưỡng hạng thẻ thành công (PUT /api/v1/loyalty-config)'
       )
-      setTimeout(() => setToastMsg(null), 4000)
     } catch (err) {
+      toast.error(getErrorMessage(err, 'Không thể lưu cấu hình hạng thẻ'))
       if (err instanceof ApiClientError) {
-        setErrorMsg(`${err.message} (${err.errorCode})`)
+        setErrorMsg(`${err.message}`)
       } else {
         setErrorMsg('Không thể lưu cấu hình hạng thẻ')
       }
@@ -167,21 +168,6 @@ export function LoyaltyPage() {
         </div>
       </div>
 
-      {toastMsg && (
-        <div className="rounded-2xl bg-[#2b1d16] text-amber-50 px-4 py-3 text-xs font-medium shadow-md flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="size-4 text-emerald-400" />
-            <span>{toastMsg}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setToastMsg(null)}
-            className="text-[11px] font-bold text-amber-200"
-          >
-            Đóng
-          </button>
-        </div>
-      )}
 
       {/* Hero Banner Card */}
       <div className="rounded-3xl bg-[#faeee5] border border-[#edd8ca] p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -468,7 +454,7 @@ export function LoyaltyPage() {
             <div className="bg-[#f9ebe2] px-6 py-4 flex items-center justify-between border-b border-[#edd9cd]">
               <div>
                 <h3 className="text-base font-extrabold text-[#221712]">
-                  Cập nhật cấu hình tích điểm & Hạng thẻ (UC-CUS-09)
+                  Cập nhật cấu hình tích điểm & Hạng thẻ
                 </h3>
                 <p className="text-[11px] font-mono text-[#7c6356]">
                   PUT /api/v1/loyalty-config{' '}

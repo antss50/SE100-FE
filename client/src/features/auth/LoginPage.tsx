@@ -202,14 +202,9 @@ export function LoginPage() {
                 <div className="font-bold flex items-center justify-between">
                   <span>
                     {errorCode === 'AUTH_ACCOUNT_LOCKED'
-                      ? 'Tài khoản bị khóa bảo mật (HTTP 403)'
+                      ? 'Tài khoản bị khóa bảo mật'
                       : 'Xác thực không thành công'}
                   </span>
-                  {errorCode && (
-                    <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-black/5">
-                      {errorCode}
-                    </span>
-                  )}
                 </div>
                 <p className="mt-1">{errorMsg}</p>
               </div>

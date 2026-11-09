@@ -22,6 +22,8 @@ import { usersService } from '../../services/users.service'
 import type { UserItem } from '../../types/api'
 import { getInitials, getRoleBadgeMeta } from '../../utils/format'
 import { CreateUserModal } from './CreateUserModal'
+import { toast } from '../../components/ui'
+import { getErrorMessage } from '../../utils/error'
 
 export function UsersListPage() {
   const currentUserId = useAuthStore((s) => s.user?.id)
@@ -33,7 +35,6 @@ export function UsersListPage() {
   const [page, setPage] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
-  const [toastMsg, setToastMsg] = useState<string | null>(null)
 
   const fetchUsers = useCallback(async () => {
     setIsLoading(true)
@@ -78,15 +79,10 @@ export function UsersListPage() {
     }
   }, [keyword, roleFilter, statusFilter, page])
 
-  const showToast = (msg: string) => {
-    setToastMsg(msg)
-    setTimeout(() => setToastMsg(null), 3200)
-  }
-
   const handleToggleLock = async (user: UserItem) => {
     try {
       const updated = await usersService.toggleUserLock(user)
-      showToast(
+      toast.success(
         updated.status === 'LOCKED'
           ? `Đã tạm khóa tài khoản ${updated.fullName} (${updated.employeeCode})`
           : `Đã mở khóa tài khoản ${updated.fullName} (${updated.employeeCode})`
@@ -94,8 +90,8 @@ export function UsersListPage() {
       fetchUsers()
     } catch (err) {
       if (err instanceof ApiClientError) {
-        showToast(err.message)
-      }
+        toast.error(err.message)
+      } else toast.error(getErrorMessage(err))
     }
   }
 
@@ -114,7 +110,7 @@ export function UsersListPage() {
     a.download = 'danh-sach-nhan-su-lumina.csv'
     a.click()
     URL.revokeObjectURL(url)
-    showToast('Đã xuất danh sách nhân sự (CSV)')
+    toast.success('Đã xuất danh sách nhân sự (CSV)')
   }
 
   const activeCount = users.filter((u) => u.status === 'ACTIVE').length
@@ -154,18 +150,6 @@ export function UsersListPage() {
         </div>
       </div>
 
-      {toastMsg && (
-        <div className="rounded-2xl bg-[#2b1d16] text-amber-50 px-4 py-3 text-xs font-medium shadow-lg flex items-center justify-between">
-          <span>{toastMsg}</span>
-          <button
-            type="button"
-            onClick={() => setToastMsg(null)}
-            className="text-amber-200 hover:text-white text-[11px] font-bold"
-          >
-            Đóng
-          </button>
-        </div>
-      )}
 
       {/* 3 KPI Summary Cards */}
       <div className="grid md:grid-cols-3 gap-4">
@@ -458,7 +442,7 @@ export function UsersListPage() {
                         <button
                           type="button"
                           onClick={() =>
-                            showToast(
+                            toast.info(
                               `Đã gửi yêu cầu đặt lại mật khẩu mặc định cho ${staff.fullName} (${staff.employeeCode})`
                             )
                           }
@@ -550,7 +534,7 @@ export function UsersListPage() {
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
         onCreated={() => {
-          showToast('Tạo tài khoản nhân viên mới thành công (HTTP 201)')
+          toast.success('Tạo tài khoản nhân viên mới thành công')
           fetchUsers()
         }}
       />

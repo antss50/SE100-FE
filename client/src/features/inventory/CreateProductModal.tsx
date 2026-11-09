@@ -3,6 +3,7 @@ import {
   Barcode,
   CheckCircle2,
   CloudUpload,
+  Package,
   PlusSquare,
   Trash2,
   X,
@@ -41,12 +42,18 @@ interface CreateProductModalProps {
 
 const UNIT_OPTIONS = ['Chai', 'Thỏi', 'Tuýp', 'Lọ', 'Hộp', 'Bộ', 'Miếng']
 const SKIN_OPTIONS: { code: ProductSkinType; label: string }[] = [
-  { code: 'ALL_SKIN_TYPES', label: 'Mọi loại da (ALL_SKIN_TYPES)' },
-  { code: 'OILY', label: 'Da dầu (OILY)' },
-  { code: 'DRY', label: 'Da khô (DRY)' },
-  { code: 'COMBINATION', label: 'Da hỗn hợp (COMBINATION)' },
-  { code: 'SENSITIVE', label: 'Da nhạy cảm (SENSITIVE)' },
+  { code: 'ALL_SKIN_TYPES', label: 'Tất cả' },
+  { code: 'OILY', label: 'Da dầu' },
+  { code: 'DRY', label: 'Da khô' },
+  { code: 'COMBINATION', label: 'Da hỗn hợp' },
+  { code: 'SENSITIVE', label: 'Da nhạy cảm' },
 ]
+const VOLUME_UNITS = ['ml', 'g', 'oz', 'l'] as const
+const getVolumeUnit = (unit: string) => ['Thỏi', 'Miếng'].includes(unit) ? 'g' : 'ml'
+const generateProductSku = (brandCode: string) =>
+  `SKU-${brandCode}-${Math.floor(100 + Math.random() * 900)}`
+const parseSkinTypes = (value?: ProductSkinType | ProductSkinType[]): ProductSkinType[] =>
+  !value || value === 'ALL_SKIN_TYPES' ? ['ALL_SKIN_TYPES'] : Array.isArray(value) ? value : [value]
 
 export function CreateProductModal({
   isOpen,
@@ -70,7 +77,7 @@ export function CreateProductModal({
     () =>
       editingProduct?.categoryCode || categories[0]?.categoryCode || 'PERFUME'
   )
-  const [sku, setSku] = useState(() => editingProduct?.sku || 'SKU-EL-ANR50')
+  const [sku, setSku] = useState(() => editingProduct?.sku || generateProductSku(brands[0]?.brandCode || 'EL'))
   const [barcode, setBarcode] = useState(
     () => editingProduct?.barcode || '887167485488'
   )
@@ -83,9 +90,8 @@ export function CreateProductModal({
   )
   const [unit, setUnit] = useState(() => editingProduct?.unit || 'Chai')
   const [volume, setVolume] = useState(() => editingProduct?.volume || '50ml')
-  const [skinType, setSkinType] = useState<ProductSkinType>(
-    () => editingProduct?.skinType || 'ALL_SKIN_TYPES'
-  )
+  const [volumeUnit, setVolumeUnit] = useState(() => editingProduct?.volume?.match(/[a-z]+$/i)?.[0]?.toLowerCase() || getVolumeUnit(editingProduct?.unit || 'Chai'))
+  const [skinTypes, setSkinTypes] = useState<ProductSkinType[]>(() => parseSkinTypes(editingProduct?.skinType))
   const [shelfLifeMonths, setShelfLifeMonths] = useState(() =>
     String(editingProduct?.shelfLifeMonths ?? 36)
   )
@@ -137,11 +143,12 @@ export function CreateProductModal({
         setSku(d.sku)
         setBarcode(d.barcode || '')
         setUnit(d.unit)
-        setVolume(d.volume || '')
+        setVolume(d.volume?.replace(/[a-z]+$/i, '') || '')
+        setVolumeUnit(d.volume?.match(/[a-z]+$/i)?.[0]?.toLowerCase() || getVolumeUnit(d.unit))
         setSpecInput(
           d.packagingDetail || `${d.unit} ${d.volume || ''}`.trim()
         )
-        setSkinType(d.skinType || 'ALL_SKIN_TYPES')
+        setSkinTypes(parseSkinTypes(d.skinType))
         setRetailPriceDisplay(d.retailPrice.toLocaleString('vi-VN'))
         setTaxRatePercent(`${Math.round((d.taxRate || 0.1) * 100)}%`)
         setMinStockAlert(String(d.minStockAlert ?? 5))
@@ -165,7 +172,28 @@ export function CreateProductModal({
     setSpecInput(val)
     const parsed = parsePackagingSpec(val)
     if (parsed.unit) setUnit(parsed.unit)
-    if (parsed.volume) setVolume(parsed.volume)
+    if (parsed.volume) {
+      setVolume(parsed.volume.replace(/[a-z]+$/i, ''))
+      const match = parsed.volume.match(/[a-z]+$/i)
+      if (match) setVolumeUnit(match[0].toLowerCase())
+    }
+  }
+
+  const handleUnitChange = (nextUnit: string) => {
+    setUnit(nextUnit)
+    setVolumeUnit(getVolumeUnit(nextUnit))
+  }
+
+  const handleSkinTypeChange = (code: ProductSkinType) => {
+    setSkinTypes((current) => {
+      if (code === 'ALL_SKIN_TYPES') return ['ALL_SKIN_TYPES']
+      if (current.includes(code)) {
+        const next = current.filter((item) => item !== code && item !== 'ALL_SKIN_TYPES')
+        return next.length ? next : ['ALL_SKIN_TYPES']
+      }
+      const specific = current.filter((item) => item !== 'ALL_SKIN_TYPES')
+      return [...specific, code]
+    })
   }
 
   const handlePriceChange = (val: string) => {
@@ -202,7 +230,7 @@ export function CreateProductModal({
       )
     ) {
       setErrorMsg(
-        'File không đúng định dạng hoặc vượt quá dung lượng (COMMON_VALIDATION_FAILED - JPG, PNG, WEBP, tối đa 5 ảnh/lần, mỗi ảnh tối đa 5 MB)'
+        'File không đúng định dạng hoặc vượt quá dung lượng. Chỉ nhận JPG, PNG, WEBP; tối đa 5 ảnh/lần, mỗi ảnh tối đa 5 MB.'
       )
       return
     }
@@ -225,7 +253,7 @@ export function CreateProductModal({
         })
       } catch (err) {
         if (err instanceof ApiClientError) {
-          setErrorMsg(`${err.message} (${err.errorCode})`)
+          setErrorMsg(`${err.message}`)
         } else {
           setErrorMsg('Không thể tải lên hình ảnh sản phẩm')
         }
@@ -267,7 +295,7 @@ export function CreateProductModal({
         )
         const remaining = images.filter((item) => item.imageId !== img.imageId)
         setImages(remaining)
-        setSuccessMsg(`${res.message} (imageId: ${img.imageId} - HTTP 200)`)
+        setSuccessMsg(`${res.message} (imageId: ${img.imageId} HTTP 200)`)
         onSaved({
           ...editingProduct,
           images: remaining,
@@ -275,7 +303,7 @@ export function CreateProductModal({
         })
       } catch (err) {
         if (err instanceof ApiClientError) {
-          setErrorMsg(`${err.message} (${err.errorCode})`)
+          setErrorMsg(`${err.message}`)
         } else {
           setErrorMsg('Không thể xóa hình ảnh sản phẩm')
         }
@@ -317,7 +345,7 @@ export function CreateProductModal({
       }
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setErrorMsg(`${err.message} (${err.errorCode})`)
+        setErrorMsg(`${err.message}`)
         if (err.errorCode === 'PROD_HAS_STOCK') {
           setHasStockConflict(true)
         }
@@ -348,9 +376,9 @@ export function CreateProductModal({
           brandCode,
           categoryCode,
           unit,
-          volume,
+          volume: volume ? `${volume.replace(/[a-z]+$/i, '')}${volumeUnit}` : '',
           packagingDetail: specInput.trim(),
-          skinType,
+          skinType: skinTypes.length === 1 ? skinTypes[0] : skinTypes,
           shelfLifeMonths: Number(shelfLifeMonths) || 36,
           retailPrice: numericPrice,
           taxRate: numericTax,
@@ -368,8 +396,8 @@ export function CreateProductModal({
           categoryCode,
           brandCode,
           unit,
-          volume,
-          skinType,
+          volume: volume ? `${volume.replace(/[a-z]+$/i, '')}${volumeUnit}` : '',
+          skinType: skinTypes.length === 1 ? skinTypes[0] : skinTypes,
           retailPrice: numericPrice,
           taxRate: numericTax,
           minStockAlert: Number(minStockAlert) || 5,
@@ -381,7 +409,6 @@ export function CreateProductModal({
         })
 
         let createdProduct = res.data
-        // Also support UC-PROD-09 multipart upload after create if pendingFiles exist
         if (pendingFiles.length > 0 && (!images || images.length === 0)) {
           const uploadRes = await productsService.uploadProductImages(
             createdProduct.sku,
@@ -401,12 +428,12 @@ export function CreateProductModal({
         setProductName('')
         setImages([])
         setPendingFiles([])
-        setSku(`SKU-${brandCode}-${Math.floor(100 + Math.random() * 900)}`)
+        setSku(generateProductSku(brandCode))
         handleGenerateBarcode()
       }
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setErrorMsg(`${err.message} (${err.errorCode})`)
+        setErrorMsg(`${err.message}`)
       } else {
         setErrorMsg('Không thể lưu sản phẩm. Vui lòng kiểm tra lại dữ liệu.')
       }
@@ -501,7 +528,11 @@ export function CreateProductModal({
                   </div>
                   <select
                     value={brandCode}
-                    onChange={(e) => setBrandCode(e.target.value)}
+                    onChange={(e) => {
+                      const nextBrandCode = e.target.value
+                      setBrandCode(nextBrandCode)
+                      if (!editingProduct) setSku(generateProductSku(nextBrandCode))
+                    }}
                     className="mt-1.5 w-full rounded-xl bg-[#fceddf]/70 border border-transparent focus:border-[#d57252] focus:bg-white px-4 py-3 text-sm font-medium text-[#221712] outline-none transition"
                   >
                     {brands.map((b) => (
@@ -545,19 +576,16 @@ export function CreateProductModal({
                     <label className="block text-xs font-bold text-[#221712]">
                       Mã SKU nội bộ *
                     </label>
-                    {editingProduct && (
-                      <span className="text-[10px] font-semibold text-[#8c7265]">
-                        (Cố định theo UC-PROD-06)
-                      </span>
-                    )}
+                    <span className="text-[10px] font-semibold text-[#8c7265]">
+                      (Có thể tự chỉnh sửa)
+                    </span>
                   </div>
                   <input
                     type="text"
                     value={sku}
-                    disabled={Boolean(editingProduct)}
-                    onChange={(e) => setSku(e.target.value.toUpperCase())}
+                    onChange={(e) => setSku(e.target.value)}
                     placeholder="SKU-EL-ANR50"
-                    className="mt-1.5 w-full rounded-xl bg-[#fceddf]/70 disabled:bg-zinc-100 disabled:text-zinc-500 border border-transparent focus:border-[#d57252] focus:bg-white px-4 py-3 font-mono text-sm font-bold text-[#221712] outline-none transition"
+                    className="mt-1.5 w-full rounded-xl bg-[#fceddf]/70 border border-transparent focus:border-[#d57252] focus:bg-white px-4 py-3 font-mono text-sm font-bold text-[#221712] outline-none transition"
                     required
                   />
                 </div>
@@ -593,24 +621,59 @@ export function CreateProductModal({
                 2. QUY CÁCH & HẠN DÙNG KHUYẾN NGHỊ
               </p>
 
-              <div className="grid sm:grid-cols-2 gap-4">
+              {/* Bố cục đồng bộ 3 cột: Đơn vị tính | Dung tích/Trọng lượng | Hạn sử dụng tối đa */}
+              <div className="grid sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-[#221712]">
-                    Dung tích / Trọng lượng *
+                    ĐƠN VỊ TÍNH / BAO BÌ *
                   </label>
-                  <input
-                    type="text"
-                    value={specInput}
-                    onChange={(e) => handleSpecChange(e.target.value)}
-                    placeholder="Chai thủy tinh 50ml"
-                    className="mt-1.5 w-full rounded-xl bg-[#fceddf]/70 border border-transparent focus:border-[#d57252] focus:bg-white px-4 py-3 text-sm text-[#221712] outline-none transition"
-                    required
-                  />
+                  <div className="mt-1.5 flex items-center rounded-xl bg-[#fceddf]/70 border border-transparent focus-within:border-[#d57252] focus-within:bg-white px-3 py-2.5">
+                    <Package aria-hidden="true" className="mr-2 size-4 shrink-0 text-[#b95738]" />
+                    <select
+                      value={unit}
+                      onChange={(e) => handleUnitChange(e.target.value)}
+                      aria-label="Đơn vị tính / Bao bì"
+                      className="min-w-0 flex-1 bg-transparent text-xs font-semibold text-[#221712] outline-none cursor-pointer"
+                    >
+                      {UNIT_OPTIONS.map((u) => (
+                        <option key={u} value={u}>
+                          {u}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-[#221712]">
-                    Hạn sử dụng tối đa
+                    DUNG TÍCH / TRỌNG LƯỢNG *
+                  </label>
+                  <div className="mt-1.5 flex w-full overflow-hidden rounded-xl bg-[#fceddf]/70 border border-transparent focus-within:border-[#d57252] focus-within:bg-white">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={volume.replace(/[a-z]+$/i, '')}
+                      onChange={(e) => setVolume(e.target.value)}
+                      placeholder="50"
+                      aria-label="Dung tích hoặc trọng lượng"
+                      className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-xs font-mono font-semibold text-[#221712] outline-none"
+                    />
+                    <select
+                      value={volumeUnit}
+                      onChange={(e) => setVolumeUnit(e.target.value)}
+                      aria-label="Đơn vị dung tích"
+                      className="border-l border-[#e5d2c5]/60 bg-transparent px-2.5 py-2.5 text-xs font-semibold text-[#6e5446] outline-none cursor-pointer"
+                    >
+                      {VOLUME_UNITS.map((u) => (
+                        <option key={u} value={u}>{u}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#221712]">
+                    HẠN SỬ DỤNG TỐI ĐA
                   </label>
                   <div className="mt-1.5 relative">
                     <input
@@ -618,64 +681,39 @@ export function CreateProductModal({
                       min={1}
                       value={shelfLifeMonths}
                       onChange={(e) => setShelfLifeMonths(e.target.value)}
-                      className="w-full rounded-xl bg-[#efefef] border border-transparent focus:border-[#d57252] focus:bg-white pl-4 pr-16 py-3 text-sm font-semibold text-[#5a5a5a] outline-none transition"
+                      className="w-full rounded-xl bg-[#fceddf]/70 border border-transparent focus:border-[#d57252] focus:bg-white pl-4 pr-16 py-2.5 text-xs font-semibold text-[#5a5a5a] outline-none transition"
                     />
-                    <span className="absolute right-4 top-3 text-sm text-[#6b5a50]">
-                      Tháng
+                    <span className="absolute right-4 top-2.5 text-xs font-bold text-[#6b5a50]">
+                      THÁNG
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Parsed API fields bar: unit + volume + skinType */}
-              <div className="rounded-2xl bg-[#fdf7f3] border border-[#eedcd0] p-3.5 grid sm:grid-cols-3 gap-3 text-xs">
-                <div>
-                  <label className="block text-[11px] font-bold text-[#6e5446]">
-                    Đơn vị tính (unit *)
+              {/* Loại da thích hợp */}
+              <div className="pt-1">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-bold text-[#221712]">
+                    LOẠI DA THÍCH HỢP *
                   </label>
-                  <select
-                    value={unit}
-                    onChange={(e) => setUnit(e.target.value)}
-                    className="mt-1 w-full rounded-lg bg-white border border-[#e5d2c5] px-2.5 py-1.5 text-xs font-semibold text-[#221712]"
-                  >
-                    {UNIT_OPTIONS.map((u) => (
-                      <option key={u} value={u}>
-                        {u}
-                      </option>
-                    ))}
-                  </select>
+                  <span className="text-[10px] text-[#8a6a58]">Có thể chọn nhiều tiêu chí hoặc chọn Tất cả</span>
                 </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-[#6e5446]">
-                    Dung tích tách (volume)
-                  </label>
-                  <input
-                    type="text"
-                    value={volume}
-                    onChange={(e) => setVolume(e.target.value)}
-                    placeholder="50ml"
-                    className="mt-1 w-full rounded-lg bg-white border border-[#e5d2c5] px-2.5 py-1.5 text-xs font-mono font-semibold text-[#221712]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-[#6e5446]">
-                    Loại da (skinType)
-                  </label>
-                  <select
-                    value={skinType}
-                    onChange={(e) =>
-                      setSkinType(e.target.value as ProductSkinType)
-                    }
-                    className="mt-1 w-full rounded-lg bg-white border border-[#e5d2c5] px-2.5 py-1.5 text-xs font-medium text-[#221712]"
-                  >
-                    {SKIN_OPTIONS.map((s) => (
-                      <option key={s.code} value={s.code}>
-                        {s.label}
-                      </option>
-                    ))}
-                  </select>
+                <div className="flex flex-wrap items-center gap-2">
+                  {SKIN_OPTIONS.map((s) => (
+                    <button
+                      key={s.code}
+                      type="button"
+                      aria-pressed={skinTypes.includes(s.code)}
+                      onClick={() => handleSkinTypeChange(s.code)}
+                      className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d57252]/40 cursor-pointer ${
+                        skinTypes.includes(s.code)
+                          ? 'border-[#b95738] bg-[#b95738] text-white shadow-sm'
+                          : 'border-[#e5d2c5] bg-white text-[#6e5446] hover:border-[#d57252] hover:bg-[#faeee7]'
+                      }`}
+                    >
+                      {s.label} {skinTypes.includes(s.code) && s.code === 'ALL_SKIN_TYPES' && '✓'}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -763,8 +801,8 @@ export function CreateProductModal({
                         }`}
                       >
                         {status === 'ACTIVE'
-                          ? 'Đang kinh doanh (ACTIVE)'
-                          : 'Ngừng kinh doanh (DISCONTINUED)'}
+                          ? 'Đang kinh doanh'
+                          : 'Ngừng kinh doanh'}
                       </span>
                     </div>
 
@@ -781,12 +819,12 @@ export function CreateProductModal({
                       {status === 'ACTIVE' ? (
                         <>
                           <Ban className="size-3.5" />
-                          <span>Ngừng KD (UC-PROD-07)</span>
+                          <span>Ngừng KD</span>
                         </>
                       ) : (
                         <>
                           <CheckCircle2 className="size-3.5" />
-                          <span>Khôi phục (UC-PROD-08)</span>
+                          <span>Khôi phục</span>
                         </>
                       )}
                     </button>
@@ -807,11 +845,11 @@ export function CreateProductModal({
                 />
               </div>
 
-              {/* Image Upload Dropzone (UC-PROD-09 & UC-PROD-10) */}
+              {/* Image Upload Dropzone */}
               <div>
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-bold text-[#221712]">
-                    Hình ảnh mỹ phẩm sản phẩm (UC-PROD-09 & UC-PROD-10)
+                    Hình ảnh mỹ phẩm sản phẩm
                   </label>
                   {isUploadingImage && (
                     <span className="text-[11px] font-bold text-[#9a3b20]">
@@ -857,7 +895,7 @@ export function CreateProductModal({
                         </span>
                         <button
                           type="button"
-                          title={`Xóa hình ảnh #${img.imageId} (UC-PROD-10)`}
+                          title={`Xóa hình ảnh #${img.imageId}`}
                           onClick={() => handleDeleteImage(img, idx)}
                           className="absolute top-1 right-1 size-6 rounded-full bg-red-600/90 hover:bg-red-700 text-white grid place-items-center opacity-0 group-hover:opacity-100 transition cursor-pointer"
                         >
@@ -889,7 +927,7 @@ export function CreateProductModal({
               {isSubmitting
                 ? 'Đang lưu...'
                 : editingProduct
-                  ? 'Lưu cập nhật sản phẩm (UC-PROD-06)'
+                  ? 'Lưu cập nhật sản phẩm'
                   : 'Lưu & Tiếp tục tạo'}
             </button>
           </div>

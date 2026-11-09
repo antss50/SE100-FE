@@ -139,7 +139,7 @@ export function RbacPage() {
       )
     } catch (err) {
       if (err instanceof ApiClientError) {
-        showFeedback('error', `${err.message} (${err.errorCode})`)
+        showFeedback('error', `${err.message}`)
       } else {
         showFeedback('error', 'Không thể lưu ma trận phân quyền')
       }

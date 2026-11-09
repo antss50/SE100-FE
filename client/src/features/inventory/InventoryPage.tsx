@@ -25,6 +25,8 @@ import { formatNumber } from '../../utils/format'
 import { CreateBrandModal } from './CreateBrandModal'
 import { CreateCategoryModal } from './CreateCategoryModal'
 import { CreateProductModal } from './CreateProductModal'
+import { toast } from '../../components/ui'
+import { getErrorMessage } from '../../utils/error'
 
 function ProductThumbnail({ product }: { product: ProductItem }) {
   const thumbUrl = product.imageUrl || product.images?.[0]?.url
@@ -120,7 +122,6 @@ export function InventoryPage() {
   const [editingBrand, setEditingBrand] = useState<BrandItem | null>(null)
 
   const [isDirectoryModalOpen, setIsDirectoryModalOpen] = useState(false)
-  const [toastMsg, setToastMsg] = useState<string | null>(null)
   const [pageError, setPageError] = useState<{
     message: string
     sku?: string
@@ -177,11 +178,6 @@ export function InventoryPage() {
     reloadTick,
   ])
 
-  const showToast = (msg: string) => {
-    setToastMsg(msg)
-    setTimeout(() => setToastMsg(null), 3800)
-  }
-
   const handleOpenCreateProduct = () => {
     setEditingProduct(null)
     setIsProductModalOpen(true)
@@ -219,20 +215,21 @@ export function InventoryPage() {
       if (product.status === 'ACTIVE') {
         const res = await productsService.deactivateProduct(product.sku)
         setReloadTick((t) => t + 1)
-        showToast(`${res.message} (${res.data.sku} → ${res.data.status})`)
+        toast.success(`${res.message} (${res.data.sku} → ${res.data.status})`)
       } else {
         const res = await productsService.restoreProduct(product.sku)
         setReloadTick((t) => t + 1)
-        showToast(`${res.message} (${res.data.sku} → ${res.data.status})`)
+        toast.success(`${res.message} (${res.data.sku} → ${res.data.status})`)
       }
     } catch (err) {
       if (err instanceof ApiClientError) {
+        toast.error(err.message)
         setPageError({
-          message: `${err.message} (${err.errorCode})`,
+          message: `${err.message}`,
           sku: product.sku,
           isStockConflict: err.errorCode === 'PROD_HAS_STOCK',
         })
-      }
+      } else toast.error(getErrorMessage(err))
     }
   }
 
@@ -243,20 +240,21 @@ export function InventoryPage() {
       if (cat.status === 'ACTIVE') {
         const res = await productsService.deactivateCategory(cat.categoryCode)
         setReloadTick((t) => t + 1)
-        showToast(
+        toast.success(
           `${res.message} (${res.data.categoryCode} → ${res.data.status})`
         )
       } else {
         const res = await productsService.restoreCategory(cat.categoryCode)
         setReloadTick((t) => t + 1)
-        showToast(
+        toast.success(
           `${res.message} (${res.data.categoryCode} → ${res.data.status})`
         )
       }
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setDirError(`${err.message} (${err.errorCode})`)
-      }
+        toast.error(err.message)
+        setDirError(`${err.message}`)
+      } else toast.error(getErrorMessage(err))
     }
   }
 
@@ -267,16 +265,17 @@ export function InventoryPage() {
       if (brand.status === 'ACTIVE') {
         const res = await productsService.deactivateBrand(brand.brandCode)
         setReloadTick((t) => t + 1)
-        showToast(`${res.message} (${res.data.brandCode} → ${res.data.status})`)
+        toast.success(`${res.message} (${res.data.brandCode} → ${res.data.status})`)
       } else {
         const res = await productsService.restoreBrand(brand.brandCode)
         setReloadTick((t) => t + 1)
-        showToast(`${res.message} (${res.data.brandCode} → ${res.data.status})`)
+        toast.success(`${res.message} (${res.data.brandCode} → ${res.data.status})`)
       }
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setDirError(`${err.message} (${err.errorCode})`)
-      }
+        toast.error(err.message)
+        setDirError(`${err.message}`)
+      } else toast.error(getErrorMessage(err))
     }
   }
 
@@ -345,18 +344,6 @@ export function InventoryPage() {
         </div>
       </div>
 
-      {toastMsg && (
-        <div className="rounded-2xl bg-[#2b1d16] text-amber-50 px-4 py-3 text-xs font-medium shadow-md flex items-center justify-between">
-          <span>{toastMsg}</span>
-          <button
-            type="button"
-            onClick={() => setToastMsg(null)}
-            className="text-[11px] font-bold text-amber-200 hover:text-white"
-          >
-            Đóng
-          </button>
-        </div>
-      )}
 
       {pageError && (
         <div className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-xs font-semibold text-red-800 flex flex-wrap items-center justify-between gap-3">
@@ -566,7 +553,7 @@ export function InventoryPage() {
             }}
             className="rounded-2xl bg-[#fbf3ed] border border-[#efe0d6] px-4 py-2.5 text-xs font-semibold text-[#3b2920] outline-none cursor-pointer"
           >
-            <option value="ACTIVE">Đang kinh doanh (ACTIVE)</option>
+            <option value="ACTIVE">Đang kinh doanh</option>
             <option value="LOW_STOCK">Dưới định mức an toàn</option>
             <option value="DISCONTINUED">Ngừng kinh doanh</option>
             <option value="ALL">Tất cả trạng thái</option>
@@ -692,7 +679,7 @@ export function InventoryPage() {
                         >
                           <button
                             type="button"
-                            title="Xem chi tiết & Cập nhật (UC-PROD-05, UC-PROD-06)"
+                            title="Xem chi tiết & Cập nhật"
                             onClick={() => handleOpenEditProduct(prod)}
                             className="p-2 rounded-xl bg-[#fbf3ed] hover:bg-[#f2e2d6] text-[#6d4934] transition cursor-pointer"
                           >
@@ -702,7 +689,7 @@ export function InventoryPage() {
                           {prod.status === 'ACTIVE' ? (
                             <button
                               type="button"
-                              title="Ngừng kinh doanh sản phẩm (UC-PROD-07)"
+                              title="Ngừng kinh doanh sản phẩm"
                               onClick={() =>
                                 handleToggleProductStatus(prod)
                               }
@@ -713,7 +700,7 @@ export function InventoryPage() {
                           ) : (
                             <button
                               type="button"
-                              title="Khôi phục sản phẩm (UC-PROD-08)"
+                              title="Khôi phục sản phẩm"
                               onClick={() =>
                                 handleToggleProductStatus(prod)
                               }
@@ -826,10 +813,10 @@ export function InventoryPage() {
         onClose={() => setIsProductModalOpen(false)}
         onSaved={(saved) => {
           setReloadTick((t) => t + 1)
-          showToast(
+          toast.success(
             editingProduct
               ? `Đã cập nhật sản phẩm "${saved.productName}" (${saved.sku})`
-              : `Thêm sản phẩm "${saved.productName}" (${saved.sku}) thành công (HTTP 201)`
+              : `Thêm sản phẩm "${saved.productName}" (${saved.sku}) thành công`
           )
         }}
         onOpenCreateCategory={handleOpenCreateCategory}
@@ -848,15 +835,15 @@ export function InventoryPage() {
         onSaved={(cat, mode) => {
           setReloadTick((t) => t + 1)
           if (mode === 'create') {
-            showToast(
-              `Thêm danh mục "${cat.categoryName}" (${cat.categoryCode}) thành công (HTTP 201)`
+            toast.success(
+              `Thêm danh mục "${cat.categoryName}" thành công`
             )
           } else if (mode === 'update') {
-            showToast(
-              `Cập nhật danh mục "${cat.categoryName}" (${cat.categoryCode}) thành công (HTTP 200)`
+            toast.success(
+              `Cập nhật danh mục "${cat.categoryName}" thành công`
             )
           } else {
-            showToast(
+            toast.success(
               `Đã chuyển trạng thái danh mục ${cat.categoryCode} → ${cat.status}`
             )
           }
@@ -875,15 +862,15 @@ export function InventoryPage() {
         onSaved={(brand, mode) => {
           setReloadTick((t) => t + 1)
           if (mode === 'create') {
-            showToast(
-              `Thêm thương hiệu "${brand.brandName}" (${brand.brandCode}) thành công (HTTP 201)`
+            toast.success(
+              `Thêm thương hiệu "${brand.brandName}" thành công`
             )
           } else if (mode === 'update') {
-            showToast(
-              `Cập nhật thương hiệu "${brand.brandName}" (${brand.brandCode}) thành công (HTTP 200)`
+            toast.success(
+              `Cập nhật thương hiệu "${brand.brandName}" thành công`
             )
           } else {
-            showToast(
+            toast.success(
               `Đã chuyển trạng thái thương hiệu ${brand.brandCode} → ${brand.status}`
             )
           }
@@ -902,7 +889,6 @@ export function InventoryPage() {
                 </h3>
                 <p className="text-[11px] text-[#7c6356] mt-0.5">
                   Xem danh sách, chi tiết, cập nhật, ngừng sử dụng và khôi phục
-                  (UC-PROD-11 đến UC-PROD-20)
                 </p>
               </div>
               <button
@@ -936,9 +922,9 @@ export function InventoryPage() {
                   onChange={(e) => setDirStatus(e.target.value)}
                   className="rounded-xl bg-white border border-[#e7d6cb] px-3 py-1.5 text-xs font-bold text-[#221712] outline-none"
                 >
-                  <option value="ALL">Tất cả (ACTIVE & INACTIVE)</option>
-                  <option value="ACTIVE">Đang hoạt động (ACTIVE)</option>
-                  <option value="INACTIVE">Ngừng sử dụng (INACTIVE)</option>
+                  <option value="ALL">Tất cả </option>
+                  <option value="ACTIVE">Đang hoạt động </option>
+                  <option value="INACTIVE">Ngừng sử dụng </option>
                 </select>
               </div>
             </div>
@@ -961,7 +947,7 @@ export function InventoryPage() {
               <div>
                 <div className="flex items-center justify-between pb-2.5 border-b border-[#f1e4dc]">
                   <span className="font-extrabold uppercase text-[#8c673a]">
-                    Danh mục ngành hàng (UC-PROD-11..15)
+                    Danh mục ngành hàng
                   </span>
                   <button
                     type="button"
@@ -1010,7 +996,7 @@ export function InventoryPage() {
                       <div className="flex items-center gap-1 shrink-0">
                         <button
                           type="button"
-                          title="Xem chi tiết & Cập nhật danh mục (UC-PROD-12, UC-PROD-13)"
+                          title="Xem chi tiết & Cập nhật danh mục"
                           onClick={() => handleOpenEditCategory(cat)}
                           className="p-2 rounded-xl bg-white border border-[#e5d2c6] hover:bg-[#f6eae2] text-[#6d4934] cursor-pointer"
                         >
@@ -1020,7 +1006,7 @@ export function InventoryPage() {
                         {cat.status === 'ACTIVE' ? (
                           <button
                             type="button"
-                            title="Ngừng sử dụng danh mục (UC-PROD-14)"
+                            title="Ngừng sử dụng danh mục"
                             onClick={() => handleToggleCategoryStatus(cat)}
                             className="p-2 rounded-xl bg-red-50 border border-red-200 hover:bg-red-100 text-red-700 cursor-pointer"
                           >
@@ -1029,7 +1015,7 @@ export function InventoryPage() {
                         ) : (
                           <button
                             type="button"
-                            title="Khôi phục danh mục (UC-PROD-15)"
+                            title="Khôi phục danh mục"
                             onClick={() => handleToggleCategoryStatus(cat)}
                             className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-700 cursor-pointer"
                           >
@@ -1046,7 +1032,7 @@ export function InventoryPage() {
               <div>
                 <div className="flex items-center justify-between pb-2.5 border-b border-[#f1e4dc]">
                   <span className="font-extrabold uppercase text-[#8c673a]">
-                    Thương hiệu phân phối (UC-PROD-16..20)
+                    Thương hiệu phân phối
                   </span>
                   <button
                     type="button"
@@ -1095,7 +1081,7 @@ export function InventoryPage() {
                       <div className="flex items-center gap-1 shrink-0">
                         <button
                           type="button"
-                          title="Xem chi tiết & Cập nhật thương hiệu (UC-PROD-17, UC-PROD-18)"
+                          title="Xem chi tiết & Cập nhật thương hiệu"
                           onClick={() => handleOpenEditBrand(b)}
                           className="p-2 rounded-xl bg-white border border-[#e5d2c6] hover:bg-[#f6eae2] text-[#6d4934] cursor-pointer"
                         >
@@ -1105,7 +1091,7 @@ export function InventoryPage() {
                         {b.status === 'ACTIVE' ? (
                           <button
                             type="button"
-                            title="Ngừng sử dụng thương hiệu (UC-PROD-19)"
+                            title="Ngừng sử dụng thương hiệu"
                             onClick={() => handleToggleBrandStatus(b)}
                             className="p-2 rounded-xl bg-red-50 border border-red-200 hover:bg-red-100 text-red-700 cursor-pointer"
                           >
@@ -1114,7 +1100,7 @@ export function InventoryPage() {
                         ) : (
                           <button
                             type="button"
-                            title="Khôi phục thương hiệu (UC-PROD-20)"
+                            title="Khôi phục thương hiệu"
                             onClick={() => handleToggleBrandStatus(b)}
                             className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-700 cursor-pointer"
                           >
