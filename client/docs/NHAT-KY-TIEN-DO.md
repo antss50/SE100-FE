@@ -97,3 +97,4 @@ Không xóa hay sửa dòng cũ; ghi sai thì thêm dòng mới đính chính.
 | 2026-11-09 13:56 | fe-tester | 3 | Chạy | e2e lần 2: 86 pass/1 fail chập chờn (auth/login-session cashier01; chạy riêng 3 lần đều pass, chưa tái hiện, nghi quá tải máy khi chạy cả bộ, chưa ghi lỗi) |
 | 2026-11-09 13:56 | fe-tester | 3 | Kết thúc | Đợt test 2 xong; commit test: 59f949e |
 | 2026-11-09 13:58 | điều phối | T2 | Kết thúc | Sửa B4 (REP-04: SKU `isSellable=false` có tồn bán được = 0, `domain/reports/stock.ts`), bỏ `it.skip`. Cổng cuối: lint 0 lỗi, build qua, vitest 325/325, playwright 87/87. T2 xong; 40 UC đã code và qua test |
+| 2026-11-09 14:20 | điều phối | – | Kết thúc | Rà tiến độ: 40/40 UC `Xong`, không còn lỗi/câu hỏi mở. Sửa bảng giai đoạn TIEN-DO (GĐ3, T2 → Xong), viết lại `client/README.md`. Chụp thử POS và Tồn kho ở 1366×768 (cashier01): bố cục khớp thiết kế, thu ngân chỉ thấy cột "Bán được". Toàn bộ kế hoạch D21–D23 hoàn tất |
