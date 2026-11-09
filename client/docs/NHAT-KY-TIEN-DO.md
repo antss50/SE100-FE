@@ -86,3 +86,6 @@ Không xóa hay sửa dòng cũ; ghi sai thì thêm dòng mới đính chính.
 | 2026-11-09 10:28 | fe-coder | 3 | Commit | e2035d0 feat(rep-02,rep-03): báo cáo doanh thu, lợi nhuận gộp và bán hàng |
 | 2026-11-09 10:28 | fe-coder | 3 | Xong | REP-02, REP-03 code xong (build qua). Mock: /reports/revenue, /reports/sales |
 | 2026-11-09 10:29 | fe-coder | 3 | Commit | 67197fa feat(rep-04,rep-05,rep-06): báo cáo tồn kho hạn dùng, nhập hàng, khách hàng |
+| 2026-11-09 13:42 | fe-coder | 3 | Commit | 7e98717 feat(auth-06): nhật ký hệ thống, ghi audit tập trung ở router |
+| 2026-11-09 13:42 | fe-coder | 3 | Commit | b3a6840 feat(prom-04): hiệu quả khuyến mãi tính từ đơn thật |
+| 2026-11-09 13:42 | fe-coder | 3 | Kiểm | lint 0 lỗi, build qua, vitest 306 pass/0 fail, e2e 82 pass/0 fail. AUTH-06, PROM-04 -> Đang test |
