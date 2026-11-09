@@ -277,7 +277,8 @@ Giá luôn do máy chủ tính bằng đúng thuật toán 4 tầng ở KHUYEN_M
 ### `POST /orders/quote` — POS-02, POS-03
 - **Quyền:** `POS_CHECKOUT` (`PROMOTION_APPLY_VOUCHER` nếu có `voucherCode`, `LOYALTY_REDEEM` nếu `pointsRequested > 0`) · **Request:** `CartInput` · **Response 200:** `OrderQuote` (không ghi gì)
 - Tính giá bằng `calculateOrder` (tầng 1 dòng hàng, tầng 2 hạng thẻ, tầng 3 bậc thang/voucher/quà, tầng 4 điểm), phân bổ lô FEFO tách lô (lô thu ngân chọn tay đứng đầu). Thiếu tồn thì ghi vào `issues`, không báo lỗi. Voucher không dùng được / thua bậc thang thì lý do nằm ở `messages`.
-- **Lỗi:** `404 POS_PRODUCT_NOT_FOUND`, `422 POS_PRODUCT_NOT_SELLABLE`, `422 POS_QUANTITY_INVALID`, `404 CUS_NOT_FOUND`, `422 POS_CUSTOMER_INACTIVE`, `404 STK_BATCH_NOT_FOUND`, `422 POS_BATCH_EXPIRED`, `422 POS_BATCH_NOT_SELLABLE`, `403 AUTH_FORBIDDEN`
+- **Ghi chú (D45):** lô chọn tay hết hạn/hết tồn thì tự quay về FEFO và trả cảnh báo trong `messages`, không lỗi.
+- **Lỗi:** `404 POS_PRODUCT_NOT_FOUND`, `422 POS_PRODUCT_NOT_SELLABLE`, `422 POS_QUANTITY_INVALID`, `404 CUS_NOT_FOUND`, `422 POS_CUSTOMER_INACTIVE`, `404 STK_BATCH_NOT_FOUND`, `422 POS_BATCH_NOT_SELLABLE`, `403 AUTH_FORBIDDEN`
 
 ### `POST /orders/complete` — POS-03 (hoàn tất = 1 giao dịch, luật 40)
 - **Quyền:** `POS_CHECKOUT` · **Request:** `CartInput` + `{ paymentMethod: CASH|BANK_TRANSFER|CARD, amountReceived?, draftId? }` · **Response 201:** `OrderRecord` (`COMPLETED`)
