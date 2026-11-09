@@ -32,6 +32,12 @@ export function LoginPage() {
   const [errorCode, setErrorCode] = useState<string | null>(null)
   const [showForgotModal, setShowForgotModal] = useState(false)
 
+  /** Quay lại trang bảo vệ đã định vào (nếu có), không thì về trang chủ theo quyền. */
+  const redirectTarget = (permissions: readonly string[]): string => {
+    const from = (location.state as { from?: string } | null)?.from
+    return from && from !== '/login' ? from : (homePathFor(permissions) ?? '/')
+  }
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setErrorMsg(null)
@@ -46,10 +52,7 @@ export function LoginPage() {
         openChangePassword()
       }
 
-      const from = (location.state as { from?: string } | null)?.from
-      navigate(from && from !== '/login' ? from : (homePathFor(response.data.user.permissions) ?? '/'), {
-        replace: true,
-      })
+      navigate(redirectTarget(response.data.user.permissions), { replace: true })
     } catch (err) {
       if (err instanceof ApiClientError) {
         setErrorMsg(err.message)
@@ -69,7 +72,10 @@ export function LoginPage() {
     setErrorCode(null)
   }
 
-  if (isAuthenticated) return <Navigate to="/" replace />
+  if (isAuthenticated) {
+    const permissions = useAuthStore.getState().user?.permissions ?? []
+    return <Navigate to={redirectTarget(permissions)} replace />
+  }
 
   return (
     <div className="min-h-screen bg-[#f5ede7] flex items-center justify-center p-4 sm:p-8">

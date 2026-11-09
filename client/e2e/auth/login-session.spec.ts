@@ -89,8 +89,8 @@ test('phiên giữ khi tải lại trang', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
 })
 
-// B1: RequireAuth lưu `from` và LoginPage định quay lại trang đó, nhưng <Navigate to="/"> khi đã đăng nhập chạy sau, đè mất.
-test.fixme('B1: vào URL bảo vệ khi chưa đăng nhập, đăng nhập xong quay lại đúng trang', async ({ page }) => {
+// B1 (đã sửa): LoginPage dùng chung `from` cho cả nhánh đã đăng nhập.
+test('B1: vào URL bảo vệ khi chưa đăng nhập, đăng nhập xong quay lại đúng trang', async ({ page }) => {
   await page.goto('/customers')
   await expect(page).toHaveURL(/\/login$/)
   await login(page, 'manager01')
