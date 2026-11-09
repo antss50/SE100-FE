@@ -1,16 +1,9 @@
-# Tiến độ frontend
-
-> Luật: [../../CLAUDE.md](../../CLAUDE.md). Nhánh: `demo`. Mỗi giai đoạn chạy: agent code → agent kiểm thử → agent code sửa lỗi → kiểm thử lại, đến khi không còn lỗi Critical/High.
-
-Trạng thái: `Chưa làm` · `Đang code` · `Đang test` · `Đang sửa` · `Xong` · `Chặn` (kèm mã câu hỏi).
-
-## Giai đoạn
-
+Đang test 7 loại, khóa sửa khi đã có đơn 
 | GĐ | Nội dung | UC | Trạng thái |
 |---|---|---|---|
 | 0 | Nền tảng (mock adapter, đăng nhập, phân quyền, component ui, layout, domain giá, công cụ test) | Nền | Xong |
 | 1 | **Kho** (gộp cũ GĐ1+2): nhà cung cấp, nhập kho, tồn kho, cận hạn, kiểm kho, xuất đặc biệt. Gồm sửa B1 | SUPP-01..03, STK-01..07 | Code xong, chờ Đợt test 1 |
-| 2 | **Sửa phần cũ + bán hàng** (gộp cũ GĐ3+4+5): sửa AUTH/PROD/CUS/PROM cho khớp tài liệu (7 loại KM, status, luật 47), cấu hình hệ thống; mở ca, POS FEFO, voucher, dùng điểm, thanh toán, lịch sử và chi tiết đơn, đổi trả, chốt ca, lịch sử ca | AUTH-01..05, AUTH-07, PROD-01..03, CUS-01..05, PROM-01..03, POS-01..05 | Chưa làm |
+| 2 | **Sửa phần cũ + bán hàng** (gộp cũ GĐ3+4+5): sửa AUTH/PROD/CUS/PROM cho khớp tài liệu (7 loại KM, status, luật 47), cấu hình hệ thống; mở ca, POS FEFO, voucher, dùng điểm, thanh toán, lịch sử và chi tiết đơn, đổi trả, chốt ca, lịch sử ca | AUTH-01..05, AUTH-07, PROD-01..03, CUS-01..05, PROM-01..03, POS-01..05 | Đang code |
 | T1 | **Đợt test 1** (sau GĐ1 + GĐ2): fe-tester viết và chạy test cho kho, bán hàng và phần sửa cũ; ghi lỗi; fe-coder sửa lỗi Critical/High | Kho, bán hàng, phần cũ | Chưa làm |
 | 3 | **Báo cáo** (cũ GĐ6): dashboard, 5 báo cáo, nhật ký, hiệu quả KM | REP-01..06, AUTH-06, PROM-04 | Chưa làm |
 | T2 | **Đợt test 2 (cuối)** (sau GĐ3): test báo cáo, E2E xuyên suốt, hồi quy toàn bộ, sửa lỗi Critical/High | Tất cả | Chưa làm |
@@ -46,8 +39,8 @@ Trạng thái: `Chưa làm` · `Đang code` · `Đang test` · `Đang sửa` · 
 | CUS-03 | Tích/thu hồi điểm, xét hạng (hệ thống) | 3 | Chưa làm | Hiện ở lịch sử điểm |
 | CUS-04 | Dùng điểm khi thanh toán | 4 | Chưa làm | |
 | CUS-05 | Cấu hình điểm & hạng | 3 | Chưa làm | Có code cũ |
-| PROM-01 | Tra cứu KM | 3 | Chưa làm | Có code cũ, lệch 7 loại |
-| PROM-02 | Quản lý KM | 3 | Chưa làm | Có code cũ, lệch 7 loại |
+| PROM-01 | Tra cứu KM | 3 | Đang test | 7 loại, phase theo ngày |
+| PROM-02 | Quản lý KM | 3 | Đang test | 7 loại, khóa sửa khi có đơn |
 | PROM-03 | Áp voucher khi bán | 4 | Chưa làm | |
 | PROM-04 | Hiệu quả KM | 6 | Chưa làm | |
 | POS-01 | Mở ca | 4 | Chưa làm | Có modal cũ |

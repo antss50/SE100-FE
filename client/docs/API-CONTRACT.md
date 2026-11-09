@@ -209,45 +209,59 @@ type PaginatedData<T> = { items: T[]; page: number; pageSize: number; totalItems
 - **Response 200:** `LoyaltyConfigData`
 - **Lỗi:** `422 CUS_TIER_SPEND_INVALID` (BRONZE = 0, hạng sau lớn hơn hạng trước)
 
-## PROMOTION
+## PROMOTION (PROM-01, PROM-02)
+
+Kiểu: `PromotionView` = bản ghi PROMOTIONS (DATABASE.md mục 24, camelCase: `id, promotionName, description, promotionType, status DRAFT|ACTIVE|PAUSED, voucherCode, customerId, applyScope, discountType, discountValue, maxDiscountAmount, fixedPrice, comboPrice, buyQuantity, isRepeatable, minOrderValue, minTierId, startAt, endAt, dailyStartTime, dailyEndTime, weekdays ("1,3,5"), maxQuantity, usageLimit, limitPerCustomer, createdBy, createdAt, updatedAt`) kèm bảng con `items[{productId, role TARGET|BUY|GIFT|COMBO_ITEM, quantity}]`, `brandIds[]`, `categoryIds[]`, `steps[{minOrderValue, discountType, discountValue, maxDiscountAmount}]` và các trường tính: `phase UPCOMING|RUNNING|ENDED` (theo ngày), `usedCount` (đếm từ đơn COMPLETED), `locked` (`usedCount > 0`), `minTierName`, `customerName`. 7 loại: `PRODUCT_DISCOUNT, FLASH_PRICE, BUY_X_GET_Y, COMBO, ORDER_TIERED, VOUCHER, ORDER_GIFT`.
 
 ### `GET /promotions` — PROM-01
-- **Quyền:** `PROMOTION_VIEW` · **Query:** `keyword` (mã, tên), `status`, `page`, `pageSize` · **Response 200:** `PaginatedData<PromotionItem>`
+- **Quyền:** `PROMOTION_VIEW` · **Query:** `keyword` (tên, mã voucher), `type`, `status`, `phase`, `page`, `pageSize` · **Response 200:** `PaginatedData<PromotionView>`
+
+### `GET /promotions/{id}` — PROM-01
+- **Quyền:** `PROMOTION_VIEW` · **Response 200:** `PromotionView` · **Lỗi:** `404 PROM_NOT_FOUND`
 
 ### `POST /promotions` — PROM-02
 - **Quyền:** `PROMOTION_MANAGE`
-- **Request:** `CreatePromotionRequest` (kiểu cũ: `PERCENT_ORDER`, `FIXED_ORDER`, `BUY_X_GET_Y`, `COMBO`, `STEP_DISCOUNT`)
-- **Response 201:** `PromotionItem`
-- **Lỗi:** `409 PROM_VOUCHER_DUPLICATED`, `422 PROM_DATE_RANGE_INVALID`, `422 PROM_LIMIT_PER_CUSTOMER_INVALID`, `422 PROM_DISCOUNT_VALUE_INVALID`
-- **Ghi chú:** GĐ3 đổi sang 7 loại theo KHUYEN_MAI.md.
+- **Request:** các cột PROMOTIONS ở trên (trừ `id, createdBy, createdAt, updatedAt`) kèm `status?: DRAFT|ACTIVE` (mặc định `DRAFT`) và bảng con. Cột bắt buộc theo loại: `PRODUCT_DISCOUNT` (applyScope, discountType, discountValue + sản phẩm/thương hiệu/danh mục theo scope), `FLASH_PRICE` (fixedPrice + sản phẩm TARGET), `BUY_X_GET_Y` (buyQuantity + BUY + GIFT), `COMBO` (comboPrice + >= 2 COMBO_ITEM), `ORDER_TIERED` (>= 1 bậc, không trùng ngưỡng), `ORDER_GIFT` (minOrderValue + GIFT), `VOUCHER` (voucherCode, discountType, discountValue). Cột không thuộc loại được lưu NULL.
+- **Response 201:** `PromotionView`
+- **Lỗi:** `400 COMMON_VALIDATION_FAILED`, `409 PROM_VOUCHER_DUPLICATED`, `422 PROM_INVALID` (thiếu cột theo loại), `422 PROM_DATE_RANGE_INVALID`, `422 PROM_LIMIT_PER_CUSTOMER_INVALID`
 
-### `PUT /promotions/{voucherCode}` — PROM-02
-- **Quyền:** `PROMOTION_MANAGE` · **Request:** `Partial<CreatePromotionRequest>` · **Response 200:** `PromotionItem`
-- **Lỗi:** `404 PROM_NOT_FOUND`, `409 PROM_FIELD_LOCKED` (đã có đơn dùng: chỉ được gia hạn, tăng lượt — luật 10)
+### `PUT /promotions/{id}` — PROM-02
+- **Quyền:** `PROMOTION_MANAGE` · **Request:** như `POST` · **Response 200:** `PromotionView`
+- Đã có đơn dùng (`locked`): chỉ được đổi `promotionName`, `description`, `endAt`; đổi mức giảm, điều kiện hay bảng con trả `409 PROM_FIELD_LOCKED` (luật 10).
+- **Lỗi:** `404 PROM_NOT_FOUND`, `409 PROM_FIELD_LOCKED`, và các lỗi của `POST`
 
-### `PATCH /promotions/{voucherCode}/pause` — PROM-02
-- **Quyền:** `PROMOTION_MANAGE` · **Response 200:** `{ voucherCode, status }` (đảo `ACTIVE` ↔ `PAUSED`)
+### `PATCH /promotions/{id}/status` — PROM-02
+- **Quyền:** `PROMOTION_MANAGE` · **Request:** `{ status: ACTIVE|PAUSED }` · **Response 200:** `PromotionView`
+- `DRAFT → ACTIVE`, `ACTIVE ↔ PAUSED`.
 - **Lỗi:** `404 PROM_NOT_FOUND`, `409 PROM_STATUS_INVALID`
 
-### `GET /promotions/{voucherCode}/report` — PROM-04
-- **Quyền:** `PROMOTION_REPORT` · **Response 200:** `PromotionReportData` · **Lỗi:** `404 PROM_NOT_FOUND`
-- **Ghi chú:** mock trả số liệu minh họa; tính thật từ đơn hàng ở GĐ6.
+> `GET /promotions/{code}/report` (PROM-04) sẽ viết lại ở GĐ3 (tính từ đơn hàng thật).
 
-## POS
+## POS · Ca bán hàng (POS-01, POS-05)
+
+Kiểu: `CashierShift` (CASHIER_SHIFTS: `shiftId, shiftCode (CAyyyymmdd-nn), cashierId, cashierName, openedAt, openingCash, closedAt, expectedCash, actualCash, differenceAmount, note, status OPEN|CLOSED, handoverConfirmedBy, handoverConfirmedByName`), `ShiftSummary` (tính từ đơn và phiếu trả, không lưu: `orderCount, returnCount, draftCount, cashSales, transferSales, cardSales, cashCollected, cashRefunded, expectedCash, totalSales, totalRefunded`). Tiền mặt thu của đơn = `totalAmount − exchangeCreditAmount` (chỉ đơn `CASH`); `expectedCash = openingCash + cashCollected − cashRefunded` (chỉ phiếu trả `refundMethod = CASH`).
 
 ### `GET /shifts/current` — POS-01
-- **Quyền:** `POS_VIEW` · **Response 200:** `{ hasOpenShift, shift: ShiftInfo | null }` — ca `OPEN` của người đăng nhập
+- **Quyền:** `POS_VIEW` · **Response 200:** `{ hasOpenShift, shift: CashierShift | null }` — ca `OPEN` của người đăng nhập
+
+### `GET /shifts` — POS-05 (lịch sử ca)
+- **Quyền:** `POS_VIEW` (thu ngân chỉ thấy ca của mình; có `POS_SHIFT_HANDOVER_CONFIRM` thì thấy mọi ca) · **Query:** `status OPEN|CLOSED`, `keyword` (mã ca, thu ngân), `page`, `pageSize` · **Response 200:** `PaginatedData<CashierShift & { summary: ShiftSummary }>`
+
+### `GET /shifts/{id}` — POS-05 (chi tiết ca)
+- **Quyền:** `POS_VIEW` · **Response 200:** `{ shift, summary, orders: OrderListItem[], returns: ReturnListItem[] }`
+- **Lỗi:** `404 POS_SHIFT_NOT_FOUND`, `403 AUTH_FORBIDDEN` (thu ngân xem ca người khác)
 
 ### `POST /shifts/open` — POS-01
-- **Quyền:** `POS_SHIFT_OPEN`
-- **Request:** `{ openingCash: number }` (số nguyên ≥ 0) · **Response 201:** `ShiftInfo`
+- **Quyền:** `POS_SHIFT_OPEN` · **Request:** `{ openingCash: number }` (số nguyên ≥ 0) · **Response 201:** `CashierShift`
 - **Lỗi:** `409 POS_SHIFT_ALREADY_OPEN` (luật 35)
 
-### `POST /shifts/{shiftId}/close` — POS-05 (tạm)
-- **Quyền:** `POS_SHIFT_CLOSE`
-- **Request:** `{}` · **Response 200:** `ShiftInfo` (`status = CLOSED`)
-- **Lỗi:** `404 POS_SHIFT_NOT_FOUND`, `403 POS_SHIFT_NOT_OWNER`, `409 POS_SHIFT_NOT_OPEN`
-- **Ghi chú:** GĐ5 bổ sung kiểm đếm tiền, giải trình lệch (luật 37), chặn khi còn đơn nháp (luật 36).
+### `POST /shifts/{id}/close` — POS-05 (kiểm đếm, chốt ca)
+- **Quyền:** `POS_SHIFT_CLOSE` (chỉ thu ngân mở ca) · **Request:** `{ actualCash: number (>= 0), note? }` · **Response 200:** `{ shift, summary }` (`CLOSED`, ghi `expectedCash`, `actualCash`, `differenceAmount = actual − expected`)
+- **Lỗi:** `404 POS_SHIFT_NOT_FOUND`, `403 POS_SHIFT_NOT_OWNER`, `409 POS_SHIFT_NOT_OPEN`, `422 POS_SHIFT_HAS_DRAFT` (còn đơn nháp, luật 36), `422 POS_SHIFT_NOTE_REQUIRED` (lệch tiền thì bắt buộc giải trình, luật 37)
+
+### `POST /shifts/{id}/confirm-handover` — POS-05
+- **Quyền:** `POS_SHIFT_HANDOVER_CONFIRM` · **Response 200:** `CashierShift` (`handoverConfirmedBy` = người xác nhận; ghi audit)
+- **Lỗi:** `404 POS_SHIFT_NOT_FOUND`, `409 POS_SHIFT_NOT_CLOSED`, `409 POS_HANDOVER_ALREADY_CONFIRMED`
 
 ## SUPPLIER (SUPP-01..03)
 

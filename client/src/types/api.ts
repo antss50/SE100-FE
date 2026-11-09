@@ -199,7 +199,7 @@ export interface PointHistoryItem {
   id?: number
   orderId?: string
   returnId?: string
-  actionType: 'EARN' | 'REVOKE' | 'REDEEM'
+  actionType: 'EARN' | 'REVOKE' | 'REDEEM' | 'ADJUST'
   pointsChanged: number
   balanceAfter: number
   createdAt: string
@@ -432,99 +432,3 @@ export interface LoyaltyConfigData {
   redemptionValuePerPoint?: number
   tiers: LoyaltyTierThreshold[]
 }
-
-// 8. G11 - CHƯƠNG TRÌNH KHUYẾN MÃI VÀ VOUCHER (UC-PROM-01..07)
-export type PromotionType =
-  | 'PERCENT_ORDER'
-  | 'FIXED_ORDER'
-  | 'BUY_X_GET_Y'
-  | 'COMBO'
-  | 'STEP_DISCOUNT'
-
-export type ApplyScope = 'ALL' | 'PRODUCT' | 'BRAND' | 'CATEGORY'
-export type PromotionStatus = 'PENDING' | 'ACTIVE' | 'PAUSED' | 'EXPIRED'
-export type DiscountType = 'PERCENT' | 'FIXED_AMOUNT'
-
-export interface PromotionStepRule {
-  minOrderValue: number
-  discountType: DiscountType
-  discountValue: number
-  maxDiscountAmount?: number
-}
-
-export interface PromotionRuleItem {
-  productId: number
-  role: 'BUY' | 'GET' | 'COMBO'
-  quantity: number
-}
-
-export interface PromotionItem {
-  voucherCode: string
-  promotionName: string
-  promotionType: PromotionType
-  applyScope: ApplyScope
-  discountType: DiscountType | null
-  discountValue: number | null
-  maxDiscountAmount?: number
-  minOrderValue?: number
-  startDate: string
-  endDate: string
-  status: PromotionStatus
-  usedCount: number
-  usageLimit: number
-  limitPerCustomer?: number
-  // UI metadata
-  minTierLabel?: 'Đồng' | 'Bạc' | 'Vàng' | 'Kim Cương'
-  valueSummaryTitle?: string
-  valueSummarySub?: string
-}
-
-export interface CreatePromotionRequest {
-  promotionName: string
-  promotionType: PromotionType
-  voucherCode: string
-  applyScope: ApplyScope
-  startDate: string
-  endDate: string
-  usageLimit: number
-  limitPerCustomer: number
-  minOrderValue?: number
-  discountType?: DiscountType
-  discountValue?: number
-  maxDiscountAmount?: number
-  productIds?: number[]
-  brandIds?: number[]
-  categoryIds?: number[]
-  steps?: PromotionStepRule[]
-  buyQuantity?: number
-  comboPrice?: number
-  isRepeatable?: boolean
-  items?: PromotionRuleItem[]
-}
-
-export interface PromotionReportData {
-  totalUsage: number
-  totalDiscountAmount: number
-  totalRevenueGenerated: number
-  uniqueCustomers: number
-  averageOrderValue: number
-  averageDiscountPerOrder: number
-  usageRate: number
-  usageByDate: { date: string; usageCount: number; revenue: number }[]
-  orders: {
-    orderCode: string
-    customerName: string
-    orderValue: number
-    discountAmount: number
-    paidAmount: number
-    usedAt: string
-  }[]
-  topCustomers: {
-    customerCode: string
-    fullName: string
-    usageCount: number
-  }[]
-}
-
-
-

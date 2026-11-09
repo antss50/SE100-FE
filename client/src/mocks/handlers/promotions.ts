@@ -1,246 +1,319 @@
 import { z } from 'zod'
-import type { LoyaltyConfigData, PromotionItem, PromotionReportData } from '../../types/api'
 import { MockHttpError, keywordOf, notFound, ok, paginate, parseBody, sameText } from '../http'
+import type { MockTransaction } from '../db'
+import { buildUsageIndex, phaseOf, toView } from '../promotion-engine'
 import type { MockRoute } from '../router'
-import { SEED_LOYALTY_CONFIG } from '../seed/loyalty'
+import { toIsoLocal } from '../time'
+import type { PromotionRecord } from '../../types/promotions'
+import { loyaltyRoutes } from './loyalty'
 
-// GĐ0: chuyển nguyên logic mock cũ (5 loại khuyến mãi cũ). Đổi sang 7 loại theo KHUYEN_MAI.md ở GĐ3.
+const PROMOTION_TYPES = [
+  'PRODUCT_DISCOUNT',
+  'FLASH_PRICE',
+  'BUY_X_GET_Y',
+  'COMBO',
+  'ORDER_TIERED',
+  'VOUCHER',
+  'ORDER_GIFT',
+] as const
 
-const promotionTypes = ['PERCENT_ORDER', 'FIXED_ORDER', 'BUY_X_GET_Y', 'COMBO', 'STEP_DISCOUNT'] as const
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Ngày phải có dạng YYYY-MM-DD')
+const isoDateTime = z.string().refine((v) => !Number.isNaN(Date.parse(v)), 'Thời gian không hợp lệ')
+const money = z.number().min(0, 'Số tiền không được âm')
+const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Giờ phải có dạng HH:MM')
+const discountType = z.enum(['PERCENT', 'FIXED_AMOUNT'])
 
-const promotionFields = {
+const inputSchema = z.object({
   promotionName: z.string().trim().min(1, 'Vui lòng nhập tên chương trình'),
-  promotionType: z.enum(promotionTypes),
-  voucherCode: z.string().trim().min(1, 'Vui lòng nhập mã voucher'),
-  applyScope: z.enum(['ALL', 'PRODUCT', 'BRAND', 'CATEGORY']),
-  startDate: isoDate,
-  endDate: isoDate,
-  usageLimit: z.number().int().positive('Tổng lượt dùng phải lớn hơn 0'),
-  limitPerCustomer: z.number().int().positive('Lượt dùng mỗi khách phải lớn hơn 0'),
-  minOrderValue: z.number().min(0).optional(),
-  discountType: z.enum(['PERCENT', 'FIXED_AMOUNT']).optional(),
-  discountValue: z.number().optional(),
-  maxDiscountAmount: z.number().optional(),
-}
-const createSchema = z.object(promotionFields).passthrough()
-const updateSchema = z.object(promotionFields).partial().passthrough()
-
-const loyaltySchema = z.object({
-  amountPerPoint: z.number().positive('Tỷ lệ quy đổi điểm phải lớn hơn 0'),
-  redemptionValuePerPoint: z.number().positive().optional(),
-  tiers: z.array(z.object({ tier: z.enum(['BRONZE', 'SILVER', 'GOLD', 'DIAMOND']), minSpend: z.number().min(0) })),
+  description: z.string().trim().nullish(),
+  promotionType: z.enum(PROMOTION_TYPES),
+  status: z.enum(['DRAFT', 'ACTIVE']).optional(),
+  voucherCode: z.string().trim().nullish(),
+  customerId: z.number().int().nullish(),
+  applyScope: z.enum(['ALL', 'PRODUCT', 'BRAND', 'CATEGORY']).nullish(),
+  discountType: discountType.nullish(),
+  discountValue: z.number().positive('Mức giảm phải lớn hơn 0').nullish(),
+  maxDiscountAmount: money.nullish(),
+  fixedPrice: money.nullish(),
+  comboPrice: money.nullish(),
+  buyQuantity: z.number().int().positive('Số món cần mua phải lớn hơn 0').nullish(),
+  isRepeatable: z.boolean().optional(),
+  minOrderValue: money.optional(),
+  minTierId: z.number().int().nullish(),
+  startAt: isoDateTime,
+  endAt: isoDateTime,
+  dailyStartTime: hhmm.nullish(),
+  dailyEndTime: hhmm.nullish(),
+  weekdays: z.string().regex(/^[1-7](,[1-7])*$/, 'Các thứ không hợp lệ').nullish(),
+  maxQuantity: z.number().int().positive().nullish(),
+  usageLimit: z.number().int().positive('Tổng lượt dùng phải lớn hơn 0').nullish(),
+  limitPerCustomer: z.number().int().positive('Lượt dùng mỗi khách phải lớn hơn 0').nullish(),
+  items: z
+    .array(
+      z.object({
+        productId: z.number().int(),
+        role: z.enum(['TARGET', 'BUY', 'GIFT', 'COMBO_ITEM']),
+        quantity: z.number().int().positive(),
+      })
+    )
+    .default([]),
+  brandIds: z.array(z.number().int()).default([]),
+  categoryIds: z.array(z.number().int()).default([]),
+  steps: z
+    .array(
+      z.object({
+        minOrderValue: money,
+        discountType,
+        discountValue: z.number().positive('Mức giảm của bậc phải lớn hơn 0'),
+        maxDiscountAmount: money.nullish(),
+      })
+    )
+    .default([]),
 })
 
-/** Tóm tắt mức giảm để hiển thị trên thẻ khuyến mãi (logic cũ của service, chuyển vào mock). */
-function withSummary(p: PromotionItem): PromotionItem {
-  if (p.valueSummaryTitle) return { ...p, minTierLabel: p.minTierLabel ?? 'Đồng' }
-  let title: string
-  let sub: string
-  if (p.promotionType === 'PERCENT_ORDER' || p.discountType === 'PERCENT') {
-    title = `${p.discountValue ?? 0}%`
-    sub = `Áp dụng với hóa đơn từ ${(p.minOrderValue ?? 0).toLocaleString('vi-VN')} VNĐ`
-  } else if (p.promotionType === 'FIXED_ORDER' || p.discountType === 'FIXED_AMOUNT') {
-    title = `-${(p.discountValue ?? 0).toLocaleString('vi-VN')} đ`
-    sub = 'Giảm trực tiếp trên tổng hóa đơn'
-  } else if (p.promotionType === 'BUY_X_GET_Y') {
-    title = 'Mua X tặng Y sản phẩm'
-    sub = 'Tự động giảm 100% sản phẩm quà tặng'
-  } else if (p.promotionType === 'COMBO') {
-    title = 'Gói Combo ưu đãi trọn bộ'
-    sub = 'Áp dụng khi mua đủ sản phẩm trong gói'
-  } else {
-    title = 'Giảm giá theo bậc thang'
-    sub = 'Tự động chọn bậc cao nhất đơn hàng chạm ngưỡng'
+type Input = z.infer<typeof inputSchema>
+
+const invalid = (message: string) => new MockHttpError(422, 'PROM_INVALID', message)
+
+/** Kiểm cột bắt buộc theo loại (DATABASE.md mục 24) và các ràng buộc chung. */
+function validate(db: MockTransaction, input: Input, selfId: number | null): void {
+  if (new Date(input.endAt) < new Date(input.startAt)) {
+    throw new MockHttpError(422, 'PROM_DATE_RANGE_INVALID', 'Thời gian kết thúc không được trước thời gian bắt đầu')
   }
-  return { ...p, minTierLabel: p.minTierLabel ?? 'Đồng', valueSummaryTitle: title, valueSummarySub: sub }
+  if (input.limitPerCustomer && input.usageLimit && input.limitPerCustomer > input.usageLimit) {
+    throw new MockHttpError(
+      422,
+      'PROM_LIMIT_PER_CUSTOMER_INVALID',
+      'Số lượt mỗi khách không được vượt quá tổng số lượt dùng'
+    )
+  }
+  if (input.discountType === 'PERCENT' && (input.discountValue ?? 0) > 100) {
+    throw invalid('Mức giảm phần trăm không được vượt quá 100%')
+  }
+  const roles = (role: string) => input.items.filter((i) => i.role === role)
+  switch (input.promotionType) {
+    case 'PRODUCT_DISCOUNT':
+      if (!input.applyScope || !input.discountType || !input.discountValue) {
+        throw invalid('Giảm giá sản phẩm cần phạm vi áp dụng, kiểu giảm và mức giảm')
+      }
+      if (input.applyScope === 'PRODUCT' && roles('TARGET').length === 0) throw invalid('Chọn ít nhất một sản phẩm áp dụng')
+      if (input.applyScope === 'BRAND' && input.brandIds.length === 0) throw invalid('Chọn ít nhất một thương hiệu')
+      if (input.applyScope === 'CATEGORY' && input.categoryIds.length === 0) throw invalid('Chọn ít nhất một danh mục')
+      break
+    case 'FLASH_PRICE':
+      if (!input.fixedPrice) throw invalid('Đồng giá giờ vàng cần giá đồng giá')
+      if (roles('TARGET').length === 0) throw invalid('Chọn ít nhất một sản phẩm áp dụng')
+      break
+    case 'BUY_X_GET_Y':
+      if (!input.buyQuantity) throw invalid('Mua X tặng Y cần số món phải mua')
+      if (roles('BUY').length === 0) throw invalid('Chọn ít nhất một sản phẩm nhóm "mua"')
+      if (roles('GIFT').length === 0) throw invalid('Chọn ít nhất một sản phẩm quà tặng')
+      break
+    case 'COMBO':
+      if (!input.comboPrice) throw invalid('Combo cần giá cả bộ')
+      if (roles('COMBO_ITEM').length < 2) throw invalid('Combo cần ít nhất hai sản phẩm')
+      break
+    case 'ORDER_TIERED': {
+      if (input.steps.length === 0) throw invalid('Bậc thang cần ít nhất một bậc')
+      const mins = input.steps.map((s) => s.minOrderValue)
+      if (new Set(mins).size !== mins.length) throw invalid('Hai bậc không được cùng ngưỡng đơn hàng')
+      break
+    }
+    case 'ORDER_GIFT':
+      if (!input.minOrderValue) throw invalid('Quà theo hóa đơn cần ngưỡng đơn hàng')
+      if (roles('GIFT').length === 0) throw invalid('Chọn ít nhất một sản phẩm quà tặng')
+      break
+    case 'VOUCHER':
+      if (!input.voucherCode) throw invalid('Voucher cần mã nhập tại quầy')
+      if (!input.discountType || !input.discountValue) throw invalid('Voucher cần kiểu giảm và mức giảm')
+      if (
+        db
+          .read('promotions')
+          .some((p) => p.id !== selfId && sameText(p.voucherCode, input.voucherCode))
+      ) {
+        throw new MockHttpError(409, 'PROM_VOUCHER_DUPLICATED', 'Mã voucher này đã tồn tại, vui lòng chọn mã khác')
+      }
+      break
+  }
+  const productIds = db.read('products').map((p) => p.id)
+  for (const item of input.items) {
+    if (!productIds.includes(item.productId)) throw invalid(`Sản phẩm #${item.productId} không tồn tại`)
+  }
 }
 
-function findPromotion(list: PromotionItem[], code: string): PromotionItem {
-  const found = list.find((p) => sameText(p.voucherCode, code))
+/** Chỉ giữ cột thuộc loại của khuyến mãi, các cột khác để NULL cho CSDL sạch. */
+function normalize(input: Input): Omit<PromotionRecord, 'id' | 'createdBy' | 'createdAt' | 'updatedAt' | 'status'> {
+  const t = input.promotionType
+  const only = <T,>(types: readonly (typeof PROMOTION_TYPES)[number][], value: T | null | undefined): T | null =>
+    types.includes(t) ? (value ?? null) : null
+  const itemRoles: Record<(typeof PROMOTION_TYPES)[number], string[]> = {
+    PRODUCT_DISCOUNT: ['TARGET'],
+    FLASH_PRICE: ['TARGET'],
+    BUY_X_GET_Y: ['BUY', 'GIFT'],
+    COMBO: ['COMBO_ITEM'],
+    ORDER_TIERED: [],
+    ORDER_GIFT: ['GIFT'],
+    VOUCHER: [],
+  }
+  return {
+    promotionName: input.promotionName,
+    description: input.description || null,
+    promotionType: t,
+    voucherCode: t === 'VOUCHER' ? (input.voucherCode?.toUpperCase() ?? null) : null,
+    customerId: only(['VOUCHER'], input.customerId),
+    applyScope: only(['PRODUCT_DISCOUNT'], input.applyScope),
+    discountType: only(['PRODUCT_DISCOUNT', 'VOUCHER'], input.discountType),
+    discountValue: only(['PRODUCT_DISCOUNT', 'VOUCHER'], input.discountValue),
+    maxDiscountAmount: only(['PRODUCT_DISCOUNT', 'VOUCHER'], input.maxDiscountAmount),
+    fixedPrice: only(['FLASH_PRICE'], input.fixedPrice),
+    comboPrice: only(['COMBO'], input.comboPrice),
+    buyQuantity: only(['BUY_X_GET_Y'], input.buyQuantity),
+    isRepeatable: t === 'BUY_X_GET_Y' ? Boolean(input.isRepeatable) : false,
+    minOrderValue: t === 'VOUCHER' || t === 'ORDER_GIFT' ? (input.minOrderValue ?? 0) : 0,
+    minTierId: input.minTierId ?? null,
+    startAt: input.startAt,
+    endAt: input.endAt,
+    dailyStartTime: only(['FLASH_PRICE'], input.dailyStartTime),
+    dailyEndTime: only(['FLASH_PRICE'], input.dailyEndTime),
+    weekdays: only(['FLASH_PRICE'], input.weekdays),
+    maxQuantity: only(['FLASH_PRICE'], input.maxQuantity),
+    usageLimit: input.usageLimit ?? null,
+    limitPerCustomer: input.limitPerCustomer ?? null,
+    items:
+      t === 'PRODUCT_DISCOUNT' && input.applyScope !== 'PRODUCT'
+        ? []
+        : input.items.filter((i) => itemRoles[t].includes(i.role)),
+    brandIds: t === 'PRODUCT_DISCOUNT' && input.applyScope === 'BRAND' ? input.brandIds : [],
+    categoryIds: t === 'PRODUCT_DISCOUNT' && input.applyScope === 'CATEGORY' ? input.categoryIds : [],
+    steps: t === 'ORDER_TIERED' ? input.steps.map((s) => ({ ...s, maxDiscountAmount: s.maxDiscountAmount ?? null })) : [],
+  }
+}
+
+function findPromotion(db: MockTransaction, id: string): PromotionRecord {
+  const found = db.read('promotions').find((p) => String(p.id) === id)
   if (!found) throw notFound('PROM_NOT_FOUND', 'Không tìm thấy chương trình khuyến mãi')
   return found
 }
 
+/** Phần "khóa sửa" của một khuyến mãi (luật 10): mọi thứ trừ tên, mô tả, ngày kết thúc. */
+const lockedPart = (p: ReturnType<typeof normalize>): string => {
+  const { promotionName, description, endAt, items, brandIds, categoryIds, steps, ...rest } = p
+  void promotionName
+  void description
+  void endAt
+  const sortedItems = [...items].sort((a, b) => a.role.localeCompare(b.role) || a.productId - b.productId)
+  const sortedSteps = steps
+    .map((s) => [s.minOrderValue, s.discountType, s.discountValue, s.maxDiscountAmount ?? null])
+    .sort((a, b) => Number(a[0]) - Number(b[0]))
+  const scalars = Object.keys(rest)
+    .sort()
+    .map((k) => [k, (rest as Record<string, unknown>)[k]])
+  return JSON.stringify([scalars, sortedItems, [...brandIds].sort(), [...categoryIds].sort(), sortedSteps])
+}
+
 export const promotionRoutes: MockRoute[] = [
-  {
-    method: 'GET',
-    path: '/loyalty-config',
-    handler: ({ db }) => ok(db.read('loyaltyConfig'), 'Lấy cấu hình tích điểm thành công'),
-  },
-  {
-    method: 'PUT',
-    path: '/loyalty-config',
-    permission: 'LOYALTY_CONFIG',
-    handler: ({ db, body }) => {
-      const input = parseBody(loyaltySchema, body)
-      const spend = (code: string) => input.tiers.find((t) => t.tier === code)?.minSpend
-      const [b, s, g, d] = ['BRONZE', 'SILVER', 'GOLD', 'DIAMOND'].map(spend)
-      if (b !== 0 || s === undefined || g === undefined || d === undefined || !(s > 0 && s < g && g < d)) {
-        throw new MockHttpError(
-          422,
-          'CUS_TIER_SPEND_INVALID',
-          'Mức chi tiêu của hạng sau phải lớn hơn hạng trước (hạng Đồng = 0)'
-        )
-      }
-      const current = db.read('loyaltyConfig')
-      const next: LoyaltyConfigData = {
-        amountPerPoint: input.amountPerPoint,
-        redemptionValuePerPoint: input.redemptionValuePerPoint ?? current.redemptionValuePerPoint ?? 100,
-        tiers: SEED_LOYALTY_CONFIG.tiers.map((tmpl) => {
-          const old = current.tiers.find((t) => t.tier === tmpl.tier) ?? tmpl
-          return { ...old, minSpend: spend(tmpl.tier) ?? old.minSpend }
-        }),
-      }
-      db.write('loyaltyConfig', next)
-      return ok(next, 'Lưu cấu hình thành công')
-    },
-  },
+  ...loyaltyRoutes,
   {
     method: 'GET',
     path: '/promotions',
     permission: 'PROMOTION_VIEW',
-    handler: ({ db, query }) => {
+    handler: ({ db, query, now }) => {
       const kw = keywordOf(query)
+      const type = query.get('type')
       const status = query.get('status')
+      const phase = query.get('phase')
+      const usage = buildUsageIndex(db)
       const items = db
         .read('promotions')
         .filter(
           (p) =>
-            (!kw || p.voucherCode.toLowerCase().includes(kw) || p.promotionName.toLowerCase().includes(kw)) &&
-            (!status || p.status === status)
+            (!kw || (p.voucherCode ?? '').toLowerCase().includes(kw) || p.promotionName.toLowerCase().includes(kw)) &&
+            (!type || type === 'ALL' || p.promotionType === type) &&
+            (!status || status === 'ALL' || p.status === status) &&
+            (!phase || phase === 'ALL' || phaseOf(p, now) === phase)
         )
-      return ok(paginate(items, query), 'Lấy danh sách thành công')
+        .sort((a, b) => b.id - a.id)
+        .map((p) => toView(db, p, now, usage))
+      return ok(paginate(items, query, 12), 'Lấy danh sách khuyến mãi thành công')
     },
+  },
+  {
+    method: 'GET',
+    path: '/promotions/:id',
+    permission: 'PROMOTION_VIEW',
+    handler: ({ db, params, now }) =>
+      ok(toView(db, findPromotion(db, params.id), now, buildUsageIndex(db)), 'Lấy chương trình khuyến mãi thành công'),
   },
   {
     method: 'POST',
     path: '/promotions',
     permission: 'PROMOTION_MANAGE',
-    handler: ({ db, body }) => {
-      const input = parseBody(createSchema, body)
+    handler: ({ db, body, user, now }) => {
+      const input = parseBody(inputSchema, body)
+      validate(db, input, null)
       const promotions = db.read('promotions')
-      const code = input.voucherCode.toUpperCase()
-      if (promotions.some((p) => sameText(p.voucherCode, code))) {
-        throw new MockHttpError(409, 'PROM_VOUCHER_DUPLICATED', 'Mã voucher này đã tồn tại, vui lòng chọn mã khác')
+      const created: PromotionRecord = {
+        ...normalize(input),
+        id: db.nextSeq('promotion', promotions.reduce((m, p) => Math.max(m, p.id), 0) + 1),
+        status: input.status ?? 'DRAFT',
+        createdBy: user?.id ?? 0,
+        createdAt: toIsoLocal(now),
+        updatedAt: null,
       }
-      if (input.startDate > input.endDate) {
-        throw new MockHttpError(422, 'PROM_DATE_RANGE_INVALID', 'Ngày bắt đầu không được lớn hơn ngày kết thúc')
-      }
-      if (input.limitPerCustomer > input.usageLimit) {
-        throw new MockHttpError(
-          422,
-          'PROM_LIMIT_PER_CUSTOMER_INVALID',
-          'Số lượt sử dụng trên mỗi khách hàng không được vượt quá tổng số lượt sử dụng'
-        )
-      }
-      if (
-        (input.promotionType === 'PERCENT_ORDER' || input.promotionType === 'FIXED_ORDER') &&
-        (!input.discountValue || input.discountValue <= 0)
-      ) {
-        throw new MockHttpError(422, 'PROM_DISCOUNT_VALUE_INVALID', 'Mức giảm không hợp lệ')
-      }
-      const created = withSummary({
-        voucherCode: code,
-        promotionName: input.promotionName,
-        promotionType: input.promotionType,
-        applyScope: input.applyScope,
-        discountType: input.discountType ?? null,
-        discountValue: input.discountValue ?? null,
-        maxDiscountAmount: input.maxDiscountAmount,
-        minOrderValue: input.minOrderValue ?? 0,
-        startDate: input.startDate,
-        endDate: input.endDate,
-        status: 'ACTIVE',
-        usedCount: 0,
-        usageLimit: input.usageLimit,
-        limitPerCustomer: input.limitPerCustomer,
-      })
-      db.write('promotions', [created, ...promotions])
-      return ok(created, 'Tạo chương trình khuyến mãi thành công', 201)
+      db.write('promotions', [...promotions, created])
+      return ok(toView(db, created, now, buildUsageIndex(db)), 'Tạo chương trình khuyến mãi thành công', 201)
     },
   },
   {
     method: 'PUT',
-    path: '/promotions/:code',
+    path: '/promotions/:id',
     permission: 'PROMOTION_MANAGE',
-    handler: ({ db, params, body }) => {
-      const input = parseBody(updateSchema, body)
-      const promotions = db.read('promotions')
-      const target = findPromotion(promotions, params.code)
-      // Luật 10: đã có đơn dùng thì chỉ được gia hạn hoặc tăng lượt dùng.
-      if (target.usedCount > 0) {
-        const locked =
-          (input.usageLimit !== undefined && input.usageLimit < target.usageLimit) ||
-          (input.endDate !== undefined && input.endDate < target.endDate) ||
-          (input.discountValue !== undefined && input.discountValue !== target.discountValue) ||
-          (input.discountType !== undefined && input.discountType !== target.discountType) ||
-          (input.applyScope !== undefined && input.applyScope !== target.applyScope)
-        if (locked) {
+    handler: ({ db, params, body, now }) => {
+      const input = parseBody(inputSchema, body)
+      const target = findPromotion(db, params.id)
+      validate(db, input, target.id)
+      const next = normalize(input)
+      const usage = buildUsageIndex(db)
+      if ((usage.used.get(target.id) ?? 0) > 0) {
+        const { id, createdBy, createdAt, updatedAt, status, ...currentFields } = target
+        void id
+        void createdBy
+        void createdAt
+        void updatedAt
+        void status
+        if (lockedPart(next) !== lockedPart(currentFields)) {
           throw new MockHttpError(
             409,
             'PROM_FIELD_LOCKED',
-            'Chương trình đã phát sinh giao dịch, chỉ được kéo dài ngày kết thúc hoặc tăng số lượt dùng'
+            'Chương trình đã có đơn dùng: chỉ được đổi tên, mô tả, ngày kết thúc hoặc tạm dừng'
           )
         }
       }
-      Object.assign(target, {
-        promotionName: input.promotionName ?? target.promotionName,
-        discountType: input.discountType ?? target.discountType,
-        discountValue: input.discountValue ?? target.discountValue,
-        minOrderValue: input.minOrderValue ?? target.minOrderValue,
-        startDate: input.startDate ?? target.startDate,
-        endDate: input.endDate ?? target.endDate,
-        usageLimit: input.usageLimit ?? target.usageLimit,
-        limitPerCustomer: input.limitPerCustomer ?? target.limitPerCustomer,
-        valueSummaryTitle: undefined,
-        valueSummarySub: undefined,
-      })
-      Object.assign(target, withSummary(target))
+      Object.assign(target, next, { updatedAt: toIsoLocal(now) })
+      if (input.status && target.status === 'DRAFT') target.status = input.status
       db.touch('promotions')
-      return ok(target, 'Cập nhật chương trình khuyến mãi thành công')
+      return ok(toView(db, target, now, usage), 'Cập nhật chương trình khuyến mãi thành công')
     },
   },
   {
     method: 'PATCH',
-    path: '/promotions/:code/pause',
+    path: '/promotions/:id/status',
     permission: 'PROMOTION_MANAGE',
-    handler: ({ db, params }) => {
-      const target = findPromotion(db.read('promotions'), params.code)
-      if (target.status === 'PENDING' || target.status === 'EXPIRED') {
-        throw new MockHttpError(409, 'PROM_STATUS_INVALID', 'Trạng thái hiện tại không cho phép tạm dừng/kích hoạt')
+    handler: ({ db, params, body, now }) => {
+      const { status } = parseBody(z.object({ status: z.enum(['ACTIVE', 'PAUSED']) }), body)
+      const target = findPromotion(db, params.id)
+      if (target.status === status) {
+        throw new MockHttpError(409, 'PROM_STATUS_INVALID', 'Chương trình đã ở trạng thái này')
       }
-      target.status = target.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE'
+      if (status === 'PAUSED' && target.status !== 'ACTIVE') {
+        throw new MockHttpError(409, 'PROM_STATUS_INVALID', 'Chỉ chương trình đang kích hoạt mới tạm dừng được')
+      }
+      target.status = status
+      target.updatedAt = toIsoLocal(now)
       db.touch('promotions')
       return ok(
-        { voucherCode: target.voucherCode, status: target.status },
-        target.status === 'PAUSED' ? 'Tạm dừng chương trình thành công' : 'Kích hoạt chương trình thành công'
+        toView(db, target, now, buildUsageIndex(db)),
+        status === 'PAUSED' ? 'Đã tạm dừng chương trình' : 'Đã kích hoạt chương trình'
       )
-    },
-  },
-  {
-    method: 'GET',
-    path: '/promotions/:code/report',
-    permission: 'PROMOTION_REPORT',
-    handler: ({ db, params }) => {
-      const target = findPromotion(db.read('promotions'), params.code)
-      // Số liệu minh họa cố định; báo cáo thật tính từ đơn hàng ở GĐ6 (PROM-04).
-      const usage = target.usedCount
-      const avgOrder = 750000
-      const avgDiscount = 75000
-      const data: PromotionReportData = {
-        totalUsage: usage,
-        totalDiscountAmount: usage * avgDiscount,
-        totalRevenueGenerated: usage * avgOrder,
-        uniqueCustomers: Math.round(usage * 0.85),
-        averageOrderValue: usage ? avgOrder : 0,
-        averageDiscountPerOrder: usage ? avgDiscount : 0,
-        usageRate: target.usageLimit ? usage / target.usageLimit : 0,
-        usageByDate: [],
-        orders: [],
-        topCustomers: [],
-      }
-      return ok(data, 'Lấy báo cáo thành công')
     },
   },
 ]

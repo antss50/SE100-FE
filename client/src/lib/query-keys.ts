@@ -1,7 +1,38 @@
 /** Khai báo tập trung query key cho TanStack Query (CLAUDE.md mục 4). */
 export const queryKeys = {
   shifts: {
+    all: ['shifts'] as const,
     current: ['shifts', 'current'] as const,
+    list: (params: object) => ['shifts', 'list', params] as const,
+    detail: (id: number | string) => ['shifts', 'detail', String(id)] as const,
+  },
+  promotions: {
+    all: ['promotions'] as const,
+    list: (params: object) => ['promotions', 'list', params] as const,
+    detail: (id: number | string) => ['promotions', 'detail', String(id)] as const,
+  },
+  catalog: {
+    forPromotions: ['catalog', 'for-promotions'] as const,
+  },
+  pos: {
+    all: ['pos'] as const,
+    products: (params: object) => ['pos', 'products', params] as const,
+    lots: (productId: number) => ['pos', 'lots', productId] as const,
+    drafts: ['pos', 'drafts'] as const,
+  },
+  orders: {
+    all: ['orders'] as const,
+    list: (params: object) => ['orders', 'list', params] as const,
+    detail: (id: number | string) => ['orders', 'detail', String(id)] as const,
+  },
+  returns: {
+    all: ['returns'] as const,
+    list: (params: object) => ['returns', 'list', params] as const,
+    detail: (id: number | string) => ['returns', 'detail', String(id)] as const,
+    returnable: (orderId: number | string) => ['returns', 'returnable', String(orderId)] as const,
+  },
+  settings: {
+    all: ['settings'] as const,
   },
   customers: {
     all: ['customers'] as const,

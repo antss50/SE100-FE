@@ -8,9 +8,9 @@ import type {
   CustomerItem,
   LoyaltyConfigData,
   ProductItem,
-  PromotionItem,
-  ShiftInfo,
 } from '../types/api'
+import type { CashierShift, OrderRecord, ReturnOrderRecord } from '../types/pos'
+import type { PromotionRecord } from '../types/promotions'
 import { SEED_AUDIT_LOGS } from './seed/audit-logs'
 import { SEED_BRANDS, SEED_CATEGORIES, SEED_PRODUCTS } from './seed/catalog'
 import { SEED_CUSTOMERS } from './seed/customers'
@@ -29,9 +29,13 @@ export interface MockSession {
   createdAt: string
 }
 
-/** Ca làm việc (CASHIER_SHIFTS) — GĐ0 chỉ giữ các trường màn hình cũ đang dùng. */
-export interface MockShift extends ShiftInfo {
-  closedAt?: string | null
+/** Bảng RETURN_POLICIES (chỉ còn thời hạn đổi trả). */
+export interface ReturnPolicy {
+  id: number
+  policyName: string
+  maxReturnDays: number
+  isDefault: boolean
+  status: 'ACTIVE' | 'INACTIVE'
 }
 
 export interface MockTables {
@@ -42,13 +46,16 @@ export interface MockTables {
   permissions: MockPermission[]
   roles: MockRole[]
   auditLogs: AuditLogItem[]
-  shifts: MockShift[]
+  shifts: CashierShift[]
   customers: CustomerItem[]
   categories: CategoryItem[]
   brands: BrandItem[]
   products: ProductItem[]
   loyaltyConfig: LoyaltyConfigData
-  promotions: PromotionItem[]
+  promotions: PromotionRecord[]
+  orders: OrderRecord[]
+  returns: ReturnOrderRecord[]
+  returnPolicies: ReturnPolicy[]
   suppliers: Supplier[]
   /** Phiếu nhập kho kèm dòng chi tiết (PURCHASE_ORDERS + PURCHASE_ORDER_DETAILS). */
   purchaseOrders: PurchaseOrderDetail[]
@@ -71,7 +78,7 @@ export type TableName = keyof MockTables
  * Phiên bản cấu trúc seed. Đổi cấu trúc bảng hoặc dữ liệu seed thì tăng số này
  * (CLAUDE.md mục 5.2) để trình duyệt bỏ dữ liệu cũ.
  */
-export const MOCK_DB_VERSION = 5
+export const MOCK_DB_VERSION = 6
 const KEY_PREFIX = 'se100_mock_'
 const keyOf = (table: string) => `${KEY_PREFIX}${table}_v${MOCK_DB_VERSION}`
 const META_KEY = keyOf('meta')
@@ -103,6 +110,9 @@ export function buildSeed(today: Date = new Date()): MockTables {
     products,
     loyaltyConfig: clone(SEED_LOYALTY_CONFIG),
     promotions: seedPromotions(today),
+    orders: [],
+    returns: [],
+    returnPolicies: [{ id: 1, policyName: 'Tiêu chuẩn 7 ngày', maxReturnDays: 7, isDefault: true, status: 'ACTIVE' }],
     suppliers,
     purchaseOrders: stock.purchaseOrders,
     batches: stock.batches,
