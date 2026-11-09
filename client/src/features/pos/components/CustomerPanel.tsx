@@ -16,7 +16,7 @@ interface CustomerPanelProps {
   disabled: boolean
 }
 
-/** CUS-04: tìm khách theo SĐT (F3) hoặc tạo nhanh; dùng điểm thưởng (tối đa theo POINT_MAX_REDEEM_PERCENT, luật 44). */
+/** CUS-04: tìm khách theo SĐT hoặc tạo nhanh; dùng điểm thưởng (tối đa theo POINT_MAX_REDEEM_PERCENT, luật 44). */
 export function CustomerPanel({ phoneRef, quote, disabled }: CustomerPanelProps) {
   const queryClient = useQueryClient()
   const canRedeem = useCan('LOYALTY_REDEEM')
@@ -131,7 +131,7 @@ export function CustomerPanel({ phoneRef, quote, disabled }: CustomerPanelProps)
           className="flex gap-2"
         >
           <label className="relative flex-1">
-            <span className="sr-only">Số điện thoại khách hàng (F3)</span>
+            <span className="sr-only">Số điện thoại khách hàng</span>
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden="true" />
             <input
               ref={phoneRef}
@@ -139,7 +139,7 @@ export function CustomerPanel({ phoneRef, quote, disabled }: CustomerPanelProps)
               disabled={disabled}
               onChange={(e) => setPhone(e.target.value)}
               inputMode="tel"
-              placeholder="SĐT khách hàng (F3), bỏ trống = khách vãng lai"
+              placeholder="SĐT khách hàng, bỏ trống = khách vãng lai"
               className="w-full rounded-xl border border-line bg-white py-2 pl-9 pr-3 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/15 disabled:bg-neutral-soft"
             />
           </label>

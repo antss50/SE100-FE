@@ -26,6 +26,7 @@ import { ApiClientError } from '../../lib/api-client'
 import { usersService } from '../../services/users.service'
 import type { UserItem } from '../../types/api'
 import { formatNumber, getInitials, getRoleBadgeMeta } from '../../utils/format'
+import { toast } from '../../components/ui'
 
 export function UserDetailPage() {
   const { userId } = useParams<{ userId: string }>()
@@ -39,7 +40,6 @@ export function UserDetailPage() {
   const [editFullName, setEditFullName] = useState('')
   const [editEmail, setEditEmail] = useState('')
   const [editPhone, setEditPhone] = useState('')
-  const [statusMessage, setStatusMessage] = useState<string | null>(null)
 
   useEffect(() => {
     usersService.getUserById(userId || 'NV0003').then((data) => {
@@ -62,23 +62,18 @@ export function UserDetailPage() {
   const roleMeta = getRoleBadgeMeta(primaryRole)
   const isLocked = staff.status === 'LOCKED'
 
-  const showNotice = (msg: string) => {
-    setStatusMessage(msg)
-    setTimeout(() => setStatusMessage(null), 3500)
-  }
-
   const handleToggleLock = async () => {
     try {
       const updated = await usersService.toggleUserLock(staff)
       setStaff(updated)
-      showNotice(
+      toast.success(
         updated.status === 'LOCKED'
           ? 'Đã khóa tạm thời tài khoản nhân viên'
           : 'Đã kích hoạt lại tài khoản nhân viên'
       )
     } catch (err) {
       if (err instanceof ApiClientError) {
-        showNotice(err.message)
+        toast.error(err.message)
       }
     }
   }
@@ -91,7 +86,7 @@ export function UserDetailPage() {
     })
     setStaff(updated)
     setIsEditOpen(false)
-    showNotice('Đã cập nhật thông tin hồ sơ nhân viên')
+    toast.success('Đã cập nhật thông tin hồ sơ nhân viên')
   }
 
   const weeklyChart = staff.weeklyRevenue || [
@@ -164,12 +159,6 @@ export function UserDetailPage() {
           </span>
         </div>
       </div>
-
-      {statusMessage && (
-        <div className="rounded-2xl bg-[#2b1d16] text-amber-50 px-4 py-3 text-xs font-medium shadow-md">
-          {statusMessage}
-        </div>
-      )}
 
       {/* Main Profile Header Card */}
       <div className="rounded-3xl bg-white border border-[#ead9ce] p-6 shadow-2xs flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -562,7 +551,7 @@ export function UserDetailPage() {
             <button
               type="button"
               onClick={() =>
-                showNotice(
+                toast.success(
                   `Đã thu hồi toàn bộ Refresh Token của tài khoản ${staff.username}`
                 )
               }

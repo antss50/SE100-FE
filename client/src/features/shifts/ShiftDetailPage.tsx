@@ -154,7 +154,13 @@ export function ShiftDetailPage() {
       {returns.length > 0 && (
         <section className="rounded-2xl border border-line bg-white">
           <h2 className="border-b border-line p-5 text-lg font-bold text-ink">5. Phiếu đổi trả trong ca ({returns.length})</h2>
-          <DataTable caption="Phiếu trả trong ca" columns={returnColumns} rows={returns} rowKey={(r) => r.id} />
+          <DataTable
+            caption="Phiếu trả trong ca"
+            columns={returnColumns}
+            rows={returns}
+            rowKey={(r) => r.id}
+            onRowClick={(r) => navigate(`/returns/${r.id}`)}
+          />
         </section>
       )}
 

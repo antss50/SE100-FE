@@ -19,15 +19,6 @@ import { ProductSearchPanel } from './components/ProductSearchPanel'
 import { ReceiptModal } from './components/ReceiptModal'
 import { usePosStore } from './pos-store'
 
-const SHORTCUTS = [
-  ['F1', 'Tìm hàng'],
-  ['F2', 'Quét barcode'],
-  ['F3', 'Khách hàng'],
-  ['F4', 'Đổi trả'],
-  ['F8', 'Chốt ca'],
-  ['F9', 'Hoàn tất'],
-] as const
-
 /** POS-02, POS-03, CUS-04, PROM-03: màn thu ngân. Giá, khuyến mãi, lô FEFO do máy chủ tính; màn này chỉ giữ giỏ hàng nháp. */
 export function PosPage() {
   const navigate = useNavigate()
@@ -152,14 +143,6 @@ export function PosPage() {
             {draftId !== null && ' · đang sửa đơn nháp'}
           </p>
         </div>
-        <ul className="flex flex-wrap gap-1.5" aria-label="Phím tắt">
-          {SHORTCUTS.map(([key, label]) => (
-            <li key={key} className="rounded-lg bg-card px-2 py-1 text-xs text-ink-soft">
-              <kbd className="mr-1 font-mono font-bold text-accent">{key}</kbd>
-              {label}
-            </li>
-          ))}
-        </ul>
         <Button variant="secondary" size="sm" icon={<FileClock className="size-4" aria-hidden="true" />} onClick={() => setShowDrafts(true)}>
           Đơn nháp{draftsCount > 0 ? ` (${draftsCount})` : ''}
         </Button>

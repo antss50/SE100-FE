@@ -562,7 +562,7 @@ export function CustomerDetailPage() {
                           <button
                             type="button"
                             onClick={() =>
-                              setToastMsg(
+                              toast.info(
                                 `Đang xem chi tiết hóa đơn ${ord.orderCode}`
                               )
                             }

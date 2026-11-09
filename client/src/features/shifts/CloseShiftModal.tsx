@@ -97,11 +97,12 @@ export function CloseShiftModal({ open, shift, summary, onClose }: CloseShiftMod
         </div>
         <Input
           label="Tiền mặt thực đếm (đ)"
-          type="number"
-          min={0}
+          type="text"
+          inputMode="numeric"
+          formatThousands
           required
           error={errors.actualCash?.message}
-          {...register('actualCash', { valueAsNumber: true })}
+          {...register('actualCash', { setValueAs: (value) => (value === '' ? Number.NaN : Number(String(value).replace(/\D/g, ''))) })}
         />
         {entered && (
           <p className={difference === 0 ? 'text-sm text-success' : 'text-sm font-semibold text-danger'} aria-live="polite">

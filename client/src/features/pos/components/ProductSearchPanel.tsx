@@ -15,7 +15,7 @@ interface ProductSearchPanelProps {
   onAdd: (product: PosProduct) => void
 }
 
-/** POS-02: tìm hàng (F1) và quét barcode (F2). Chỉ hiện SKU bán được còn tồn bán được; lô FEFO đầu tiên hiện ở cột Lô. */
+/** POS-02: tìm hàng và quét barcode. Chỉ hiện SKU bán được còn tồn bán được; lô FEFO đầu tiên hiện ở cột Lô. */
 export function ProductSearchPanel({ searchRef, scanRef, disabled, onAdd }: ProductSearchPanelProps) {
   const [keyword, setKeyword] = useState('')
   const [scan, setScan] = useState('')
@@ -47,19 +47,19 @@ export function ProductSearchPanel({ searchRef, scanRef, disabled, onAdd }: Prod
     <section className="flex min-h-0 flex-col rounded-2xl border border-line bg-white" aria-label="Chọn sản phẩm">
       <div className="grid gap-3 border-b border-line p-4 md:grid-cols-[2fr_1fr]">
         <label className="relative">
-          <span className="sr-only">Tìm sản phẩm (F1)</span>
+          <span className="sr-only">Tìm sản phẩm</span>
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden="true" />
           <input
             ref={searchRef}
             value={keyword}
             disabled={disabled}
             onChange={(e) => setKeyword(e.target.value)}
-            placeholder="Tìm theo tên, SKU, barcode (F1)"
+            placeholder="Tìm theo tên, SKU, barcode"
             className={inputClass}
           />
         </label>
         <label className="relative">
-          <span className="sr-only">Quét barcode (F2)</span>
+          <span className="sr-only">Quét barcode</span>
           <Barcode className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden="true" />
           <input
             ref={scanRef}
@@ -72,7 +72,7 @@ export function ProductSearchPanel({ searchRef, scanRef, disabled, onAdd }: Prod
                 void submitScan()
               }
             }}
-            placeholder="Quét mã vạch (F2)"
+            placeholder="Quét mã vạch"
             className={inputClass}
           />
         </label>

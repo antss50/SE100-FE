@@ -110,8 +110,9 @@ export function ShiftModal() {
         <form id="open-shift-form" onSubmit={handleSubmit((v) => mutation.mutate(v))} noValidate>
           <Input
             label="Tiền mặt đầu ca (đ)"
-            type="number"
-            min={0}
+            type="text"
+            inputMode="numeric"
+            formatThousands
             required
             error={errors.openingCash?.message}
             {...register('openingCash', { valueAsNumber: true })}

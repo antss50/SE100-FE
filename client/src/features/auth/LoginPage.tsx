@@ -15,6 +15,7 @@ import { useAuthStore, useUiStore } from '../../app/store'
 import { ApiClientError, USE_MOCK } from '../../lib/api-client'
 import { homePathFor } from '../../routes/nav-config'
 import { authService } from '../../services/auth.service'
+import loginStoreImage from '../../assets/ảnh màn hình đăng nhập.jpg'
 import { DEMO_ACCOUNTS, DEMO_PASSWORD } from './demo-accounts'
 
 export function LoginPage() {
@@ -104,8 +105,16 @@ export function LoginPage() {
 
             {/* Boutique Visual Banner */}
             <div className="mt-6 relative rounded-2xl overflow-hidden h-56 shadow-md border border-[#ebcfc0] bg-gradient-to-br from-[#8c5239] via-[#b57355] to-[#563020]">
+              <img
+                src={loginStoreImage}
+                alt="Sản phẩm mỹ phẩm tại cửa hàng Flagship"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
               <div
-                className="absolute inset-0 opacity-35"
+                className="absolute inset-0 bg-[#563020]/15"
+              />
+              <div
+                className="absolute inset-0 opacity-25"
                 style={{
                   backgroundImage:
                     'radial-gradient(circle at 25% 25%, rgba(255,245,235,0.7) 0%, transparent 55%), radial-gradient(circle at 80% 70%, rgba(255,205,178,0.5) 0%, transparent 50%)',
@@ -132,6 +141,7 @@ export function LoginPage() {
                 </div>
               </div>
             </div>
+
           </div>
 
           {/* 3 Feature Highlight Cards */}

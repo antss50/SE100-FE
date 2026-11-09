@@ -49,10 +49,12 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string
   hint?: string
   containerClassName?: string
+  /** Show digit grouping while keeping the form value numeric and unformatted. */
+  formatThousands?: boolean
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { label, error, hint, id, required, className, containerClassName, ...rest },
+  { label, error, hint, id, required, className, containerClassName, formatThousands, onChange, ...rest },
   ref
 ) {
   const autoId = useId()
@@ -66,6 +68,18 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${fieldId}-error` : hint ? `${fieldId}-hint` : undefined}
         className={cn(FIELD_CLASS, error ? 'border-danger' : 'border-line', className)}
+        onChange={(event) => {
+          if (!formatThousands) {
+            onChange?.(event)
+            return
+          }
+          const raw = event.currentTarget.value.replace(/\D/g, '')
+          const formatted = raw.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+          // RHF (including valueAsNumber) must read plain digits before the UI is grouped.
+          event.currentTarget.value = raw
+          onChange?.(event)
+          event.currentTarget.value = formatted
+        }}
         {...rest}
       />
     </FieldShell>

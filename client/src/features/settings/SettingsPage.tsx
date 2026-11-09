@@ -110,8 +110,8 @@ export function SettingsPage() {
         <Input label="Số ngày cảnh báo cận hạn" inputMode="numeric" hint="Lô còn ít hơn số ngày này là cận hạn" error={errors.EXPIRY_WARNING_DAYS?.message} {...register('EXPIRY_WARNING_DAYS')} />
       </Section>
       <Section title="Điểm thưởng" description="Tích điểm chạy ngay khi hoàn tất đơn; điểm dùng trừ trên phần tiền còn lại sau 3 tầng khuyến mãi.">
-        <Input label="Số tiền để được 1 điểm (đ)" inputMode="numeric" error={errors.POINT_EARN_AMOUNT?.message} {...register('POINT_EARN_AMOUNT')} />
-        <Input label="Giá trị 1 điểm khi đổi (đ)" inputMode="numeric" error={errors.POINT_REDEEM_VALUE?.message} {...register('POINT_REDEEM_VALUE')} />
+        <Input label="Số tiền để được 1 điểm (đ)" type="text" inputMode="numeric" formatThousands error={errors.POINT_EARN_AMOUNT?.message} {...register('POINT_EARN_AMOUNT')} />
+        <Input label="Giá trị 1 điểm khi đổi (đ)" type="text" inputMode="numeric" formatThousands error={errors.POINT_REDEEM_VALUE?.message} {...register('POINT_REDEEM_VALUE')} />
         <Input label="Điểm dùng tối đa (% giá trị đơn)" inputMode="numeric" error={errors.POINT_MAX_REDEEM_PERCENT?.message} {...register('POINT_MAX_REDEEM_PERCENT')} />
       </Section>
       <Section title="Chính sách đổi trả" description="Hàng lỗi hoàn tiền hoặc đổi, khách đổi ý chỉ đổi hàng là luật cố định; chỉ thời hạn chỉnh được.">

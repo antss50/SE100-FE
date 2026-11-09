@@ -138,11 +138,11 @@ export function PaymentPanel({ quote, quoting, disabled, completing, savingDraft
           </label>
           <input
             id="pos-received"
-            type="number"
-            min={0}
-            value={received}
+            type="text"
+            inputMode="numeric"
+            value={received ? received.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''}
             disabled={disabled}
-            onChange={(e) => setReceived(e.target.value)}
+            onChange={(e) => setReceived(e.target.value.replace(/\D/g, ''))}
             className="w-full rounded-xl border border-line bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
           />
           <p aria-live="polite" className={`text-xs font-semibold ${cashShort ? 'text-danger' : 'text-success'}`}>
@@ -160,14 +160,14 @@ export function PaymentPanel({ quote, quoting, disabled, completing, savingDraft
         loading={completing}
         onClick={onComplete}
       >
-        In hóa đơn và hoàn tất (F9)
+        In hóa đơn và hoàn tất
       </Button>
       <div className="grid grid-cols-2 gap-2">
         <Button variant="secondary" icon={<FileClock className="size-4" aria-hidden="true" />} disabled={disabled || itemCount === 0} loading={savingDraft} onClick={onSaveDraft}>
           Lưu đơn nháp
         </Button>
         <Button variant="secondary" icon={<Undo2 className="size-4" aria-hidden="true" />} onClick={onReturn}>
-          Đổi trả (F4)
+          Đổi trả
         </Button>
       </div>
     </section>
