@@ -28,6 +28,7 @@ Thiết kế hoặc code cũ trái tài liệu thì **làm theo tài liệu**, v
 | D5 | Mock | Cờ `VITE_USE_MOCK`. Bỏ cơ chế "lỗi mạng thì rơi về mock" |
 | D6 | Git | Làm trên nhánh `demo` (tách từ `feat/sprint1-2`) trong repo `SE100-FE`. Từ 2026-11-08 được push lên `origin/demo`; chỉ **điều phối** push, sau khi cổng chất lượng của giai đoạn qua. Agent code/kiểm thử không push |
 | D7 | Nhịp chạy | Agent tự chạy, tự test hết các giai đoạn; chỉ dừng khi có câu hỏi cần chủ dự án quyết |
+| D21 | Gộp giai đoạn, test dồn cuối | Từ 2026-11-09: 5 giai đoạn (GĐ0 nền tảng, GĐ1 kho, GĐ2 sửa cũ + bán hàng, GĐ3 báo cáo, GĐ4 kiểm thử toàn bộ). Trong GĐ1–3 chỉ viết code, **không viết E2E/component test**, không chạy `test:e2e`; chỉ viết unit test cho hàm thuần `domain/` (luật nghiệp vụ tiền/tồn) |
 
 ## 3. Bản đồ UC → thiết kế
 
