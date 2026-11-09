@@ -1,18 +1,27 @@
 # API contract (frontend đề xuất cho backend)
 
 > Quy ước chung: [../../CLAUDE.md](../../CLAUDE.md) mục 5.1. Mock trong `src/mocks/` phải trả đúng như file này.
-> Mỗi endpoint một mục theo mẫu dưới. Đổi contract đã có thì ghi lý do vào QUYET-DINH.md.
+> Mỗi endpoint một mục: quyền, request, response, mã lỗi. Đổi contract đã có thì ghi lý do vào QUYET-DINH.md.
 
-## Mẫu
+## Mục lục
 
-### `POST /purchase-orders/{id}/confirm` — STK-01
-- **Quyền:** `STOCK_IMPORT`
-- **Request:** header `Idempotency-Key`; body `{}`
-- **Response 200:** `PurchaseOrderDetail`
-- **Lỗi:** `404 STK_PO_NOT_FOUND`, `409 STK_PO_ALREADY_CONFIRMED`, `422 STK_PO_EMPTY`
-- **Ghi chú:** bấm 2 lần không cộng tồn 2 lần (luật 30).
-
----
+| Nhóm | Số endpoint |
+|---|---|
+| AUTH | 16 |
+| PRODUCT | 15 |
+| CUSTOMER | 7 |
+| PROMOTION (PROM-01, PROM-02) | 6 |
+| POS · Ca bán hàng (POS-01, POS-05) | 6 |
+| POS · Bán hàng và thanh toán (POS-02, POS-03, PROM-03, CUS-04) | 7 |
+| POS · Đổi trả hàng (POS-04) | 5 |
+| SETTINGS · Cấu hình hệ thống (AUTH-07) | 3 |
+| SUPPLIER (SUPP-01..03) | 7 |
+| STOCK · Nhập kho (STK-01) | 7 |
+| STOCK · Tồn kho theo lô, cận hạn (STK-02, STK-03) | 4 |
+| STOCK · Kiểm kho (STK-04, STK-05) | 8 |
+| STOCK · Xuất hủy / tester / trả NCC (STK-06, STK-07) | 5 |
+| REPORT · Báo cáo (REP-01..06, PROM-04) | 6 |
+| **Tổng** | **102** |
 
 ## Kiểu dùng chung
 
@@ -34,7 +43,7 @@ type PaginatedData<T> = { items: T[]; page: number; pageSize: number; totalItems
 - Danh sách: query `page` (từ 1), `pageSize` (mặc định 20), `keyword`; trả `PaginatedData<T>`.
 - Kiểu dữ liệu (`AuthUser`, `UserItem`, `CustomerItem`, `ProductItem`…) lấy theo `src/types/api.ts`.
 
-> **GĐ0:** các endpoint dưới đây ghi **đúng như service hiện tại đang gọi** (code sprint 1–2). Chỗ lệch DATABASE.md/KHUYEN_MAI.md (5 loại khuyến mãi cũ, trường hiển thị phụ trong `UserItem`/`CustomerItem`…) sửa ở GĐ3 và ghi lý do vào QUYET-DINH.md.
+> **Trạng thái:** contract khớp mock hiện tại (`src/mocks/`, đã qua Đợt test 1 và 2) cho cả 40 UC. Backend làm đúng theo đây; muốn đổi contract phải ghi lý do vào QUYET-DINH.md. Quy ước nghiệp vụ và seed: KIEN-THUC.md.
 
 ## AUTH
 

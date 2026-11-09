@@ -11,7 +11,7 @@ npm install
 npm run dev        # http://localhost:5173, mặc định VITE_USE_MOCK=true (.env.development)
 ```
 
-Đăng nhập (mật khẩu chung `Password@123`): `admin`, `manager01`, `cashier01`, `inventory01`, `newstaff` (bị bắt đổi mật khẩu lần đầu).
+Đăng nhập (mật khẩu chung `Password@123`): `admin`, `manager01`, `cashier01`, `inventory01`, `newstaff` (bị bắt đổi mật khẩu lần đầu). Kịch bản demo từng nhân vật: [docs/HUONG-DAN-DEMO.md](docs/HUONG-DAN-DEMO.md).
 Xóa dữ liệu giả lập: mở console trình duyệt, chạy `window.__SE100_MOCK__.reset()` rồi tải lại trang.
 
 ## Lệnh
@@ -32,7 +32,8 @@ Xóa dữ liệu giả lập: mở console trình duyệt, chạy `window.__SE10
 
 | File | Nội dung |
 |---|---|
-| [API-CONTRACT.md](docs/API-CONTRACT.md) | Hợp đồng API cho backend |
+| [HUONG-DAN-DEMO.md](docs/HUONG-DAN-DEMO.md) | Hướng dẫn demo từng nhân vật (admin, quản lý, nhân viên kho, thu ngân) |
+| [API-CONTRACT.md](docs/API-CONTRACT.md) | Hợp đồng API cho backend (102 endpoint, 14 nhóm) |
 | [TIEN-DO.md](docs/TIEN-DO.md) | Trạng thái giai đoạn, từng UC, lỗi, câu hỏi mở |
 | [QUYET-DINH.md](docs/QUYET-DINH.md) | Các quyết định và chỗ làm khác thiết kế |
 | [KIEN-THUC.md](docs/KIEN-THUC.md) | Sổ kiến thức: cấu trúc code, cách thêm UC, API mock |
