@@ -71,7 +71,7 @@ export type TableName = keyof MockTables
  * Phiên bản cấu trúc seed. Đổi cấu trúc bảng hoặc dữ liệu seed thì tăng số này
  * (CLAUDE.md mục 5.2) để trình duyệt bỏ dữ liệu cũ.
  */
-export const MOCK_DB_VERSION = 4
+export const MOCK_DB_VERSION = 5
 const KEY_PREFIX = 'se100_mock_'
 const keyOf = (table: string) => `${KEY_PREFIX}${table}_v${MOCK_DB_VERSION}`
 const META_KEY = keyOf('meta')
@@ -106,8 +106,8 @@ export function buildSeed(today: Date = new Date()): MockTables {
     suppliers,
     purchaseOrders: stock.purchaseOrders,
     batches: stock.batches,
-    inventoryChecks: [],
-    disposals: [],
+    inventoryChecks: stock.inventoryChecks,
+    disposals: stock.disposals,
     stockMovements: stock.stockMovements,
     systemSettings: { ...SEED_SYSTEM_SETTINGS },
     idempotencyKeys: {},

@@ -2,7 +2,7 @@
 
 > Mục đích: tiết kiệm token. Agent mới **đọc file này + CLAUDE.md + phần tài liệu nghiệp vụ của UC được giao**, rồi code luôn. Không `ls`/đọc lại toàn bộ `src/` để tìm hiểu cấu trúc. Chỉ mở file khi cần sửa nó.
 > Agent học thêm điều gì mới (quy ước, bẫy, hàm dùng chung) thì **thêm vào mục 9 "Ghi chú tích lũy"** ở cuối file này, ngắn gọn.
-> Cập nhật lần cuối: 2026-11-09 (sau GĐ0 + B1).
+> Cập nhật lần cuối: 2026-11-09 (sau GĐ0 + B1 + GĐ1 Kho).
 
 ## 1. Cách làm hiện tại (D21–D23)
 
@@ -42,7 +42,7 @@ Style màu: token Tailwind `@theme` trong `index.css` (`bg-accent-soft`, `text-m
 
 1. **Type** trong `src/types/<module>.ts` (camelCase 1-1 với cột DATABASE.md; enum giữ nguyên giá trị mục 7).
 2. **Seed** trong `src/mocks/seed/<module>.ts` (hàm `seedXxx(today: Date)`, ngày tính tương đối bằng `addDays` từ `mocks/time.ts`).
-3. **Bảng mock**: thêm vào `MockTables` + `buildSeed()` trong `mocks/db.ts`; **tăng `MOCK_DB_VERSION`** (đang là 2) mỗi khi đổi cấu trúc/seed.
+3. **Bảng mock**: thêm vào `MockTables` + `buildSeed()` trong `mocks/db.ts`; **tăng `MOCK_DB_VERSION`** (đang là 5) mỗi khi đổi cấu trúc/seed.
 4. **Handler** `src/mocks/handlers/<module>.ts` xuất mảng `MockRoute[]`; đăng ký trong `mocks/index.ts` (`mockRoutes`).
 5. **Service** `src/services/<module>.service.ts` gọi `apiRequest`.
 6. **Query key** trong `lib/query-keys.ts`.
@@ -58,9 +58,9 @@ Style màu: token Tailwind `@theme` trong `index.css` (`bg-accent-soft`, `text-m
 - `mocks/http.ts`: `ok(data, message?, status=200)`, `new MockHttpError(status, errorCode, message, errors?)`, `notFound(code, msg)`, `parseBody(zodSchema, body)` (sai → 400 `COMMON_VALIDATION_FAILED`), `paginate(items, query, defaultPageSize=20)`, `keywordOf(query)`, `sameText(a,b)`.
 - `mocks/time.ts`: `addDays`, `addMinutes`, `toDateOnly(d)` (`YYYY-MM-DD`), `toIsoLocal(d)`, `toQueryString` ở `services/query.ts`.
 - Mã lỗi: `MODULE_ĐIỀU_GÌ` (vd `STK_PO_ALREADY_CONFIRMED`). 400 = body sai; 404; 409 = xung đột trạng thái; 422 = vi phạm luật nghiệp vụ.
-- Mock bảng hiện có: users, passwords, sessions, permissions, roles, auditLogs, shifts, customers, categories, brands, products, loyaltyConfig, promotions, counters.
+- Mock bảng hiện có: users, passwords, sessions, permissions, roles, auditLogs, shifts, customers, categories, brands, products, loyaltyConfig, promotions, counters, **suppliers, purchaseOrders (kèm lines), batches, stockMovements, inventoryChecks (kèm lines), disposals (kèm lines), systemSettings (mới có EXPIRY_WARNING_DAYS), idempotencyKeys**.
 - Ghi audit log từ handler: xem `mocks/handlers/rbac.ts` / `users.ts` (mẫu thêm vào bảng `auditLogs`).
-- Thay đổi tồn kho trong mock: **luôn** kèm 1 dòng `stockMovements` cùng giao dịch (luật 28) và giữ `0 ≤ blockedQty ≤ onHandQty`. Nên viết helper dùng chung trong `src/mocks/stock-ledger.ts` (tạo ở GĐ1) để POS/kiểm kho/xuất hủy dùng lại.
+- Thay đổi tồn kho trong mock: **luôn** kèm 1 dòng `stockMovements` cùng giao dịch (luật 28) và giữ `0 ≤ blockedQty ≤ onHandQty`. Helper dùng chung đã có ở `src/mocks/stock-ledger.ts` (xem mục 9 dòng GĐ1).
 
 ## 6. Phân quyền
 
@@ -85,3 +85,9 @@ Xem CLAUDE.md mục 3 (UC → PDF). Tài liệu: bảng trong `docs/DATABASE.md`
 - GĐ0: `playwright.config.ts` chạy cổng 5174 (B1 đã sửa, commit 1e1a035, 87dbd31). Dev server 5173 của người dùng: không đụng.
 - GĐ0: trang "Đang phát triển" = `features/common/ComingSoonPage.tsx`, hiện cho mọi mục menu chưa có trong `PAGES`.
 - Tiếng Việt có dấu trong mọi chuỗi giao diện; file TS/TSX UTF-8.
+- GĐ1 Kho — **`mocks/stock-ledger.ts`** (POS/đổi trả GĐ2 phải dùng, không tự sửa `onHandQty`): `applyStockChange(db, {batch, change, referenceType, referenceId, reason, userId, now})` đổi tồn + ghi thẻ kho `balanceAfter` + cập nhật `products.currentStock`, ném 422 nếu tồn âm hoặc blocked > onHand; `adjustBlockedQty(db, batch, delta)` đổi cách ly (không có thẻ kho); `findBatchByLot`, `findBatchById`, `assertBatchNotLocked` (409 `STK_BATCH_LOCKED`), `expiryWarningDays(db)`, `todayOf(now)`, `nextTableId(db, counter, maxHienCo)`, `referenceCodeOf` (mã chứng từ cho thẻ kho; thêm case SALE/RETURN khi có đơn).
+- GĐ1 — domain thuần (GĐ4 test): `domain/stock/batch.ts` (`expiryStatus`, `daysUntilExpiry`, `sellableQty`, `compareFefo`, `weightedAverageCost`), `domain/stock/purchase-warnings.ts` (`collectPurchaseWarnings`). POS FEFO ở GĐ2 dùng lại `sellableQty` + `compareFefo`; endpoint `GET /stock/fefo?code=` đã trả lô bán được theo FEFO.
+- GĐ1 — mock stock API: `GET /stock/batches` trả thêm `onHandQty/blockedQty/costPrice` **chỉ khi** người gọi có `STOCK_VIEW` hoặc `STOCK_EXPIRY_VIEW`; thu ngân (`STOCK_VIEW_AVAILABLE`) chỉ nhận lô bán được và không có 3 trường đó. Seed kho: 9 SKU (id 1-9, SKU 9 là tester hãng `isSellable=false`), 16 lô (cận hạn, hết hạn, cách ly, tester), 5 phiếu nhập COMPLETED + 1 DRAFT, 4 phiếu kiểm kho (APPROVED/WAITING/NO_DIFFERENCE/REJECTED), 2 phiếu xuất khác (TESTER APPROVED, DESTROY WAITING); tồn lô luôn bằng tổng thẻ kho.
+- GĐ1 — UI dùng chung mới: `app/usePermission.ts` (`useCan(quyền)`), `utils/error.ts` (`getErrorMessage`), `utils/format.ts` thêm `formatDate`/`formatDateTime`, `features/stock/LotPicker.tsx` (chọn lô cho kiểm kho/xuất khác), `ExpiryBadge`, `FefoScanPanel`. Chuyển trang kèm dữ liệu qua `navigate(path, { state: { batchIds, issueType } })` (màn Tồn kho → `/inventory-checks/new`, `/disposals/new`).
+- GĐ1 — cách chạy thử mock mà không viết test: bundle bằng `npx rolldown src/mocks/index.ts --format esm --platform node -o <scratchpad>/mocks.mjs`, `sed` thay `import.meta.env.VITE_MOCK_DELAY_MS` bằng `"0"`, polyfill `localStorage` bằng Map rồi gọi `handleMockRequest(path, {method, headers: new Headers(...), body})` trong một file `.mjs` ở scratchpad (không đưa vào repo). Đã kiểm: nhập kho + idempotency + bình quân gia quyền, kiểm kho, xuất khác, quyền thu ngân.
+- Công cụ Bash của agent đôi khi báo `unexpected EOF while looking for matching '` với heredoc/chuỗi chứa dấu nháy lẫn tiếng Việt: ghi file bằng công cụ Write/Edit thay vì heredoc dài.
