@@ -5,8 +5,7 @@ import { buildSeed } from './db'
 afterEach(() => vi.useRealTimers())
 
 describe('seed tất định theo thời gian', () => {
-  // B2 (Low): seed ca OPEN của newstaff lấy openedAt từ giờ hiện tại (có giây) nên seed không tất định
-  it.skip('B2: hai lần dựng seed cách nhau vài giây trong cùng ngày giống hệt nhau', () => {
+  it('B2: hai lần dựng seed cách nhau vài giây trong cùng ngày giống hệt nhau', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-11-09T10:00:00+07:00'))
     const a = JSON.stringify(buildSeed(new Date()))

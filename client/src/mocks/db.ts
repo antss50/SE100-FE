@@ -85,7 +85,10 @@ const keyOf = (table: string) => `${KEY_PREFIX}${table}_v${MOCK_DB_VERSION}`
 const META_KEY = keyOf('meta')
 
 /** Seed tất định; ngày tính tương đối so với `today`. */
-export function buildSeed(today: Date = new Date()): MockTables {
+export function buildSeed(now: Date = new Date()): MockTables {
+  // Làm tròn xuống 10 phút để hai lần dựng seed cách nhau vài giây cho dữ liệu y hệt (B2).
+  const today = new Date(now)
+  today.setMinutes(Math.floor(today.getMinutes() / 10) * 10, 0, 0)
   const permissions = seedPermissions()
   const clone = <T>(value: T): T => structuredClone(value)
   const suppliers = seedSuppliers(today)
