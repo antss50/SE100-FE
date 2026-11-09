@@ -30,6 +30,7 @@ Thiết kế hoặc code cũ trái tài liệu thì **làm theo tài liệu**, v
 | D7 | Nhịp chạy | Agent tự chạy, tự test hết các giai đoạn; chỉ dừng khi có câu hỏi cần chủ dự án quyết |
 | D21 | Gộp giai đoạn, test dồn cuối | Từ 2026-11-09: 5 giai đoạn (GĐ0 nền tảng, GĐ1 kho, GĐ2 sửa cũ + bán hàng, GĐ3 báo cáo, GĐ4 kiểm thử toàn bộ). Trong GĐ1–3 chỉ viết code, **không viết E2E/component test**, không chạy `test:e2e`; chỉ viết unit test cho hàm thuần `domain/` (luật nghiệp vụ tiền/tồn) |
 | D22 | Code trước, test sau, có sổ kiến thức | Từ 2026-11-09: **chưa viết/chạy test nào** (kể cả unit test, lint) cho tới GĐ4; chỉ chạy `npm run build` một lần trước mỗi commit. Agent mới **đọc [client/docs/KIEN-THUC.md](client/docs/KIEN-THUC.md) trước** thay vì khám phá lại code, và ghi điều mới học vào mục 9 của file đó. Ghi đè D21 ở điểm "vẫn viết unit test hàm thuần" |
+| D23 | Test sau mỗi 2 giai đoạn | Từ 2026-11-09: GĐ1 → GĐ2 → **Đợt test 1** → GĐ3 → **Đợt test 2 (cuối)**. Trong khi code GĐ1–3 vẫn không viết/chạy test (D22); đợt test do `fe-tester` chạy, sửa lỗi bởi `fe-coder`, rồi mới sang bước kế. Thay cho "GĐ4 kiểm thử" của D21/D22 |
 
 ## 3. Bản đồ UC → thiết kế
 

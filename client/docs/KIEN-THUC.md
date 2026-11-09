@@ -4,9 +4,9 @@
 > Agent học thêm điều gì mới (quy ước, bẫy, hàm dùng chung) thì **thêm vào mục 9 "Ghi chú tích lũy"** ở cuối file này, ngắn gọn.
 > Cập nhật lần cuối: 2026-11-09 (sau GĐ0 + B1).
 
-## 1. Cách làm hiện tại (D21 + chỉ thị 2026-11-09)
+## 1. Cách làm hiện tại (D21–D23)
 
-- **Chưa viết test.** Không E2E, không component test, không unit test mới; không chạy `test`/`test:e2e`/`lint`. Test sẽ làm ở GĐ4.
+- **Chưa viết test.** Không E2E, không component test, không unit test mới; không chạy `test`/`test:e2e`/`lint`. Test chạy theo đợt (D23): Đợt test 1 sau GĐ1+GĐ2, Đợt test 2 sau GĐ3; do fe-tester làm.
 - Chỉ chạy `npm run build` (gồm `tsc -b`, chạy trong `SE100-FE/client`) **một lần trước mỗi commit** để chắc code biên dịch được. Lỗi kiểu thì sửa.
 - Vẫn tuân luật nghiệp vụ và luật code trong CLAUDE.md (viết hàm thuần cho logic tiền/tồn đặt trong `src/domain/` để GĐ4 test dễ).
 - Commit theo UC, không push. Ghi nhật ký `NHAT-KY-TIEN-DO.md` (1 dòng/commit là đủ), cập nhật trạng thái UC trong `TIEN-DO.md` thành `Đang test` (nghĩa: code xong, chờ GĐ4).

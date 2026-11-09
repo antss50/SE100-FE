@@ -11,8 +11,9 @@ Trạng thái: `Chưa làm` · `Đang code` · `Đang test` · `Đang sửa` · 
 | 0 | Nền tảng (mock adapter, đăng nhập, phân quyền, component ui, layout, domain giá, công cụ test) | Nền | Xong |
 | 1 | **Kho** (gộp cũ GĐ1+2): nhà cung cấp, nhập kho, tồn kho, cận hạn, kiểm kho, xuất đặc biệt. Gồm sửa B1 | SUPP-01..03, STK-01..07 | Đang code |
 | 2 | **Sửa phần cũ + bán hàng** (gộp cũ GĐ3+4+5): sửa AUTH/PROD/CUS/PROM cho khớp tài liệu (7 loại KM, status, luật 47), cấu hình hệ thống; mở ca, POS FEFO, voucher, dùng điểm, thanh toán, lịch sử và chi tiết đơn, đổi trả, chốt ca, lịch sử ca | AUTH-01..05, AUTH-07, PROD-01..03, CUS-01..05, PROM-01..03, POS-01..05 | Chưa làm |
+| T1 | **Đợt test 1** (sau GĐ1 + GĐ2): fe-tester viết và chạy test cho kho, bán hàng và phần sửa cũ; ghi lỗi; fe-coder sửa lỗi Critical/High | Kho, bán hàng, phần cũ | Chưa làm |
 | 3 | **Báo cáo** (cũ GĐ6): dashboard, 5 báo cáo, nhật ký, hiệu quả KM | REP-01..06, AUTH-06, PROM-04 | Chưa làm |
-| 4 | **Kiểm thử toàn bộ** (cũ GĐ7): unit/component/E2E cho mọi UC, E2E xuyên suốt, sửa lỗi Critical/High | Tất cả | Chưa làm |
+| T2 | **Đợt test 2 (cuối)** (sau GĐ3): test báo cáo, E2E xuyên suốt, hồi quy toàn bộ, sửa lỗi Critical/High | Tất cả | Chưa làm |
 
 > Đổi ngày 2026-11-09 (D21): gộp 8 giai đoạn thành 5, kiểm thử dồn về GĐ4. Các dòng nhật ký cũ ghi GĐ theo cách đánh số cũ; GĐ0 không đổi.
 
