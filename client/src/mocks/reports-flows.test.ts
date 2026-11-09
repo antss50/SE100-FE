@@ -223,7 +223,7 @@ describe('REP-04/05/06 khớp dữ liệu nguồn', () => {
   })
 
   // B4: SKU isSellable=false (tester) có availableQty=3 ở REP-04 trong khi lô ở /stock/batches là 0.
-  it.skip('REP-04: SKU không bán được (tester) có tồn bán được = 0, khớp màn Tồn kho (luật 24, CLAUDE 7) [B4]', async () => {
+  it('REP-04: SKU không bán được (tester) có tồn bán được = 0, khớp màn Tồn kho (luật 24, CLAUDE 7) [B4]', async () => {
     const st = await get<StockReport>('/reports/stock')
     const tester = st.products.find((p) => p.sku === 'SKU-YSL-RPC196-TST')
     expect(tester?.availableQty).toBe(0)

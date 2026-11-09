@@ -50,8 +50,9 @@ export function buildStockReport(src: StockSource, range: ReportRange, today: st
     const sellableLots = lots.filter((b) => b.expDate >= today && !b.lockedByCheckId)
     const minStockAlert = p.minStockAlert ?? 0
     // Tồn dưới ngưỡng tính trên hàng bán được (SKU tester không bán nên không có ngưỡng).
-    const availableQty = sum(sellableLots, (b) => b.onHandQty - b.blockedQty)
     const sellable = p.isSellable !== false && p.status === 'ACTIVE'
+    // Luật 24: SKU không bán được (tester) có tồn bán được = 0, khớp màn Tồn kho.
+    const availableQty = p.isSellable === false ? 0 : sum(sellableLots, (b) => b.onHandQty - b.blockedQty)
     if (onHandQty === 0 && !(sellable && minStockAlert > 0)) continue
     products.push({
       productId: p.id,
