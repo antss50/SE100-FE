@@ -52,3 +52,5 @@ Không xóa hay sửa dòng cũ; ghi sai thì thêm dòng mới đính chính.
 | 2026-11-08 23:23 | fe-tester | 0 | Xong việc | Đối chiếu: permissions.ts khớp từng ô ma trận mục 4; 12 test giá port nguyên văn (so từng dòng, thuật toán pricing/returns giống hệt code mẫu); mock đúng envelope/errorCode/status mẫu mọi module, 401/403, reset() và seed tất định; sidebar/header khớp bản LUMINA (D9); 8 màn cũ mở không lỗi console. newstaff: hộp đổi mật khẩu mở sau đăng nhập (chặn dùng app để GĐ3) |
 | 2026-11-08 23:23 | fe-tester | 0 | Commit | ad9287c test: kiểm thử GĐ0 nền tảng (phân quyền, mock adapter, đăng nhập, layout) |
 | 2026-11-08 23:23 | fe-tester | 0 | Kết thúc | GĐ0 → Xong (không còn lỗi Critical/High; B1 Low mở). Commit ad9287c và commit nhật ký này |
+| 2026-11-09 08:47 | fe-coder | 1 | Bắt đầu | GĐ1 nhóm Kho (SUPP, STK-01..07); đọc KIEN-THUC, CLAUDE, TIEN-DO |
+| 2026-11-09 08:47 | fe-coder | 1 | Commit | 927bdfa feat(supp-01): NCC (SUPP-01..03) xong, build qua; trạng thái UC -> Đang test |

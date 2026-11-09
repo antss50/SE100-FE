@@ -248,3 +248,31 @@ type PaginatedData<T> = { items: T[]; page: number; pageSize: number; totalItems
 - **Request:** `{}` · **Response 200:** `ShiftInfo` (`status = CLOSED`)
 - **Lỗi:** `404 POS_SHIFT_NOT_FOUND`, `403 POS_SHIFT_NOT_OWNER`, `409 POS_SHIFT_NOT_OPEN`
 - **Ghi chú:** GĐ5 bổ sung kiểm đếm tiền, giải trình lệch (luật 37), chặn khi còn đơn nháp (luật 36).
+
+## SUPPLIER (SUPP-01..03)
+
+Quy ước chung: `SupplierItem = Supplier + { orderCount, totalPurchaseAmount, lastPurchaseDate, brands[], draftOrderCount }` (số liệu tính từ phiếu nhập `COMPLETED`). `phoneNumber` UNIQUE; không có công nợ (luật 58). Ngừng hợp tác = `INACTIVE`, không xóa.
+
+### `GET /suppliers` — SUPP-02
+- **Quyền:** `SUPPLIER_VIEW` · **Query:** `keyword` (tên, mã, MST, SĐT, người liên hệ, thương hiệu), `status` (`ACTIVE|INACTIVE`), `page`, `pageSize`
+- **Response 200:** `{ items: SupplierItem[], page, pageSize, totalItems, summary: { total, active, inactive, totalOrders, totalPurchaseAmount } }`
+
+### `GET /suppliers/{id}` — SUPP-02
+- **Quyền:** `SUPPLIER_VIEW` · **Response 200:** `SupplierItem` · **Lỗi:** `404 SUPP_NOT_FOUND`
+
+### `GET /suppliers/{id}/products` — SUPP-02
+- **Quyền:** `SUPPLIER_VIEW` · **Response 200:** `{ productId, sku, productName, brandName, totalQuantity, lastUnitCost, lastPurchaseDate }[]` (sản phẩm từng có trong phiếu nhập `COMPLETED` của NCC; không có bảng gán)
+
+### `POST /suppliers` — SUPP-01
+- **Quyền:** `SUPPLIER_MANAGE` · **Request:** `{ supplierName, taxCode?, phoneNumber, email?, address, contactPerson?, note? }` · **Response 201:** `SupplierItem` (mã `NCCxxx` do hệ thống sinh)
+- **Lỗi:** `400 COMMON_VALIDATION_FAILED`, `409 SUPP_PHONE_DUPLICATED`, `409 SUPP_EMAIL_DUPLICATED`, `409 SUPP_TAX_CODE_DUPLICATED`
+
+### `PUT /suppliers/{id}` — SUPP-01
+- **Quyền:** `SUPPLIER_MANAGE` · **Request:** như tạo mới · **Response 200:** `SupplierItem` · **Lỗi:** như tạo mới + `404 SUPP_NOT_FOUND`
+
+### `POST /suppliers/{id}/deactivate` — SUPP-01
+- **Quyền:** `SUPPLIER_MANAGE` · **Request:** `{ acknowledgeDraft?: boolean }` · **Response 200:** `SupplierItem` (`INACTIVE`)
+- **Lỗi:** `404 SUPP_NOT_FOUND`, `409 SUPP_ALREADY_INACTIVE`, `409 SUPP_HAS_DRAFT_ORDERS` (còn phiếu nhập `DRAFT`, gửi lại với `acknowledgeDraft = true` để vẫn ngừng)
+
+### `POST /suppliers/{id}/activate` — SUPP-01
+- **Quyền:** `SUPPLIER_MANAGE` · **Response 200:** `SupplierItem` (`ACTIVE`) · **Lỗi:** `404 SUPP_NOT_FOUND`, `409 SUPP_ALREADY_ACTIVE`

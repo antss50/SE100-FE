@@ -23,6 +23,8 @@ const CustomerDetailPage = lazyNamed(() => import('../features/customers/Custome
 const UsersListPage = lazyNamed(() => import('../features/users/UsersListPage'), 'UsersListPage')
 const UserDetailPage = lazyNamed(() => import('../features/users/UserDetailPage'), 'UserDetailPage')
 const RbacPage = lazyNamed(() => import('../features/rbac/RbacPage'), 'RbacPage')
+const SuppliersListPage = lazyNamed(() => import('../features/suppliers/SuppliersListPage'), 'SuppliersListPage')
+const SupplierDetailPage = lazyNamed(() => import('../features/suppliers/SupplierDetailPage'), 'SupplierDetailPage')
 const ComingSoonPage = lazy(async () => ({ default: (await import('../features/common/ComingSoonPage')).ComingSoonPage }))
 
 /** Màn hình đã có, theo đường dẫn mục menu. Mục không có ở đây dùng trang "Đang phát triển". */
@@ -34,12 +36,14 @@ const PAGES: Record<string, ComponentType> = {
   '/loyalty': LoyaltyPage,
   '/users': UsersListPage,
   '/rbac': RbacPage,
+  '/suppliers': SuppliersListPage,
 }
 
 /** Route con không có trên menu. */
 const SUB_ROUTES: { path: string; permission: PermissionRequirement; element: ReactNode }[] = [
   { path: 'customers/new', permission: 'CUSTOMER_EDIT', element: <CreateCustomerPage /> },
   { path: 'customers/:customerCode', permission: 'CUSTOMER_VIEW', element: <CustomerDetailPage /> },
+  { path: 'suppliers/:supplierId', permission: 'SUPPLIER_VIEW', element: <SupplierDetailPage /> },
   { path: 'users/:userId', permission: 'USER_MANAGE', element: <UserDetailPage /> },
 ]
 

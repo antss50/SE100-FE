@@ -1,0 +1,75 @@
+import type { Supplier } from '../../types/suppliers'
+import { addDays, toIsoLocal } from '../time'
+
+/** Nhà cung cấp mẫu (SUPPLIERS). Ngày tạo tính tương đối so với hôm nay. */
+export function seedSuppliers(today: Date): Supplier[] {
+  const created = (daysAgo: number) => toIsoLocal(addDays(today, -daysAgo))
+  return [
+    {
+      id: 1,
+      supplierCode: 'NCC001',
+      supplierName: 'Công ty TNHH Estée Lauder Việt Nam',
+      taxCode: '0302839210',
+      phoneNumber: '0908124556',
+      email: 'dathang@esteelauder.vn',
+      address: 'Tầng 12, Bitexco Financial Tower, 2 Hải Triều, Quận 1, TP. Hồ Chí Minh',
+      contactPerson: 'Lê Hoàng Yến',
+      note: 'Chiết khấu 5% cho đơn từ 100 triệu đồng, giao trong 3 ngày làm việc.',
+      status: 'ACTIVE',
+      createdAt: created(400),
+    },
+    {
+      id: 2,
+      supplierCode: 'NCC002',
+      supplierName: 'Amorepacific Vietnam Corporation',
+      taxCode: '0309941235',
+      phoneNumber: '0912876543',
+      email: 'order@amorepacific.vn',
+      address: '25 Lê Duẩn, Quận 1, TP. Hồ Chí Minh',
+      contactPerson: 'Phạm Quang Minh',
+      note: 'Thanh toán khi nhận hàng, không áp chiết khấu.',
+      status: 'ACTIVE',
+      createdAt: created(380),
+    },
+    {
+      id: 3,
+      supplierCode: 'NCC003',
+      supplierName: 'Shiseido Cosmetics Vietnam LLC',
+      taxCode: '0305112288',
+      phoneNumber: '0934456789',
+      email: 'sales@shiseido.vn',
+      address: '8 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh',
+      contactPerson: 'Đỗ Thu Trang',
+      note: null,
+      status: 'ACTIVE',
+      createdAt: created(350),
+    },
+    {
+      id: 4,
+      supplierCode: 'NCC004',
+      supplierName: 'NAOS Vietnam (Bioderma & Institut Esthederm)',
+      taxCode: '0313818844',
+      phoneNumber: '0934998221',
+      email: 'vn@naos.com',
+      address: '90 Pasteur, Quận 3, TP. Hồ Chí Minh',
+      contactPerson: 'Vũ An An',
+      note: 'Đổi hàng lỗi trong 30 ngày kể từ ngày nhận.',
+      status: 'ACTIVE',
+      createdAt: created(300),
+    },
+    {
+      id: 5,
+      supplierCode: 'NCC005',
+      supplierName: "Công ty CP L'Oréal Vietnam Luxe Division",
+      taxCode: '0384992118',
+      phoneNumber: '0903881229',
+      email: 'luxe@loreal.vn',
+      address: '14 Đồng Khởi, Quận 1, TP. Hồ Chí Minh',
+      contactPerson: 'Trịnh Anh Tuấn',
+      note: 'Tạm ngừng nhập từ quý này do thay đổi chính sách phân phối.',
+      status: 'INACTIVE',
+      createdAt: created(280),
+      updatedAt: created(40),
+    },
+  ]
+}

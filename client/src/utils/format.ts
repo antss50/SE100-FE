@@ -129,3 +129,23 @@ export function getInitials(fullName: string): string {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
 }
 
+
+const pad2 = (n: number) => String(n).padStart(2, '0')
+
+/** `dd/MM/yyyy` từ ISO hoặc `YYYY-MM-DD`; rỗng thì trả `—`. Ngày thuần không bị lệch múi giờ. */
+export function formatDate(value?: string | null): string {
+  if (!value) return '—'
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  if (dateOnly) return `${dateOnly[3]}/${dateOnly[2]}/${dateOnly[1]}`
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return '—'
+  return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`
+}
+
+/** `dd/MM/yyyy HH:mm` từ ISO. */
+export function formatDateTime(value?: string | null): string {
+  if (!value) return '—'
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return '—'
+  return `${formatDate(value)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+}

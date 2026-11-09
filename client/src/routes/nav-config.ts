@@ -91,7 +91,7 @@ export const NAV_GROUPS: NavGroup[] = [
         uc: 'STK-06, STK-07',
         plannedPhase: 2,
       },
-      { to: '/suppliers', label: 'Nhà cung cấp', icon: Truck, permission: 'SUPPLIER_VIEW', uc: 'SUPP-01..03', plannedPhase: 1 },
+      { to: '/suppliers', label: 'Nhà cung cấp', icon: Truck, permission: 'SUPPLIER_VIEW', uc: 'SUPP-01..03' },
     ],
   },
   {
