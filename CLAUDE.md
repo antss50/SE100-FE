@@ -29,6 +29,7 @@ Thiết kế hoặc code cũ trái tài liệu thì **làm theo tài liệu**, v
 | D6 | Git | Làm trên nhánh `demo` (tách từ `feat/sprint1-2`) trong repo `SE100-FE`. Từ 2026-11-08 được push lên `origin/demo`; chỉ **điều phối** push, sau khi cổng chất lượng của giai đoạn qua. Agent code/kiểm thử không push |
 | D7 | Nhịp chạy | Agent tự chạy, tự test hết các giai đoạn; chỉ dừng khi có câu hỏi cần chủ dự án quyết |
 | D21 | Gộp giai đoạn, test dồn cuối | Từ 2026-11-09: 5 giai đoạn (GĐ0 nền tảng, GĐ1 kho, GĐ2 sửa cũ + bán hàng, GĐ3 báo cáo, GĐ4 kiểm thử toàn bộ). Trong GĐ1–3 chỉ viết code, **không viết E2E/component test**, không chạy `test:e2e`; chỉ viết unit test cho hàm thuần `domain/` (luật nghiệp vụ tiền/tồn) |
+| D22 | Code trước, test sau, có sổ kiến thức | Từ 2026-11-09: **chưa viết/chạy test nào** (kể cả unit test, lint) cho tới GĐ4; chỉ chạy `npm run build` một lần trước mỗi commit. Agent mới **đọc [client/docs/KIEN-THUC.md](client/docs/KIEN-THUC.md) trước** thay vì khám phá lại code, và ghi điều mới học vào mục 9 của file đó. Ghi đè D21 ở điểm "vẫn viết unit test hàm thuần" |
 
 ## 3. Bản đồ UC → thiết kế
 
@@ -182,6 +183,7 @@ Không bỏ qua, không tắt rule, không `--no-verify`. Lỗi của test có s
 ## 13. Tài liệu theo dõi
 
 - [client/docs/TIEN-DO.md](client/docs/TIEN-DO.md): giai đoạn, trạng thái từng UC, bảng lỗi, câu hỏi mở. Cập nhật khi bắt đầu và khi xong mỗi phần.
+- [client/docs/KIEN-THUC.md](client/docs/KIEN-THUC.md): **sổ kiến thức, đọc đầu tiên** (cấu trúc code, công thức thêm UC, API mock, quyền, seed). Agent thêm ghi chú mới vào mục 9.
 - [client/docs/NHAT-KY-TIEN-DO.md](client/docs/NHAT-KY-TIEN-DO.md): **nhật ký theo thời gian, bắt buộc ghi**. Mỗi agent thêm một dòng (không sửa dòng cũ) khi: bắt đầu nhiệm vụ, xong mỗi việc/UC, mỗi commit (hash + message), mỗi lần chạy test (số pass/fail), phát hiện lỗi hoặc câu hỏi mở, và khi kết thúc. File này được commit cùng commit của việc vừa ghi.
 - [client/docs/QUYET-DINH.md](client/docs/QUYET-DINH.md): mọi chỗ làm khác thiết kế/code cũ và lý do.
 - [client/docs/API-CONTRACT.md](client/docs/API-CONTRACT.md): hợp đồng API cho BE.
