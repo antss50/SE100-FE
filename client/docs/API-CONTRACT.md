@@ -263,6 +263,76 @@ Kiểu: `CashierShift` (CASHIER_SHIFTS: `shiftId, shiftCode (CAyyyymmdd-nn), cas
 - **Quyền:** `POS_SHIFT_HANDOVER_CONFIRM` · **Response 200:** `CashierShift` (`handoverConfirmedBy` = người xác nhận; ghi audit)
 - **Lỗi:** `404 POS_SHIFT_NOT_FOUND`, `409 POS_SHIFT_NOT_CLOSED`, `409 POS_HANDOVER_ALREADY_CONFIRMED`
 
+## POS · Bán hàng và thanh toán (POS-02, POS-03, PROM-03, CUS-04)
+
+Giá luôn do máy chủ tính bằng đúng thuật toán 4 tầng ở KHUYEN_MAI.md (FE không gửi số tiền, không tin số từ FE). Kiểu: `CartInput` (`items: [{ productId, quantity, batchId? }], customerId, voucherCode, pointsRequested, exchangeReturnId?`; `batchId` có giá trị = thu ngân đổi lô thủ công), `OrderQuote` (`lines[] { key, productId, sku, productName, quantity, unitPrice, lineType NORMAL|GIFT, linePromotionId/Name, promoGroupNo, lineDiscount, tierDiscount, orderDiscount, pointsDiscount, lineTotal, taxAmount, allocations[] { batchId, lotCode, expDate, quantity, overridden } }, subtotalAmount, lineDiscountAmount, tierDiscountAmount, orderPromotionId/Name, orderDiscountAmount, pointsUsed, pointsDiscountAmount, discountAmount, taxAmount, totalAmount, exchangeCreditAmount, amountDue, messages[], issues[] { productId, message }, pointsToEarn, maxRedeemablePoints`), `OrderRecord` (ORDERS kèm `lines[]` ORDER_DETAILS, camelCase 1-1 DATABASE.md mục 27-28, thêm `cashierName, customerName, customerPhone, orderPromotionName, voucherCode, pointsEarned, draftCart`).
+
+### `GET /pos/products` — POS-02
+- **Quyền:** `POS_CHECKOUT` · **Query:** `keyword` (tên, SKU, barcode), `code` (khớp đúng barcode/SKU, dùng khi quét), `page`, `pageSize` · **Response 200:** `PaginatedData<PosProduct>` (`id, sku, barcode, productName, brandName, categoryName, retailPrice, sellableQty, firstLotCode, firstLotExpDate, nearExpiry`)
+- Chỉ SKU `ACTIVE`, `isSellable = true` và còn tồn bán được (luật 24, 34); không lộ `onHandQty`, `blockedQty`, giá vốn.
+
+### `GET /pos/products/{id}/lots` — POS-02
+- **Quyền:** `POS_CHECKOUT` · **Response 200:** `PosLot[]` (`batchId, lotCode, expDate, sellableQty, nearExpiry`) theo FEFO; chỉ lô còn hạn, không khóa kiểm kho, `onHand − blocked > 0` (để đổi lô thủ công)
+
+### `POST /orders/quote` — POS-02, POS-03
+- **Quyền:** `POS_CHECKOUT` (`PROMOTION_APPLY_VOUCHER` nếu có `voucherCode`, `LOYALTY_REDEEM` nếu `pointsRequested > 0`) · **Request:** `CartInput` · **Response 200:** `OrderQuote` (không ghi gì)
+- Tính giá bằng `calculateOrder` (tầng 1 dòng hàng, tầng 2 hạng thẻ, tầng 3 bậc thang/voucher/quà, tầng 4 điểm), phân bổ lô FEFO tách lô (lô thu ngân chọn tay đứng đầu). Thiếu tồn thì ghi vào `issues`, không báo lỗi. Voucher không dùng được / thua bậc thang thì lý do nằm ở `messages`.
+- **Lỗi:** `404 POS_PRODUCT_NOT_FOUND`, `422 POS_PRODUCT_NOT_SELLABLE`, `422 POS_QUANTITY_INVALID`, `404 CUS_NOT_FOUND`, `422 POS_CUSTOMER_INACTIVE`, `404 STK_BATCH_NOT_FOUND`, `422 POS_BATCH_EXPIRED`, `422 POS_BATCH_NOT_SELLABLE`, `403 AUTH_FORBIDDEN`
+
+### `POST /orders/complete` — POS-03 (hoàn tất = 1 giao dịch, luật 40)
+- **Quyền:** `POS_CHECKOUT` · **Request:** `CartInput` + `{ paymentMethod: CASH|BANK_TRANSFER|CARD, amountReceived?, draftId? }` · **Response 201:** `OrderRecord` (`COMPLETED`)
+- Một giao dịch: tính lại giá/lô/lượt voucher; kiểm tiền; mỗi dòng (kể cả quà) trừ lô qua thẻ kho `SALE` (`referenceId` = id đơn); ghi ORDERS/ORDER_DETAILS (`unitCost` = giá vốn lô); khách đang hoạt động thì ghi `REDEEM` (−điểm dùng), `EARN` (`floor((totalAmount − exchangeCreditAmount) / POINT_EARN_AMOUNT)`, đơn đổi hàng tích theo tiền khách thực nộp), cộng `totalSpent` (`totalAmount`), xét hạng ngay (chỉ tăng); đổi lô tay khác lô FEFO đầu tiên thì ghi audit `OVERRIDE_FEFO`. Đơn đổi hàng (`exchangeReturnId`): `amountDue = totalAmount − exchangeCreditAmount`, gắn `exchangeOrderId` cho phiếu trả.
+- **Lỗi:** `409 POS_SHIFT_NOT_OPEN`, `409 POS_DRAFT_NOT_FOUND`, `422 POS_CART_EMPTY`, `422 POS_INSUFFICIENT_STOCK`, `422 PROM_VOUCHER_INVALID`, `422 POS_POINTS_EXCEED_LIMIT`, `422 POS_CASH_INSUFFICIENT` (tiền mặt thiếu, luật 39), `422 RET_EXCHANGE_BELOW_CREDIT` (hàng mới < hàng cũ), `409 RET_EXCHANGE_ALREADY_USED`, `404 RET_NOT_FOUND`, `422 RET_NOT_EXCHANGE`, `409 STK_BATCH_LOCKED`, `422 STK_INSUFFICIENT_STOCK`, và các lỗi của `quote`
+
+### `GET /orders/drafts`, `POST /orders/drafts`, `POST /orders/{id}/cancel` — POS-02 (đơn nháp)
+- **Quyền:** `POS_CHECKOUT`. `GET` trả `OrderListItem[]` đơn nháp của người đăng nhập. `POST /orders/drafts` nhận `CartInput + { draftId? }` (có `draftId` = cập nhật), cần ca đang mở, trả `OrderRecord` `DRAFT` (có `draftCart`, chưa trừ tồn). `POST /orders/{id}/cancel` chỉ cho đơn nháp của chính mình (`CANCELLED`).
+- **Lỗi:** `409 POS_SHIFT_NOT_OPEN`, `422 POS_CART_EMPTY`, `409 POS_DRAFT_NOT_FOUND`, `409 POS_ORDER_NOT_DRAFT` (chứng từ hoàn tất không hủy, luật 41), `403 AUTH_FORBIDDEN`, `404 POS_ORDER_NOT_FOUND`
+
+### `GET /orders` — POS-03 (lịch sử đơn)
+- **Quyền:** `POS_VIEW` (thu ngân chỉ thấy đơn của mình; có `POS_SHIFT_HANDOVER_CONFIRM` thì thấy mọi đơn) · **Query:** `keyword` (mã đơn, tên/SĐT khách), `status DRAFT|COMPLETED|CANCELLED`, `paymentMethod`, `fromDate`, `toDate` (`YYYY-MM-DD`), `shiftId`, `page`, `pageSize` · **Response 200:** `PaginatedData<OrderListItem> & { summary: { completedCount, totalRevenue, cashCollected } }`
+
+### `GET /orders/{id}` — POS-03 (chi tiết đơn)
+- **Quyền:** `POS_VIEW` · **Response 200:** `{ order: OrderRecord, returns: ReturnListItem[], returnedQuantities: { [orderDetailId]: number }, shiftCode }`
+- **Lỗi:** `404 POS_ORDER_NOT_FOUND`, `403 AUTH_FORBIDDEN`
+
+## POS · Đổi trả hàng (POS-04)
+
+Kiểu: `ReturnOrderRecord` (RETURN_ORDERS kèm `lines[]` RETURN_ORDER_DETAILS, camelCase 1-1 DATABASE.md mục 29-30: `id, returnCode (RETyyyymmdd-nnnn), originalOrderId, originalOrderCode, shiftId, processedBy, processedByName, returnReason DEFECTIVE|CHANGE_OF_MIND, returnNote, totalRefundAmount, refundMethod CASH|BANK_TRANSFER|EXCHANGE, pointsRevoked, status, createdAt, exchangeOrderId, exchangeOrderCode`; dòng: `id, orderDetailId, productId, sku, productName, batchId, lotCode, quantity, lineKind RETURN|GIFT_CHARGE, refundAmount (âm với GIFT_CHARGE), unitCost, itemCondition INTACT|DAMAGED_OR_OPENED`), `ReturnListItem` (không có `lines`, có `lineCount`). Tiền hoàn tính bằng `calculateReturn` (KHUYEN_MAI.md mục 6): theo `lineTotal` đã lưu, không tính lại khuyến mãi, không hoàn lượt voucher, trừ giá trị quà khi mất điều kiện, thu hồi điểm theo tỷ lệ.
+
+### `GET /orders/{id}/returnable` — POS-04
+- **Quyền:** `POS_RETURN` · **Response 200:** `{ order: OrderRecord, lines: (OrderLine & { returnedQuantity, returnableQuantity })[], maxReturnDays, daysSincePurchase, expired }`
+- **Lỗi:** `404 POS_ORDER_NOT_FOUND`, `422 RET_ORDER_NOT_COMPLETED`
+
+### `POST /returns/quote` — POS-04
+- **Quyền:** `POS_RETURN` · **Request:** `{ originalOrderId, reason, items: [{ orderDetailId, quantity, condition }] }` · **Response 200:** `{ lines: [{ orderDetailId, kind, quantity, refundAmount, toBlocked, productName }], totalRefund, pointsRevoked, messages[], refundMethod, cashShortfall }` (không ghi gì)
+- `refundMethod` là hình thức thực tế: đổi ý luôn `EXCHANGE`; hoàn `CASH` mà két ca hiện tại không đủ tiền mặt (đầu ca + thu tiền mặt − chi hoàn tiền mặt) thì chuyển `BANK_TRANSFER` và `cashShortfall = true` (luật 23).
+- **Lỗi:** `404 POS_ORDER_NOT_FOUND`, `422 RET_ORDER_NOT_COMPLETED`, `422 RET_EXPIRED` (quá `maxReturnDays`, luật 16), `422 RET_NO_ITEMS`, `422 RET_SEAL_BROKEN` (đổi ý mà hàng đã mở seal), `422 RET_DUPLICATE_LINE`, `404 RET_LINE_NOT_FOUND`, `422 RET_QUANTITY_EXCEEDED` (vượt số đã mua/còn lại), `422 RET_REFUND_NOT_ALLOWED`, `422 RET_INVALID`
+
+### `POST /returns` — POS-04 (một giao dịch: nhận hàng + hoàn tiền)
+- **Quyền:** `POS_RETURN` · **Request:** như `quote` + `{ note?, refundMethod: CASH|BANK_TRANSFER|EXCHANGE }` (đổi ý bắt buộc `EXCHANGE`) · **Response 201:** `ReturnOrderRecord` (`COMPLETED`, gắn ca hiện tại, không cần Manager duyệt, không cấp voucher bù)
+- Một giao dịch: mỗi dòng `RETURN` cộng `onHandQty` lô gốc kèm thẻ kho `RETURN` (`referenceId` = id phiếu); hàng lỗi (`DEFECTIVE`) hoặc `DAMAGED_OR_OPENED` cộng cả `blockedQty` (cách ly); dòng `GIFT_CHARGE` không nhập kho; khách đang có hồ sơ thì ghi `REVOKE` (−điểm), trừ `totalSpent` bằng tiền hoàn, **không hạ hạng**; điểm đã dùng không hoàn.
+- **Lỗi:** như `quote`, thêm `409 POS_SHIFT_NOT_OPEN`, `409 STK_BATCH_LOCKED`, `422 STK_BLOCKED_EXCEEDS_ON_HAND`
+- Đổi hàng: sau phiếu `EXCHANGE`, thu ngân lập đơn bán với `exchangeReturnId` (xem `POST /orders/complete`).
+
+### `GET /returns` — POS-04
+- **Quyền:** `POS_VIEW` (thu ngân chỉ thấy phiếu của mình) · **Query:** `keyword` (mã phiếu, mã hóa đơn), `reason`, `page`, `pageSize` · **Response 200:** `PaginatedData<ReturnListItem>`
+
+### `GET /returns/{id}` — POS-04
+- **Quyền:** `POS_VIEW` · **Response 200:** `ReturnOrderRecord` · **Lỗi:** `404 RET_NOT_FOUND`, `403 AUTH_FORBIDDEN`
+
+## SETTINGS · Cấu hình hệ thống (AUTH-07)
+
+### `GET /settings/store`
+- **Quyền:** đã đăng nhập (in hóa đơn) · **Response 200:** `{ name, address, phone }` (`STORE_NAME`, `STORE_ADDRESS`, `STORE_PHONE`)
+
+### `GET /settings` — AUTH-07
+- **Quyền:** `SYSTEM_SETTINGS_MANAGE` · **Response 200:** `{ settings: [{ key, value, description, kind number|text }], maxReturnDays }` — khóa: `EXPIRY_WARNING_DAYS, POINT_EARN_AMOUNT, POINT_REDEEM_VALUE, POINT_MAX_REDEEM_PERCENT, STORE_NAME, STORE_ADDRESS, STORE_PHONE`; `maxReturnDays` = `RETURN_POLICIES.max_return_days` của chính sách mặc định
+
+### `PUT /settings` — AUTH-07
+- **Quyền:** `SYSTEM_SETTINGS_MANAGE` · **Request:** `{ settings: { [key]: string }, maxReturnDays?: number (0-365) }` · **Response 200:** như `GET`. Ghi audit khi có thay đổi.
+- **Lỗi:** `400 COMMON_VALIDATION_FAILED`, `422 SET_KEY_UNKNOWN`, `422 SET_VALUE_INVALID` (số nguyên >= 1, riêng `EXPIRY_WARNING_DAYS` >= 0; `POINT_MAX_REDEEM_PERCENT` <= 100; chuỗi không rỗng)
+- **Ghi chú:** `GET/PUT /loyalty-config` đọc/ghi `POINT_EARN_AMOUNT` và `POINT_REDEEM_VALUE` ở cùng nơi này (một nguồn sự thật).
+
 ## SUPPLIER (SUPP-01..03)
 
 Quy ước chung: `SupplierItem = Supplier + { orderCount, totalPurchaseAmount, lastPurchaseDate, brands[], draftOrderCount }` (số liệu tính từ phiếu nhập `COMPLETED`). `phoneNumber` UNIQUE; không có công nợ (luật 58). Ngừng hợp tác = `INACTIVE`, không xóa.

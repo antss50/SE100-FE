@@ -46,7 +46,7 @@
 | POS-01 | Mở ca | 4 | Đang test | Mở ca qua modal, mỗi thu ngân 1 ca |
 | POS-02 | Lập đơn FEFO | 4 | Đang test | POS FEFO viết lại, phím tắt F1-F9, đơn nháp |
 | POS-03 | Thanh toán & hóa đơn | 4 | Đang test | Thanh toán 1 giao dịch mock, lịch sử + chi tiết đơn, in hóa đơn |
-| POS-04 | Đổi trả & hoàn tiền | 5 | Chưa làm | Đường găng |
+| POS-04 | Đổi trả & hoàn tiền | 5 | Đang test | Phiếu trả 2 lý do, đổi hàng qua POS, két thiếu hoàn CK |
 | POS-05 | Kiểm đếm & chốt ca | 5 | Đang test | Kiểm đếm, chốt ca, lịch sử, bàn giao |
 | REP-01 | Dashboard | 6 | Chưa làm | Có code cũ |
 | REP-02 | Doanh thu & lợi nhuận gộp | 6 | Chưa làm | |

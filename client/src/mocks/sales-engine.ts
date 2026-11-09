@@ -32,7 +32,7 @@ export const sellableTotal = (db: MockTransaction, productId: number, now: Date)
   return sellableBatches(db, productId, now).reduce((n, b) => n + sellableQty(b, today), 0)
 }
 
-function domainProducts(db: MockTransaction): Map<number, DomainProduct> {
+export function domainProducts(db: MockTransaction): Map<number, DomainProduct> {
   const brands = db.read('brands')
   const categories = db.read('categories')
   const batches = db.read('batches')
@@ -236,7 +236,7 @@ export function priceCart(
     amountDue: pricing.totalAmount - credit,
     messages,
     issues,
-    pointsToEarn: customer ? Math.floor(pricing.totalAmount / settings.earnAmount) : 0,
+    pointsToEarn: customer ? Math.floor(Math.max(0, pricing.totalAmount - credit) / settings.earnAmount) : 0,
     maxRedeemablePoints: customer ? Math.max(0, Math.min(customer.rewardPoints, maxByPercent)) : 0,
   }
   return { quote, pricing, allocations, customer, overrides }

@@ -209,7 +209,8 @@ function applyLoyalty(db: MockTransaction, order: OrderRecord, customer: Custome
     })
   }
   const earnAmount = Number(db.read('systemSettings').POINT_EARN_AMOUNT) || 10000
-  const earned = Math.floor(order.totalAmount / earnAmount)
+  // Đơn đổi hàng tích điểm theo số tiền khách thực nộp (DANH_GIA_USECASE 2.6.1).
+  const earned = Math.floor((order.totalAmount - order.exchangeCreditAmount) / earnAmount)
   order.pointsEarned = earned
   recordPoints(target, {
     actionType: 'EARN',

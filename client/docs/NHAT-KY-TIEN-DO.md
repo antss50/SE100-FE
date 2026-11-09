@@ -66,3 +66,4 @@ Không xóa hay sửa dòng cũ; ghi sai thì thêm dòng mới đính chính.
 | 2026-11-09 09:15 | fe-coder | 2 | Bắt đầu | GĐ2: bán hàng trước rồi sửa phần cũ; đọc KIEN-THUC, CLAUDE, TIEN-DO, QUYET-DINH, QUY_TAC, KHUYEN_MAI, DATABASE 7, 21-30 |
 | 2026-11-09 09:15 | fe-coder | 2 | Commit | 0596825 feat(prom-01,prom-02): khuyến mãi 7 loại, khóa sửa khi có đơn; build qua. PROM-01/02 -> Đang test |
 | 2026-11-09 09:17 | fe-coder | 2 | Commit | 6bc72e2 feat(pos-01,pos-05): mở ca, chốt ca có kiểm đếm, lịch sử/biên bản ca, bàn giao; build qua. (hash trước: 0596825 khuyến mãi 7 loại) |
+| 2026-11-09 09:25 | fe-coder | 2 | Commit | c0e8fae feat(pos-02,pos-03,prom-03,cus-04): POS viết lại, mock sales-engine (domain/pricing + FEFO), hoàn tất đơn atomic, lịch sử/chi tiết đơn; build qua; đã chạy thử luồng mock bằng script rolldown+node |

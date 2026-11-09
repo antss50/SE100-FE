@@ -40,6 +40,9 @@ const ShiftsPage = lazyNamed(() => import('../features/shifts/ShiftsPage'), 'Shi
 const ShiftDetailPage = lazyNamed(() => import('../features/shifts/ShiftDetailPage'), 'ShiftDetailPage')
 const OrdersListPage = lazyNamed(() => import('../features/orders/OrdersListPage'), 'OrdersListPage')
 const OrderDetailPage = lazyNamed(() => import('../features/orders/OrderDetailPage'), 'OrderDetailPage')
+const ReturnsListPage = lazyNamed(() => import('../features/returns/ReturnsListPage'), 'ReturnsListPage')
+const ReturnCreatePage = lazyNamed(() => import('../features/returns/ReturnCreatePage'), 'ReturnCreatePage')
+const ReturnDetailPage = lazyNamed(() => import('../features/returns/ReturnDetailPage'), 'ReturnDetailPage')
 const ComingSoonPage = lazy(async () => ({ default: (await import('../features/common/ComingSoonPage')).ComingSoonPage }))
 
 /** Màn hình đã có, theo đường dẫn mục menu. Mục không có ở đây dùng trang "Đang phát triển". */
@@ -58,6 +61,7 @@ const PAGES: Record<string, ComponentType> = {
   '/purchase-orders': PurchaseOrdersListPage,
   '/shifts': ShiftsPage,
   '/orders': OrdersListPage,
+  '/returns': ReturnsListPage,
 }
 
 /** Route con không có trên menu. */
@@ -73,6 +77,8 @@ const SUB_ROUTES: { path: string; permission: PermissionRequirement; element: Re
   { path: 'disposals/new', permission: 'STOCK_DISPOSAL_CREATE', element: <DisposalCreatePage /> },
   { path: 'disposals/:disposalId', permission: 'STOCK_DISPOSAL_VIEW', element: <DisposalDetailPage /> },
   { path: 'suppliers/:supplierId', permission: 'SUPPLIER_VIEW', element: <SupplierDetailPage /> },
+  { path: 'returns/new', permission: 'POS_RETURN', element: <ReturnCreatePage /> },
+  { path: 'returns/:id', permission: 'POS_VIEW', element: <ReturnDetailPage /> },
   { path: 'orders/:id', permission: 'POS_VIEW', element: <OrderDetailPage /> },
   { path: 'shifts/:id', permission: 'POS_VIEW', element: <ShiftDetailPage /> },
   { path: 'users/:userId', permission: 'USER_MANAGE', element: <UserDetailPage /> },

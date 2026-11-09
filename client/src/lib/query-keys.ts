@@ -30,6 +30,7 @@ export const queryKeys = {
     all: ['returns'] as const,
     list: (params: object) => ['returns', 'list', params] as const,
     detail: (id: number | string) => ['returns', 'detail', String(id)] as const,
+    quote: (request: object) => ['returns', 'quote', request] as const,
     returnable: (orderId: number | string) => ['returns', 'returnable', String(orderId)] as const,
   },
   settings: {
