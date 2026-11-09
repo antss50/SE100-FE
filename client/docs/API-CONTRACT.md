@@ -1,18 +1,27 @@
 # API contract (frontend đề xuất cho backend)
 
 > Quy ước chung: [../../CLAUDE.md](../../CLAUDE.md) mục 5.1. Mock trong `src/mocks/` phải trả đúng như file này.
-> Mỗi endpoint một mục theo mẫu dưới. Đổi contract đã có thì ghi lý do vào QUYET-DINH.md.
+> Mỗi endpoint một mục: quyền, request, response, mã lỗi. Đổi contract đã có thì ghi lý do vào QUYET-DINH.md.
 
-## Mẫu
+## Mục lục
 
-### `POST /purchase-orders/{id}/confirm` — STK-01
-- **Quyền:** `STOCK_IMPORT`
-- **Request:** header `Idempotency-Key`; body `{}`
-- **Response 200:** `PurchaseOrderDetail`
-- **Lỗi:** `404 STK_PO_NOT_FOUND`, `409 STK_PO_ALREADY_CONFIRMED`, `422 STK_PO_EMPTY`
-- **Ghi chú:** bấm 2 lần không cộng tồn 2 lần (luật 30).
-
----
+| Nhóm | Số endpoint |
+|---|---|
+| AUTH | 16 |
+| PRODUCT | 15 |
+| CUSTOMER | 7 |
+| PROMOTION (PROM-01, PROM-02) | 6 |
+| POS · Ca bán hàng (POS-01, POS-05) | 6 |
+| POS · Bán hàng và thanh toán (POS-02, POS-03, PROM-03, CUS-04) | 7 |
+| POS · Đổi trả hàng (POS-04) | 5 |
+| SETTINGS · Cấu hình hệ thống (AUTH-07) | 3 |
+| SUPPLIER (SUPP-01..03) | 7 |
+| STOCK · Nhập kho (STK-01) | 7 |
+| STOCK · Tồn kho theo lô, cận hạn (STK-02, STK-03) | 4 |
+| STOCK · Kiểm kho (STK-04, STK-05) | 8 |
+| STOCK · Xuất hủy / tester / trả NCC (STK-06, STK-07) | 5 |
+| REPORT · Báo cáo (REP-01..06, PROM-04) | 6 |
+| **Tổng** | **102** |
 
 ## Kiểu dùng chung
 
@@ -34,7 +43,7 @@ type PaginatedData<T> = { items: T[]; page: number; pageSize: number; totalItems
 - Danh sách: query `page` (từ 1), `pageSize` (mặc định 20), `keyword`; trả `PaginatedData<T>`.
 - Kiểu dữ liệu (`AuthUser`, `UserItem`, `CustomerItem`, `ProductItem`…) lấy theo `src/types/api.ts`.
 
-> **GĐ0:** các endpoint dưới đây ghi **đúng như service hiện tại đang gọi** (code sprint 1–2). Chỗ lệch DATABASE.md/KHUYEN_MAI.md (5 loại khuyến mãi cũ, trường hiển thị phụ trong `UserItem`/`CustomerItem`…) sửa ở GĐ3 và ghi lý do vào QUYET-DINH.md.
+> **Trạng thái:** contract khớp mock hiện tại (`src/mocks/`, đã qua Đợt test 1 và 2) cho cả 40 UC. Backend làm đúng theo đây; muốn đổi contract phải ghi lý do vào QUYET-DINH.md. Quy ước nghiệp vụ và seed: KIEN-THUC.md.
 
 ## AUTH
 
@@ -111,9 +120,11 @@ type PaginatedData<T> = { items: T[]; page: number; pageSize: number; totalItems
 - **Quyền:** `ROLE_MANAGE` · **Request:** `{}` · **Response 200:** `RbacRole[]` (ma trận về mặc định của `domain/permissions.ts`). Ghi audit log.
 
 ### `GET /audit-logs` — AUTH-06
-- **Quyền:** `AUDIT_LOG_VIEW`
-- **Query:** `roleCode`, `page`, `pageSize` (mặc định 50) · **Response 200:** `PaginatedData<AuditLogItem>`
-- **Ghi chú:** cấu trúc `AuditLogItem` hiện theo màn RBAC cũ; GĐ6 đổi theo bảng AUDIT_LOGS.
+- **Quyền:** `AUDIT_LOG_VIEW` (Admin)
+- **Query:** `userId`, `action`, `module` (`AUTH`/`USER`/`ROLE`/`SETTING`/`PRODUCT`/`SUPPLIER`/`STOCK`/`POS`/`CUSTOMER`/`PROMOTION`), `fromDate`, `toDate` (`YYYY-MM-DD`), `keyword` (đối tượng/người), `page`, `pageSize` (mặc định 20)
+- **Response 200:** `{ items: AuditLogRecord[], page, pageSize, totalItems, facets: { users: {id,name}[], actions: string[] } }`; `AuditLogRecord = { id, userId, userName, roleCode, action, module, entityType, entityId, details: {before?, after?, note?} | null, ipAddress, createdAt }`, mới nhất trước
+- **Lỗi:** `422 REP_INVALID_RANGE` khi `fromDate > toDate`
+- **Ghi chú:** chỉ đọc. Mock ghi audit tự động trong router (`mocks/audit.ts`, bảng `AUDIT_RULES`) cho mọi request ghi thành công; thao tác cần trước/sau (UPDATE_SETTING, TIER_UPGRADE, OVERRIDE_FEFO, đổi quyền, chốt ca, bàn giao ca) gọi `writeAudit` trực tiếp. Body bị lược mật khẩu/token.
 
 ## PRODUCT
 
@@ -235,7 +246,10 @@ Kiểu: `PromotionView` = bản ghi PROMOTIONS (DATABASE.md mục 24, camelCase:
 - `DRAFT → ACTIVE`, `ACTIVE ↔ PAUSED`.
 - **Lỗi:** `404 PROM_NOT_FOUND`, `409 PROM_STATUS_INVALID`
 
-> `GET /promotions/{code}/report` (PROM-04) sẽ viết lại ở GĐ3 (tính từ đơn hàng thật).
+### `GET /promotions/{id}/effect` — PROM-04
+- **Quyền:** `PROMOTION_REPORT` (Admin, Quản lý) · **Query:** `fromDate`, `toDate` (mặc định 30 ngày)
+- **Response 200:** `PromotionEffect = { promotionId, promotionName, range, usageCount, totalDiscount, revenue, customerCount, averageOrderValue, topCustomers[], byDay[] }`; tính từ đơn COMPLETED trong kỳ có `orderPromotionId` hoặc `linePromotionId` = id; tiền giảm = `orderDiscountAmount` (KM đơn) + Σ `lineDiscount` (KM dòng)
+- **Lỗi:** `404 PROMOTION_NOT_FOUND`, `422 REP_INVALID_RANGE`
 
 ## POS · Ca bán hàng (POS-01, POS-05)
 
@@ -468,3 +482,32 @@ Kiểu: `Disposal` (`id, disposalCode (DISPyyyymmdd-nn), issueType DESTROY|TESTE
 ### `POST /disposals/{id}/reject` — STK-07
 - **Quyền:** `STOCK_DISPOSAL_APPROVE` · **Request:** `{ reason }` (bắt buộc) · **Response 200:** `DisposalDetail` (`REJECTED`; `blockedQty −= blockedAddedQty` từng dòng, tồn thực tế không đổi)
 - **Lỗi:** `400 COMMON_VALIDATION_FAILED`, `409 STK_DISPOSAL_NOT_WAITING`
+
+## REPORT · Báo cáo (REP-01..06, PROM-04)
+
+Chung: query `fromDate`, `toDate` (`YYYY-MM-DD`, mặc định 30 ngày gần nhất), sai `fromDate > toDate` hoặc ngày sai định dạng trả `422 REP_INVALID_RANGE`. Số liệu tính trực tiếp từ ORDERS, RETURN_ORDERS, BATCHES... (không có bảng tổng hợp sẵn). Đơn tính theo `completed_at`, phiếu trả theo ngày trả (luật 53-54). Kiểu ở `src/types/reports.ts`. Xuất CSV làm phía client.
+
+### `GET /reports/revenue` — REP-02
+- **Quyền:** `REPORT_REVENUE`. Có thêm `REPORT_PROFIT` (Admin) thì trả `cogs`, `grossProfit`, `marginPercent`; không có (Manager) thì các trường này vắng và `showProfit=false`.
+- **Query:** `fromDate`, `toDate`, `granularity` = `DAY|WEEK|MONTH` (mặc định `DAY`), `compare=true` (kèm kỳ trước cùng độ dài liền trước `fromDate`).
+- **Response 200:** `RevenueReport = { range, granularity, showProfit, totals, previousRange|null, previous|null, series[] }`; `totals` và mỗi `series[i]` (kèm `periodStart`, `label`) là `RevenueFigures`: `orderCount, returnCount, grossAmount (Σ subtotalAmount), discountAmount (+ 4 loại: line/tier/order/points), returnedAmount (Σ totalRefundAmount), netRevenue = gross − discount − returned (luật 55), vatAmount, netRevenueExVat, cogs = Σ costPrice×qty dòng bán − Σ unitCost×qty dòng trả, grossProfit = netRevenueExVat − cogs (luật 56), marginPercent`.
+
+### `GET /reports/sales` — REP-03
+- **Quyền:** `REPORT_SALES` (mọi ca) hoặc `REPORT_SALES_OWN_SHIFT` (thu ngân: server lọc theo `cashierId` của người gọi, `scope = "OWN"`).
+- **Response 200:** `SalesReport = { range, scope, summary {orderCount,totalAmount,averageOrderValue,itemsSold,returnCount,returnedAmount}, topProducts[] (SalesProductRow: productId,sku,productName,quantity,returnedQuantity,revenue,returnedAmount; tối đa 10, theo số lượng giảm dần), slowProducts[] (bán ít nhất, kể cả SKU chưa bán được), byPayment[] {method,orderCount,amount}, byCashier[] {cashierId,cashierName,orderCount,amount,returnCount,returnedAmount}, byShift[] {shiftId,shiftCode,cashierName,openedAt,closedAt,status,orderCount,amount,differenceAmount} }`.
+
+### `GET /reports/stock` — REP-04
+- **Quyền:** `REPORT_STOCK` (Admin, Manager, NV kho) · **Query:** `fromDate`, `toDate` (chỉ áp cho hàng hủy; tồn chụp tại lúc xem).
+- **Response 200:** `StockReport = { range, expiryWarningDays, summary {skuCount, lotCount, totalQty, inventoryValue (Σ onHandQty × costPrice), blockedQty, belowMinCount, nearExpiryLots, nearExpiryValue, expiredLots, expiredValue, disposalLoss (Σ totalCost phiếu DESTROY đã duyệt trong kỳ)}, products[] (onHandQty, blockedQty, availableQty, value, minStockAlert, belowMin), belowMinProducts[], nearExpiryLots[] / expiredLots[] (batchId, sku, productName, lotCode, expDate, daysToExpiry, onHandQty, blockedQty, value, daysInStock), disposals[] {issueType, count, quantity, totalCost} }`. Ngưỡng cận hạn = `EXPIRY_WARNING_DAYS`; SKU `isSellable=false` không tính "dưới ngưỡng".
+
+### `GET /reports/purchases` — REP-05
+- **Quyền:** `REPORT_PURCHASE` · **Query:** `fromDate`, `toDate`, `granularity`.
+- **Response 200:** `PurchaseReport = { range, granularity, summary {orderCount, quantity, totalAmount, supplierCount}, bySupplier[] {supplierId, supplierName, orderCount, quantity, amount}, byBrand[] {brandName, quantity, amount}, series[] {periodStart, label, orderCount, amount} }`. Chỉ phiếu `COMPLETED`, tính theo `confirmedAt`.
+
+### `GET /reports/customers` — REP-06
+- **Quyền:** `REPORT_CUSTOMER` · **Query:** `fromDate`, `toDate`, `granularity`.
+- **Response 200:** `CustomerReport = { range, granularity, summary {totalCustomers, newCustomers (theo joinedAt/created_at), activeBuyers, returningBuyers (người mua trong kỳ đã có đơn COMPLETED trước fromDate), pointsEarned, pointsRedeemed, pointsRevoked}, byTier[] {tierCode, tierName, customerCount, totalSpent}, topSpenders[] {customerId, customerCode, fullName, tierName, orderCount, spent (Σ totalAmount − tiền hoàn)}, series[] {periodStart, label, newCustomers} }`.
+
+### `GET /reports/dashboard` — REP-01
+- **Quyền:** `REPORT_DASHBOARD` (Admin, Manager: đủ widget) hoặc `REPORT_DASHBOARD_STOCK` (NV kho: `sales = null`, chỉ widget kho). Thu ngân không có quyền (403).
+- **Response 200:** `DashboardData = { generatedAt, sales: { todayRevenue (doanh thu thuần hôm nay), todayOrders, yesterdayRevenue, openShifts, last7Days[] {date,label,netRevenue,orderCount} } | null, stock: { expiryWarningDays, nearExpiry[], expired[] (batchId, sku, productName, lotCode, expDate, daysToExpiry, onHandQty), lowStock[] {productId, sku, productName, onHandQty, minStockAlert} }, pending: { waitingChecks, waitingDisposals } }`.

@@ -82,3 +82,20 @@ Không xóa hay sửa dòng cũ; ghi sai thì thêm dòng mới đính chính.
 | 2026-11-09 10:18 | fe-tester | T1 | Câu hỏi | Q7: API-CONTRACT ghi 422 POS_BATCH_EXPIRED cho lô tay hết hạn nhưng mock quay về FEFO (chưa có trong QUYET-DINH) |
 | 2026-11-09 10:18 | fe-tester | T1 | Test | E2E mới e2e/t1: main-flows 5 test (a,b,c+d+e,f,h) + screens 23 test; chạy full 2 lần: 82 pass / 0 fail / 0 chập chờn. Unit: stock-flows 22, sales-flows 29, legacy-flows 19 (đều pass). g (phân quyền URL) đã có sẵn e2e/rbac |
 | 2026-11-09 10:18 | fe-tester | T1 | Kết thúc | Lint 0 lỗi, build qua, vitest 298 pass/1 skip, e2e 82/82. 32 UC Kho + bán hàng + phần cũ chuyển Xong (chỉ còn B2, B3 Low, Q7) |
+| 2026-11-09 10:25 | fe-coder | 3 | Commit | 9a691c8 fix(b2,b3): seed tất định theo giây, hộp đổi mật khẩu role=dialog; đóng B2, B3. Bắt đầu GĐ3 báo cáo |
+| 2026-11-09 10:28 | fe-coder | 3 | Commit | e2035d0 feat(rep-02,rep-03): báo cáo doanh thu, lợi nhuận gộp và bán hàng |
+| 2026-11-09 10:28 | fe-coder | 3 | Xong | REP-02, REP-03 code xong (build qua). Mock: /reports/revenue, /reports/sales |
+| 2026-11-09 10:29 | fe-coder | 3 | Commit | 67197fa feat(rep-04,rep-05,rep-06): báo cáo tồn kho hạn dùng, nhập hàng, khách hàng |
+| 2026-11-09 13:42 | fe-coder | 3 | Commit | 7e98717 feat(auth-06): nhật ký hệ thống, ghi audit tập trung ở router |
+| 2026-11-09 13:42 | fe-coder | 3 | Commit | b3a6840 feat(prom-04): hiệu quả khuyến mãi tính từ đơn thật |
+| 2026-11-09 13:42 | fe-coder | 3 | Kiểm | lint 0 lỗi, build qua, vitest 306 pass/0 fail, e2e 82 pass/0 fail. AUTH-06, PROM-04 -> Đang test |
+| 2026-11-09 13:42 | fe-tester | 3 | Bắt đầu | Đợt test 2 (D23): REP-01..06, AUTH-06, PROM-04 |
+| 2026-11-09 13:46 | fe-tester | 3 | Chạy | reports-flows.test.ts 18 pass, 1 skip (B4); e2e t2 vừa viết |
+| 2026-11-09 13:51 | fe-tester | 3 | Chạy | lint 0 lỗi, build qua, vitest 324 pass/0 fail/1 skip (reports-flows 18 pass + 1 skip B4), e2e 87 pass (t2: 5 test) |
+| 2026-11-09 13:51 | fe-tester | 3 | Lỗi | B4 (Medium) REP-04: tester isSellable=false có tồn bán được 3 ở báo cáo |
+| 2026-11-09 13:51 | fe-tester | 3 | Xong | REP-01..06, AUTH-06, PROM-04 -> Xong (không còn Critical/High) |
+| 2026-11-09 13:56 | fe-tester | 3 | Chạy | e2e lần 2: 86 pass/1 fail chập chờn (auth/login-session cashier01; chạy riêng 3 lần đều pass, chưa tái hiện, nghi quá tải máy khi chạy cả bộ, chưa ghi lỗi) |
+| 2026-11-09 13:56 | fe-tester | 3 | Kết thúc | Đợt test 2 xong; commit test: 59f949e |
+| 2026-11-09 13:58 | điều phối | T2 | Kết thúc | Sửa B4 (REP-04: SKU `isSellable=false` có tồn bán được = 0, `domain/reports/stock.ts`), bỏ `it.skip`. Cổng cuối: lint 0 lỗi, build qua, vitest 325/325, playwright 87/87. T2 xong; 40 UC đã code và qua test |
+| 2026-11-09 14:20 | điều phối | – | Kết thúc | Rà tiến độ: 40/40 UC `Xong`, không còn lỗi/câu hỏi mở. Sửa bảng giai đoạn TIEN-DO (GĐ3, T2 → Xong), viết lại `client/README.md`. Chụp thử POS và Tồn kho ở 1366×768 (cashier01): bố cục khớp thiết kế, thu ngân chỉ thấy cột "Bán được". Toàn bộ kế hoạch D21–D23 hoàn tất |
+| 2026-11-09 14:45 | điều phối | – | Xong việc | Rà tài liệu: khôi phục tiêu đề TIEN-DO.md (bị mất ở lần ghi đè trước), bỏ ghi chú GĐ0 cũ và mục "Mẫu" sai quyền trong API-CONTRACT, thêm mục lục (102 endpoint, 14 nhóm), viết `docs/HUONG-DAN-DEMO.md` (demo 4 vai trò), cập nhật README |

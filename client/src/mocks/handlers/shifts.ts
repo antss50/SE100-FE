@@ -6,7 +6,7 @@ import { MockHttpError, keywordOf, notFound, ok, paginate, parseBody } from '../
 import type { MockRoute } from '../router'
 import { summarizeShift, toOrderListItem, toReturnListItem } from '../sales-views'
 import { toDateOnly, toIsoLocal } from '../time'
-import { appendAuditLog } from './rbac'
+import { writeAudit } from '../audit'
 
 const openShiftSchema = z.object({
   openingCash: z
@@ -157,6 +157,16 @@ export const shiftRoutes: MockRoute[] = [
       shift.differenceAmount = difference
       shift.note = input.note || null
       db.touch('shifts')
+      writeAudit(db, user, now, {
+        action: 'CLOSE_SHIFT',
+        module: 'POS',
+        entityType: 'SHIFT',
+        entityId: shift.shiftId,
+        details: {
+          note: shift.note ?? undefined,
+          after: { shiftCode: shift.shiftCode, expectedCash: summary.expectedCash, actualCash: input.actualCash, differenceAmount: difference },
+        },
+      })
       return ok({ shift, summary }, 'Chốt ca thành công')
     },
   },
@@ -175,10 +185,12 @@ export const shiftRoutes: MockRoute[] = [
       shift.handoverConfirmedBy = user?.id ?? null
       shift.handoverConfirmedByName = user?.fullName ?? null
       db.touch('shifts')
-      appendAuditLog(db, user, now, {
-        actionTitle: 'Xác nhận bàn giao ca',
-        referenceCode: shift.shiftCode,
-        detailNote: `(Chênh lệch ${shift.differenceAmount ?? 0} đ, thu ngân ${shift.cashierName})`,
+      writeAudit(db, user, now, {
+        action: 'CONFIRM_HANDOVER',
+        module: 'POS',
+        entityType: 'SHIFT',
+        entityId: shift.shiftId,
+        details: { note: `Ca ${shift.shiftCode}, thu ngân ${shift.cashierName}`, after: { differenceAmount: shift.differenceAmount ?? 0 } },
       })
       return ok(shift, 'Đã xác nhận bàn giao ca')
     },

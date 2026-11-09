@@ -2,7 +2,7 @@ import type { CartInput, CashierShift, CompleteOrderRequest, OrderRecord, Return
 import type { MockTables, MockTransaction } from '../db'
 import { createReturn } from '../handlers/returns'
 import { saveDraft } from '../handlers/orders'
-import { appendAuditLog } from '../handlers/rbac'
+import { writeAudit } from '../audit'
 import { completeSale, exchangeCreditOf } from '../sales-complete'
 import { priceCart } from '../sales-engine'
 import { summarizeShift } from '../sales-views'
@@ -187,10 +187,12 @@ export function seedSales(db: MockTransaction, today: Date): void {
     shiftA.handoverConfirmedBy = manager.id
     shiftA.handoverConfirmedByName = manager.fullName
     db.touch('shifts')
-    appendAuditLog(db, manager, at(3, 16), {
-      actionTitle: 'Xác nhận bàn giao ca',
-      referenceCode: shiftA.shiftCode,
-      detailNote: `(Chênh lệch ${shiftA.differenceAmount ?? 0} đ, thu ngân ${shiftA.cashierName})`,
+    writeAudit(db, manager, at(3, 16), {
+      action: 'CONFIRM_HANDOVER',
+      module: 'POS',
+      entityType: 'SHIFT',
+      entityId: shiftA.shiftCode,
+      details: { note: `${shiftA.shiftCode}: chênh lệch ${shiftA.differenceAmount ?? 0} đ, thu ngân ${shiftA.cashierName}` },
     })
   })
 

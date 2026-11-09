@@ -1,7 +1,7 @@
 import { splitByBatches } from '../domain/pricing'
 import type { CustomerItem } from '../types/api'
 import type { CashierShift, CompleteOrderRequest, OrderLine, OrderRecord } from '../types/pos'
-import { appendAuditLog } from './handlers/rbac'
+import { writeAudit } from './audit'
 import type { MockTransaction } from './db'
 import { MockHttpError } from './http'
 import { recordPoints, tierForSpend, tierRankOf } from './loyalty'
@@ -186,10 +186,15 @@ export function completeSale(
 
   for (const o of overrides) {
     const product = products.find((p) => p.id === o.productId)
-    appendAuditLog(db, user, now, {
-      actionTitle: 'Đổi lô thủ công khi bán (OVERRIDE_FEFO)',
-      referenceCode: orderCode,
-      detailNote: `(${product?.productName ?? `SP #${o.productId}`} bán từ lô ${o.lotCode} thay vì lô FEFO đầu tiên)`,
+    writeAudit(db, user, now, {
+      action: 'OVERRIDE_FEFO',
+      module: 'POS',
+      entityType: 'ORDER',
+      entityId: record.id,
+      details: {
+        note: `${product?.productName ?? `SP #${o.productId}`} bán từ lô ${o.lotCode} thay vì lô FEFO đầu tiên`,
+        after: { orderCode, lotCode: o.lotCode },
+      },
     })
   }
   return record
@@ -222,7 +227,20 @@ function applyLoyalty(db: MockTransaction, order: OrderRecord, customer: Custome
   const spent = parseFloat(target.totalSpent) + order.totalAmount
   target.totalSpent = spent.toFixed(2)
   const nextTier = tierForSpend(db, spent)
-  if (tierRankOf({ tier: nextTier }) > tierRankOf(target)) target.tier = nextTier
+  if (tierRankOf({ tier: nextTier }) > tierRankOf(target)) {
+    writeAudit(db, null, now, {
+      action: 'TIER_UPGRADE',
+      module: 'CUSTOMER',
+      entityType: 'CUSTOMER',
+      entityId: target.id,
+      details: {
+        note: `${target.customerCode} lên hạng nhờ đơn ${order.orderCode}`,
+        before: { tier: target.tier.tierCode },
+        after: { tier: nextTier.tierCode, totalSpent: spent },
+      },
+    })
+    target.tier = nextTier
+  }
   target.completedOrdersCount = (target.completedOrdersCount ?? 0) + 1
   target.lastOrderCode = order.orderCode
   target.lastOrderText = 'Vừa xong'

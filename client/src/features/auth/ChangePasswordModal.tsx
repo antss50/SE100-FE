@@ -74,14 +74,14 @@ export function ChangePasswordModal() {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 border border-[#ead8ce] shadow-2xl">
+      <div role="dialog" aria-modal="true" aria-labelledby="change-password-title" className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 border border-[#ead8ce] shadow-2xl">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-2xl bg-[#fbeae2] text-[#b4533c] grid place-items-center">
               <KeyRound className="size-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-[#2b1d16]">
+              <h3 id="change-password-title" className="text-base font-bold text-[#2b1d16]">
                 Đổi mật khẩu bảo mật
               </h3>
               <p className="text-xs text-[#7c6356]">
@@ -123,13 +123,14 @@ export function ChangePasswordModal() {
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-[#543e34]">
+            <label htmlFor="cp-old" className="block text-xs font-semibold text-[#543e34]">
               Mật khẩu hiện tại *
             </label>
             <div className="mt-1.5 relative">
               <Lock className="size-4 text-[#9a7d6f] absolute left-3.5 top-3" />
               <input
                 type="password"
+                id="cp-old"
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
                 placeholder="Nhập mật khẩu hiện tại (VD: Password@123)"
@@ -140,13 +141,14 @@ export function ChangePasswordModal() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#543e34]">
+            <label htmlFor="cp-new" className="block text-xs font-semibold text-[#543e34]">
               Mật khẩu mới *
             </label>
             <div className="mt-1.5 relative">
               <Lock className="size-4 text-[#9a7d6f] absolute left-3.5 top-3" />
               <input
                 type="password"
+                id="cp-new"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Tối thiểu 8 ký tự, chữ hoa, chữ thường & số"
@@ -161,13 +163,14 @@ export function ChangePasswordModal() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#543e34]">
+            <label htmlFor="cp-confirm" className="block text-xs font-semibold text-[#543e34]">
               Xác nhận mật khẩu mới *
             </label>
             <div className="mt-1.5 relative">
               <Lock className="size-4 text-[#9a7d6f] absolute left-3.5 top-3" />
               <input
                 type="password"
+                id="cp-confirm"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Nhập lại mật khẩu mới"

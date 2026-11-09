@@ -31,6 +31,7 @@ import { toast } from '../../components/ui'
 import { getErrorMessage } from '../../utils/error'
 import {
   formatAnyDateTime,
+  formatDate,
   formatCurrency,
   formatNumber,
   getInitials,
@@ -242,7 +243,7 @@ export function CustomerDetailPage() {
             </h2>
             <p className="mt-1 font-mono text-xs text-amber-200/90">
               {customer.customerCode} • Gia nhập:{' '}
-              {customer.joinedAt || '18/02/2023'}
+              {customer.joinedAt?.includes('-') ? formatDate(customer.joinedAt) : customer.joinedAt || '—'}
             </p>
           </div>
 

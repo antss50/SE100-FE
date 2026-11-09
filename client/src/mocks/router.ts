@@ -5,6 +5,7 @@ import {
   type PermissionCode,
   type PermissionRequirement,
 } from '../domain/permissions'
+import { auditAfterRequest } from './audit'
 import { MockTransaction } from './db'
 import { MockHttpError, type HttpMethod, type MockContext, type MockResponse } from './http'
 import type { MockUser } from './seed/users'
@@ -125,6 +126,7 @@ export async function dispatch(
       now: new Date(),
     }
     const response = await route.handler(ctx)
+    if (method !== 'GET') auditAfterRequest(db, { method, path, body: ctx.body, user, now: ctx.now }, response)
     db.commit()
     return response
   } catch (err) {

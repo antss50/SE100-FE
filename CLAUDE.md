@@ -188,3 +188,15 @@ Không bỏ qua, không tắt rule, không `--no-verify`. Lỗi của test có s
 - [client/docs/NHAT-KY-TIEN-DO.md](client/docs/NHAT-KY-TIEN-DO.md): **nhật ký theo thời gian, bắt buộc ghi**. Mỗi agent thêm một dòng (không sửa dòng cũ) khi: bắt đầu nhiệm vụ, xong mỗi việc/UC, mỗi commit (hash + message), mỗi lần chạy test (số pass/fail), phát hiện lỗi hoặc câu hỏi mở, và khi kết thúc. File này được commit cùng commit của việc vừa ghi.
 - [client/docs/QUYET-DINH.md](client/docs/QUYET-DINH.md): mọi chỗ làm khác thiết kế/code cũ và lý do.
 - [client/docs/API-CONTRACT.md](client/docs/API-CONTRACT.md): hợp đồng API cho BE.
+
+## 14. Tiết kiệm token (bắt buộc, D46)
+
+Token tốn chủ yếu ở **số lượt × độ dài ngữ cảnh** (mỗi lượt gọi công cụ đọc lại toàn bộ ngữ cảnh). Đo thực tế: agent chạy 90–340 lượt, ngữ cảnh lên 200–480 nghìn token; một lần `Read` file PDF/PNG thiết kế làm ngữ cảnh phình thêm ~150–200 nghìn token cho mọi lượt sau.
+
+- **Agent kiểm thử: không `Read` PDF/PNG.** Test viết từ tài liệu chữ; đối chiếu thiết kế bằng text (cột/nút đã liệt kê trong KIEN-THUC.md, hoặc `pdftotext -layout "<pdf>" -` lấy chữ, cắt `| head -80`). Agent code chỉ mở PDF của đúng UC đang làm và mỗi file một lần; ưu tiên `pdftotext` trước, chỉ `Read` ảnh khi cần bố cục.
+- **Không `cat` nhiều file lớn một lúc.** Doc lớn (API-CONTRACT.md ~48KB, QUYET-DINH.md, NHAT-KY) dùng `grep -n` hoặc `sed -n 'a,bp'` lấy đúng đoạn. Không đọc lại file đã đọc trong cùng lượt làm việc.
+- **Gộp lệnh**: nhiều lệnh độc lập trong một lượt gọi; viết nguyên một file test/handler trong một lệnh Write thay vì sửa lắt nhắt nhiều lần.
+- **Giới hạn đầu ra lệnh:** `npm run build 2>&1 | tail -25`; `npx vitest run --reporter=dot 2>&1 | tail -40`; `npx playwright test --reporter=line 2>&1 | tail -40`; `grep -c`/`head`. Không in cả log.
+- **Chạy test có chọn lọc** khi đang sửa (`npx vitest run <file>`, `npx playwright test <file> -g "<tên>"`); chạy toàn bộ đúng một lần cuối (E2E hai lần chỉ ở đợt test cuối để bắt chập chờn).
+- **Giới hạn lượt:** mỗi agent ≤ 120 lượt gọi công cụ. Việc lớn tách thành nhiều agent nhỏ theo nhóm UC (ngữ cảnh mỗi agent bắt đầu sạch); agent kiểm thử chia theo module, mỗi agent một module.
+- Báo cáo cuối ngắn (≤ 30 dòng); chi tiết đã nằm trong nhật ký/TIEN-DO nên không lặp lại.

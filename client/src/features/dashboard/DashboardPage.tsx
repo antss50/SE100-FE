@@ -1,162 +1,134 @@
-import {
-  ArrowRight,
-  Award,
-  Boxes,
-  KeyRound,
-  Shield,
-  Tag,
-  UserCheck,
-  UserPlus,
-  Users,
-} from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { AlertTriangle, Clock, ClipboardCheck, PackageMinus, ReceiptText, TrendingUp } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useCan } from '../../app/usePermission'
+import { DataTable, ErrorState, LoadingState, PageHeader, StatCard, StatusBadge, type Column } from '../../components/ui'
+import { queryKeys } from '../../lib/query-keys'
+import { reportsService } from '../../services/reports.service'
+import type { DashboardAlertLot, DashboardLowStock } from '../../types/reports'
+import { getErrorMessage } from '../../utils/error'
+import { formatCurrency, formatDate, formatDateTime, formatNumber } from '../../utils/format'
+import { BarChart, Delta, Panel } from '../reports/charts'
 
-const moduleCards = [
+const lotColumns: Column<DashboardAlertLot>[] = [
+  { key: 'name', header: 'Sản phẩm', render: (l) => l.productName },
+  { key: 'lot', header: 'Lô', render: (l) => <span className="font-mono text-xs">{l.lotCode}</span> },
+  { key: 'exp', header: 'Hạn dùng', render: (l) => formatDate(l.expDate) },
   {
-    title: 'Khuyến mãi 4 Tầng & Chính sách Bán hàng (G11)',
-    subtitle: 'GET/POST/PUT /api/v1/promotions · /pause · /report',
-    description:
-      'Quản lý khung khuyến mãi 4 tầng (Flash Sale, Hạng thẻ, Bậc thang, Điểm thưởng), tạo/sửa/tạm dừng Voucher và xem báo cáo hiệu quả.',
-    to: '/promotions',
-    icon: Tag,
+    key: 'days',
+    header: 'Còn lại',
+    align: 'right',
+    render: (l) =>
+      l.daysToExpiry < 0 ? (
+        <StatusBadge tone="danger">Quá hạn {-l.daysToExpiry} ngày</StatusBadge>
+      ) : (
+        <StatusBadge tone="warning">{l.daysToExpiry} ngày</StatusBadge>
+      ),
   },
-  {
-    title: 'Hệ thống 4 Hạng thẻ & Tích điểm (G10)',
-    subtitle: 'PUT /api/v1/loyalty-config · Đồng, Bạc, Vàng, Kim Cương',
-    description:
-      'Cấu hình tỷ lệ quy đổi điểm thưởng (amountPerPoint) và ngưỡng chi tiêu thăng hạng tự động cho 4 hạng thành viên Lumina VIP.',
-    to: '/loyalty',
-    icon: Award,
-  },
-  {
-    title: 'Sản phẩm, Danh mục & Thương hiệu',
-    subtitle: 'POST /api/v1/products · /categories · /brands',
-    description:
-      'Quản lý 1.240 SKU mỹ phẩm, khởi tạo danh mục nội bộ, thương hiệu phân phối, quy cách đóng gói, thuế VAT và định mức tồn an toàn.',
-    to: '/products',
-    icon: Boxes,
-  },
-  {
-    title: 'Xác thực POS & Mở Ca (G02 · G12)',
-    subtitle: 'POST /api/v1/auth/login · /change-password · /shifts/open',
-    description:
-      'Đăng nhập POS theo mã nhân viên/username, tự động khóa 30 phút khi sai mật khẩu 5 lần, đổi mật khẩu Bcrypt và khai báo tiền mặt mở ca.',
-    to: '/login',
-    icon: KeyRound,
-    badge: 'Module Auth',
-  },
-  {
-    title: 'Quản lý Tài khoản Nhân viên (G02)',
-    subtitle: 'GET /api/v1/users · POST /api/v1/users · GET /users/me',
-    description:
-      'Tra cứu danh sách nhân sự, tạo tài khoản nhân viên mới, theo dõi ca trực, doanh thu 7 ngày và nhật ký hoạt động bảo mật.',
-    to: '/users',
-    icon: Users,
-    badge: '32 Nhân sự',
-  },
-  {
-    title: 'Chi tiết Hoạt động Nhân viên',
-    subtitle: 'Hồ sơ Nguyễn Thu Hà (NV0003) · Thu ngân POS',
-    description:
-      'Xem biểu đồ doanh thu thuần 7 ngày, trạng thái bảo mật tài khoản (0/5 lần sai mật khẩu), thu hồi phiên đăng nhập và nhật ký OVERRIDE_FEFO.',
-    to: '/users/NV0003',
-    icon: UserCheck,
-    badge: 'NV0003',
-  },
-  {
-    title: 'Phân quyền & Ma trận Vai trò RBAC (G02)',
-    subtitle: 'GET /rbac/roles · GET /rbac/permissions · PUT /roles/:id/permissions',
-    description:
-      'Ma trận 24 quyền hạn chia theo 6 nhóm nghiệp vụ cho 4 vai trò chuẩn (ADMIN, STORE_MANAGER, INVENTORY_STAFF, CASHIER) kèm Audit Log truy vết.',
-    to: '/rbac',
-    icon: Shield,
-    badge: 'RBAC Matrix',
-  },
-  {
-    title: 'Quản lý Khách hàng & Hội viên (G06)',
-    subtitle: 'GET /api/v1/customers · Lọc hạng thẻ Đồng, Bạc, Vàng, Kim Cương',
-    description:
-      'Danh sách 3,842 khách hàng hội viên, tra cứu nhanh bằng phím tắt (/), lọc theo hạng thành viên, điểm thưởng khả dụng và tổng chi tiêu.',
-    to: '/customers',
-    icon: Users,
-    badge: 'CRM & Loyalty',
-  },
-  {
-    title: 'Thêm mới & Hồ sơ VIP Khách hàng (G06)',
-    subtitle: 'POST /api/v1/customers · GET /api/v1/customers/:customerCode',
-    description:
-      'Form thêm mới khách hàng kèm kiểm tra trùng SĐT (409 Conflict), phân loại làn da/dị ứng mỹ phẩm và thẻ đặc quyền Lumina VIP Club.',
-    to: '/customers/KH0001',
-    icon: UserPlus,
-    badge: 'VIP Club',
-  },
+  { key: 'qty', header: 'Tồn', align: 'right', render: (l) => formatNumber(l.onHandQty) },
 ]
 
+const lowColumns: Column<DashboardLowStock>[] = [
+  { key: 'sku', header: 'SKU', render: (p) => <span className="font-mono text-xs">{p.sku}</span> },
+  { key: 'name', header: 'Sản phẩm', render: (p) => p.productName },
+  { key: 'qty', header: 'Tồn', align: 'right', render: (p) => <span className="font-semibold text-danger">{formatNumber(p.onHandQty)}</span> },
+  { key: 'min', header: 'Ngưỡng', align: 'right', render: (p) => formatNumber(p.minStockAlert) },
+]
+
+/** REP-01: dashboard theo quyền. NV kho chỉ có widget kho; thu ngân không có dashboard. */
 export function DashboardPage() {
+  const canApproveCheck = useCan('STOCK_ADJUST_APPROVE')
+  const canApproveDisposal = useCan('STOCK_DISPOSAL_APPROVE')
+  const canViewStock = useCan(['STOCK_VIEW', 'STOCK_EXPIRY_VIEW'])
+  const query = useQuery({ queryKey: queryKeys.reports.report('dashboard', {}), queryFn: () => reportsService.dashboard(), refetchInterval: 60_000 })
+  const data = query.data?.data
+
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl bg-gradient-to-r from-[#8f422a] via-[#a8553a] to-[#6d2f1b] text-white p-6 sm:p-8 shadow-md flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div>
-          <span className="px-3 py-1 rounded-full bg-white/15 text-amber-100 font-mono text-[11px] font-bold uppercase tracking-wider">
-            Sprint 02 · G02 & G06 · Lumina Beauty POS & ERP
-          </span>
-          <h1 className="mt-3 text-2xl sm:text-3xl font-extrabold tracking-tight">
-            Dashboard tổng quan
-          </h1>
-          <p className="mt-2 text-xs sm:text-sm text-amber-100/90 max-w-2xl leading-relaxed">
-            Chọn nhanh các phân hệ bên dưới hoặc từ thanh điều hướng bên trái để
-            trải nghiệm đầy đủ các màn hình theo thiết kế UI và API Contract.
-          </p>
-        </div>
+      <PageHeader
+        title="Dashboard tổng quan"
+        description={data ? `Cập nhật lúc ${formatDateTime(data.generatedAt)}` : 'Doanh thu, cảnh báo kho và chứng từ chờ duyệt'}
+      />
+      {query.isLoading && <LoadingState />}
+      {query.isError && <ErrorState message={getErrorMessage(query.error)} onRetry={() => void query.refetch()} />}
+      {data && (
+        <>
+          {data.sales && (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <StatCard
+                  label="Doanh thu hôm nay"
+                  value={formatCurrency(data.sales.todayRevenue)}
+                  icon={TrendingUp}
+                  hint={
+                    <span>
+                      <Delta current={data.sales.todayRevenue} previous={data.sales.yesterdayRevenue} /> so với hôm qua
+                    </span>
+                  }
+                />
+                <StatCard label="Đơn hôm nay" value={formatNumber(data.sales.todayOrders)} icon={ReceiptText} hint="Đơn đã hoàn tất" />
+                <StatCard label="Ca đang mở" value={formatNumber(data.sales.openShifts)} icon={Clock} />
+                <StatCard
+                  label="Chờ duyệt"
+                  value={formatNumber(data.pending.waitingChecks + data.pending.waitingDisposals)}
+                  icon={ClipboardCheck}
+                  hint={`${data.pending.waitingChecks} kiểm kho · ${data.pending.waitingDisposals} xuất khác`}
+                />
+              </div>
+              <Panel title="Doanh thu thuần 7 ngày gần nhất">
+                <BarChart title="Doanh thu thuần 7 ngày" data={data.sales.last7Days.map((d) => ({ label: d.label, value: Math.max(0, d.netRevenue) }))} />
+              </Panel>
+            </>
+          )}
 
-        <div className="flex flex-wrap gap-3 shrink-0">
-          <Link
-            to="/customers/new"
-            className="px-4 py-2.5 rounded-xl bg-black/25 border border-white/25 text-white text-xs font-bold hover:bg-black/35 transition"
-          >
-            + Thêm mới Khách hàng
-          </Link>
-        </div>
-      </div>
+          {!data.sales && (
+            <div className="grid gap-4 sm:grid-cols-3">
+              <StatCard label="Lô cận hạn" value={formatNumber(data.stock.nearExpiry.length)} icon={AlertTriangle} hint={`Còn ≤ ${data.stock.expiryWarningDays} ngày`} />
+              <StatCard label="Lô hết hạn còn tồn" value={formatNumber(data.stock.expired.length)} icon={PackageMinus} />
+              <StatCard label="Phiếu chờ duyệt" value={formatNumber(data.pending.waitingChecks + data.pending.waitingDisposals)} icon={ClipboardCheck} hint={`${data.pending.waitingChecks} kiểm kho · ${data.pending.waitingDisposals} xuất khác`} />
+            </div>
+          )}
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {moduleCards.map((card) => {
-          const Icon = card.icon
-          return (
-            <Link
-              key={card.to}
-              to={card.to}
-              className="group rounded-3xl bg-white border border-[#ead9ce] hover:border-[#c97a5d] p-6 shadow-2xs hover:shadow-md transition flex flex-col justify-between"
+          <div className="grid gap-5 xl:grid-cols-2">
+            <Panel
+              title={`Lô cận hạn (≤ ${data.stock.expiryWarningDays} ngày)`}
+              right={canViewStock && <Link to="/stock" className="text-xs font-semibold text-accent hover:underline">Xem tồn kho</Link>}
             >
-              <div>
-                <div className="flex items-center justify-between">
-                  <div className="size-11 rounded-2xl bg-[#fbeae2] text-[#9a462d] grid place-items-center">
-                    <Icon className="size-5" />
-                  </div>
-                  <span className="px-2.5 py-1 rounded-full bg-[#faf1ea] text-[#9a462d] font-mono text-[10px] font-bold">
-                    {card.badge && card.badge}
+              <DataTable columns={lotColumns} rows={data.stock.nearExpiry} rowKey={(l) => l.batchId} caption="Lô cận hạn" emptyTitle="Không có lô cận hạn" />
+            </Panel>
+            <Panel title="Lô đã hết hạn còn tồn">
+              <DataTable columns={lotColumns} rows={data.stock.expired} rowKey={(l) => l.batchId} caption="Lô hết hạn" emptyTitle="Không có lô hết hạn còn tồn" />
+            </Panel>
+            <Panel title="Sản phẩm tồn dưới ngưỡng">
+              <DataTable columns={lowColumns} rows={data.stock.lowStock} rowKey={(p) => p.productId} caption="Tồn dưới ngưỡng" emptyTitle="Không có sản phẩm dưới ngưỡng" />
+            </Panel>
+            <Panel title="Chứng từ chờ duyệt">
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-center justify-between gap-3 rounded-xl bg-card p-3">
+                  <span className="flex items-center gap-2">
+                    <ClipboardCheck className="size-4 text-accent" aria-hidden="true" />
+                    Phiếu kiểm kho chờ duyệt
                   </span>
-                </div>
-
-                <h2 className="mt-4 text-base font-extrabold text-[#221712] group-hover:text-[#9a462d] transition">
-                  {card.title}
-                </h2>
-                <p className="mt-1 font-mono text-[11px] text-[#8d7467]">
-                  {card.subtitle}
-                </p>
-                <p className="mt-2.5 text-xs text-[#695246] leading-relaxed">
-                  {card.description}
-                </p>
-              </div>
-
-              <div className="mt-5 pt-3 border-t border-[#f3e7df] flex items-center justify-between text-xs font-bold text-[#9a462d]">
-                <span>Mở màn hình chức năng</span>
-                <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </Link>
-          )
-        })}
-      </div>
+                  <span className="flex items-center gap-3">
+                    <strong>{data.pending.waitingChecks}</strong>
+                    {canApproveCheck && <Link to="/inventory-checks" className="text-xs font-semibold text-accent hover:underline">Xem</Link>}
+                  </span>
+                </li>
+                <li className="flex items-center justify-between gap-3 rounded-xl bg-card p-3">
+                  <span className="flex items-center gap-2">
+                    <PackageMinus className="size-4 text-accent" aria-hidden="true" />
+                    Phiếu xuất khác chờ duyệt
+                  </span>
+                  <span className="flex items-center gap-3">
+                    <strong>{data.pending.waitingDisposals}</strong>
+                    {canApproveDisposal && <Link to="/disposals" className="text-xs font-semibold text-accent hover:underline">Xem</Link>}
+                  </span>
+                </li>
+              </ul>
+            </Panel>
+          </div>
+        </>
+      )}
     </div>
   )
 }

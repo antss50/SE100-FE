@@ -2,7 +2,6 @@ import type { DisposalDetail, InventoryCheckDetail } from '../types/inventory'
 import type { Batch, PurchaseOrderDetail, StockMovement } from '../types/stock'
 import type { Supplier } from '../types/suppliers'
 import type {
-  AuditLogItem,
   BrandItem,
   CategoryItem,
   CustomerItem,
@@ -11,7 +10,8 @@ import type {
 } from '../types/api'
 import type { CashierShift, OrderRecord, ReturnOrderRecord } from '../types/pos'
 import type { PromotionRecord } from '../types/promotions'
-import { SEED_AUDIT_LOGS } from './seed/audit-logs'
+import type { AuditLogRecord } from '../types/reports'
+import { seedAuditLogs } from './seed/audit-logs'
 import { SEED_BRANDS, SEED_CATEGORIES, SEED_PRODUCTS } from './seed/catalog'
 import { SEED_CUSTOMERS } from './seed/customers'
 import { SEED_LOYALTY_CONFIG } from './seed/loyalty'
@@ -19,6 +19,7 @@ import { seedPromotions } from './seed/promotions'
 import { seedSales } from './seed/sales'
 import { SEED_SYSTEM_SETTINGS, seedStock } from './seed/stock'
 import { seedSuppliers } from './seed/suppliers'
+import { addDays, toDateOnly } from './time'
 import { seedPermissions, seedRoles, type MockPermission, type MockRole } from './seed/rbac'
 import { SEED_PASSWORD, SEED_USERS, type MockUser } from './seed/users'
 
@@ -46,7 +47,7 @@ export interface MockTables {
   sessions: MockSession[]
   permissions: MockPermission[]
   roles: MockRole[]
-  auditLogs: AuditLogItem[]
+  auditLogs: AuditLogRecord[]
   shifts: CashierShift[]
   customers: CustomerItem[]
   categories: CategoryItem[]
@@ -85,7 +86,10 @@ const keyOf = (table: string) => `${KEY_PREFIX}${table}_v${MOCK_DB_VERSION}`
 const META_KEY = keyOf('meta')
 
 /** Seed tất định; ngày tính tương đối so với `today`. */
-export function buildSeed(today: Date = new Date()): MockTables {
+export function buildSeed(now: Date = new Date()): MockTables {
+  // Làm tròn xuống 10 phút để hai lần dựng seed cách nhau vài giây cho dữ liệu y hệt (B2).
+  const today = new Date(now)
+  today.setMinutes(Math.floor(today.getMinutes() / 10) * 10, 0, 0)
   const permissions = seedPermissions()
   const clone = <T>(value: T): T => structuredClone(value)
   const suppliers = seedSuppliers(today)
@@ -103,7 +107,7 @@ export function buildSeed(today: Date = new Date()): MockTables {
     sessions: [],
     permissions,
     roles: seedRoles(permissions),
-    auditLogs: clone(SEED_AUDIT_LOGS),
+    auditLogs: seedAuditLogs(today, SEED_USERS),
     shifts: [],
     customers: clone(SEED_CUSTOMERS),
     categories: clone(SEED_CATEGORIES),
@@ -123,6 +127,12 @@ export function buildSeed(today: Date = new Date()): MockTables {
     systemSettings: { ...SEED_SYSTEM_SETTINGS },
     idempotencyKeys: {},
     counters: {},
+  }
+  // Vài khách tham gia gần đây để báo cáo khách hàng (REP-06) có dữ liệu "khách mới" theo kỳ.
+  const joinedDaysAgo: Record<number, number> = { 4: 3, 5: 10, 6: 35 }
+  for (const c of tables.customers) {
+    const ago = joinedDaysAgo[c.id]
+    if (ago !== undefined) c.joinedAt = toDateOnly(addDays(today, -ago))
   }
   seedSales(new MockTransaction(tables), today)
   return tables

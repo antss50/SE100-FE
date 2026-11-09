@@ -135,7 +135,6 @@ export const NAV_GROUPS: NavGroup[] = [
           'REPORT_CUSTOMER',
         ],
         uc: 'REP-02..06',
-        plannedPhase: 6,
       },
       { to: '/users', label: 'Tài khoản nhân viên', icon: UserCog, permission: 'USER_MANAGE', uc: 'AUTH-04' },
       { to: '/rbac', label: 'Phân quyền vai trò', icon: ShieldCheck, permission: 'ROLE_MANAGE', uc: 'AUTH-05' },
@@ -145,7 +144,6 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: FileClock,
         permission: 'AUDIT_LOG_VIEW',
         uc: 'AUTH-06',
-        plannedPhase: 6,
       },
       {
         to: '/settings',
