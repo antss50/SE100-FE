@@ -36,17 +36,36 @@ ${order.amountReceived !== null ? line('Tiền khách đưa', formatCurrency(ord
 <p style="margin-top:10px">Cảm ơn quý khách!</p></body></html>`
 }
 
-/** Mở cửa sổ in. Trả `false` nếu không in được (lỗi in không chặn đơn, luật 39). */
+/**
+ * In bằng khung ẩn trong trang (không dùng `window.open` nên không bị trình duyệt chặn popup).
+ * Trả `false` nếu không in được (lỗi in không chặn đơn, luật 39).
+ */
 export function printReceipt(html: string): boolean {
+  let frame: HTMLIFrameElement | null = null
   try {
-    const win = window.open('', '_blank', 'width=420,height=640')
-    if (!win) return false
-    win.document.write(html)
-    win.document.close()
+    frame = document.createElement('iframe')
+    frame.setAttribute('aria-hidden', 'true')
+    frame.setAttribute('title', 'Hóa đơn in')
+    frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden'
+    document.body.appendChild(frame)
+    const win = frame.contentWindow
+    const doc = frame.contentDocument
+    if (!win || !doc) {
+      frame.remove()
+      return false
+    }
+    doc.open()
+    doc.write(html)
+    doc.close()
+    const target = frame
+    const cleanup = () => window.setTimeout(() => target.remove(), 500)
+    win.addEventListener('afterprint', cleanup)
+    window.setTimeout(() => target.remove(), 120_000)
     win.focus()
     win.print()
     return true
   } catch {
+    frame?.remove()
     return false
   }
 }

@@ -149,18 +149,18 @@ export function priceCart(
     const manualId = merged.get(productId)?.batchId ?? null
     let ordered = fefo
     if (manualId !== null) {
+      // Lô chọn tay (kể cả lưu trong đơn nháp) không còn bán được thì quay về FEFO và báo, không chặn giỏ hàng.
       const manual = db.read('batches').find((b) => b.id === manualId && b.productId === productId)
-      if (!manual) throw new MockHttpError(404, 'STK_BATCH_NOT_FOUND', 'Không tìm thấy lô hàng đã chọn')
-      if (manual.expDate < today) {
-        throw new MockHttpError(422, 'POS_BATCH_EXPIRED', `Lô ${manual.lotCode} đã hết hạn, không được bán`)
-      }
-      if (sellableQty(manual, today) <= 0) {
-        throw new MockHttpError(422, 'POS_BATCH_NOT_SELLABLE', `Lô ${manual.lotCode} không còn tồn bán được`)
-      }
-      ordered = [manual, ...fefo.filter((b) => b.id !== manual.id)]
-      if (fefo[0] && fefo[0].id !== manual.id) {
-        overrides.push({ productId, lotCode: manual.lotCode })
-        overrideBatch.set(productId, manual.id)
+      const name = productById.get(productId)?.productName ?? `#${productId}`
+      if (!manual || manual.expDate < today || sellableQty(manual, today) <= 0) {
+        const lot = manual ? `Lô ${manual.lotCode}` : 'Lô đã chọn'
+        messages.push(`${name}: ${lot} không còn bán được, hệ thống tự chọn lô theo FEFO`)
+      } else {
+        ordered = [manual, ...fefo.filter((b) => b.id !== manual.id)]
+        if (fefo[0] && fefo[0].id !== manual.id) {
+          overrides.push({ productId, lotCode: manual.lotCode })
+          overrideBatch.set(productId, manual.id)
+        }
       }
     }
     for (const b of ordered) remaining.set(b.id, sellableQty(b, today))
