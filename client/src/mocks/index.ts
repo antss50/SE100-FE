@@ -6,6 +6,7 @@ import { promotionRoutes } from './handlers/promotions'
 import { purchaseOrderRoutes } from './handlers/purchase-orders'
 import { rbacRoutes } from './handlers/rbac'
 import { shiftRoutes } from './handlers/shifts'
+import { stockRoutes } from './handlers/stock'
 import { supplierRoutes } from './handlers/suppliers'
 import { userRoutes } from './handlers/users'
 import type { HttpMethod } from './http'
@@ -23,6 +24,7 @@ export const mockRoutes: MockRoute[] = [
   ...shiftRoutes,
   ...supplierRoutes,
   ...purchaseOrderRoutes,
+  ...stockRoutes,
 ]
 
 /**

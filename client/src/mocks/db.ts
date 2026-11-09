@@ -1,3 +1,4 @@
+import type { DisposalDetail, InventoryCheckDetail } from '../types/inventory'
 import type { Batch, PurchaseOrderDetail, StockMovement } from '../types/stock'
 import type { Supplier } from '../types/suppliers'
 import type {
@@ -52,6 +53,8 @@ export interface MockTables {
   /** Phiếu nhập kho kèm dòng chi tiết (PURCHASE_ORDERS + PURCHASE_ORDER_DETAILS). */
   purchaseOrders: PurchaseOrderDetail[]
   batches: Batch[]
+  inventoryChecks: InventoryCheckDetail[]
+  disposals: DisposalDetail[]
   /** Thẻ kho (STOCK_MOVEMENTS): mọi thay đổi tồn đều có một dòng ở đây (luật 28). */
   stockMovements: StockMovement[]
   /** SYSTEM_SETTINGS dạng khóa → giá trị chuỗi. */
@@ -103,6 +106,8 @@ export function buildSeed(today: Date = new Date()): MockTables {
     suppliers,
     purchaseOrders: stock.purchaseOrders,
     batches: stock.batches,
+    inventoryChecks: [],
+    disposals: [],
     stockMovements: stock.stockMovements,
     systemSettings: { ...SEED_SYSTEM_SETTINGS },
     idempotencyKeys: {},

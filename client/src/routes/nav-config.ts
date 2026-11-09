@@ -72,7 +72,6 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Warehouse,
         permission: ['STOCK_VIEW', 'STOCK_VIEW_AVAILABLE', 'STOCK_EXPIRY_VIEW'],
         uc: 'STK-02, STK-03',
-        plannedPhase: 2,
       },
       {
         to: '/inventory-checks',

@@ -28,6 +28,8 @@ const SupplierDetailPage = lazyNamed(() => import('../features/suppliers/Supplie
 const PurchaseOrdersListPage = lazyNamed(() => import('../features/purchase-orders/PurchaseOrdersListPage'), 'PurchaseOrdersListPage')
 const PurchaseOrderFormPage = lazyNamed(() => import('../features/purchase-orders/PurchaseOrderFormPage'), 'PurchaseOrderFormPage')
 const PurchaseOrderDetailPage = lazyNamed(() => import('../features/purchase-orders/PurchaseOrderDetailPage'), 'PurchaseOrderDetailPage')
+const StockPage = lazyNamed(() => import('../features/stock/StockPage'), 'StockPage')
+const StockBatchDetailPage = lazyNamed(() => import('../features/stock/StockBatchDetailPage'), 'StockBatchDetailPage')
 const ComingSoonPage = lazy(async () => ({ default: (await import('../features/common/ComingSoonPage')).ComingSoonPage }))
 
 /** Màn hình đã có, theo đường dẫn mục menu. Mục không có ở đây dùng trang "Đang phát triển". */
@@ -40,6 +42,7 @@ const PAGES: Record<string, ComponentType> = {
   '/users': UsersListPage,
   '/rbac': RbacPage,
   '/suppliers': SuppliersListPage,
+  '/stock': StockPage,
   '/purchase-orders': PurchaseOrdersListPage,
 }
 
@@ -50,6 +53,7 @@ const SUB_ROUTES: { path: string; permission: PermissionRequirement; element: Re
   { path: 'purchase-orders/new', permission: 'STOCK_IMPORT_CREATE', element: <PurchaseOrderFormPage /> },
   { path: 'purchase-orders/:purchaseOrderId/edit', permission: 'STOCK_IMPORT_CREATE', element: <PurchaseOrderFormPage /> },
   { path: 'purchase-orders/:purchaseOrderId', permission: 'STOCK_IMPORT_VIEW', element: <PurchaseOrderDetailPage /> },
+  { path: 'stock/:batchId', permission: ['STOCK_VIEW', 'STOCK_EXPIRY_VIEW'], element: <StockBatchDetailPage /> },
   { path: 'suppliers/:supplierId', permission: 'SUPPLIER_VIEW', element: <SupplierDetailPage /> },
   { path: 'users/:userId', permission: 'USER_MANAGE', element: <UserDetailPage /> },
 ]

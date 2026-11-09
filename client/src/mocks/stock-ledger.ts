@@ -116,3 +116,22 @@ export function syncProductStock(db: MockTransaction, productId: number): void {
     .reduce((n, b) => n + b.onHandQty, 0)
   db.touch('products')
 }
+
+/** Mã chứng từ gốc của một dòng thẻ kho (để hiện ở cột "Mã tham chiếu"). */
+export function referenceCodeOf(db: MockTransaction, movement: StockMovement): string {
+  const id = movement.referenceId
+  switch (movement.referenceType) {
+    case 'PURCHASE':
+      return db.read('purchaseOrders').find((o) => o.id === id)?.poCode ?? `PN#${id}`
+    case 'CHECK_ADJUST':
+      return db.read('inventoryChecks').find((c) => c.id === id)?.checkCode ?? `CHK#${id}`
+    case 'DISPOSAL':
+    case 'TESTER':
+    case 'SUPPLIER_RETURN':
+      return db.read('disposals').find((d) => d.id === id)?.disposalCode ?? `DISP#${id}`
+    case 'SALE':
+      return `HD#${id}`
+    case 'RETURN':
+      return `TH#${id}`
+  }
+}

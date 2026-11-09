@@ -306,3 +306,21 @@ Kiểu: `PurchaseOrder` (header: `id, poCode, supplierId, supplierCode, supplier
 
 ### `POST /purchase-orders/{id}/cancel` — STK-01
 - **Quyền:** `STOCK_IMPORT_CREATE` · **Response 200:** `PurchaseOrderDetail` (`CANCELLED`) · **Lỗi:** `404 STK_PO_NOT_FOUND`, `409 STK_PO_NOT_EDITABLE`
+
+## STOCK · Tồn kho theo lô, cận hạn (STK-02, STK-03)
+
+`StockBatchItem`: `id, productId, sku, productName, barcode, brandName, categoryName, unit, isSellable, lotCode, mfgDate, expDate, daysToExpiry, expiryStatus (OK|NEAR_EXPIRY|EXPIRED), availableQty, fefoRank` và, **chỉ khi người gọi có `STOCK_VIEW` hoặc `STOCK_EXPIRY_VIEW`**, thêm `onHandQty, blockedQty, costPrice, lockedByCheckId, createdAt`. Người chỉ có `STOCK_VIEW_AVAILABLE` (thu ngân) chỉ nhận lô bán được (`availableQty > 0`) và không có các trường tồn thực, cách ly, giá vốn.
+`availableQty = onHandQty − blockedQty`, bằng 0 nếu lô hết hạn (`expDate < hôm nay`), đang khóa kiểm kho hoặc SKU `isSellable = false` (luật 24, 26). `expiryStatus` theo `EXPIRY_WARNING_DAYS`. `fefoRank`: thứ tự trong sản phẩm (1 = xuất trước), null nếu không bán được.
+
+### `GET /stock/batches` — STK-02, STK-03
+- **Quyền:** `STOCK_VIEW` | `STOCK_VIEW_AVAILABLE` | `STOCK_EXPIRY_VIEW` · **Query:** `keyword` (SKU, tên, mã lô, mã vạch), `expiry` (`ALL|WARNING|NEAR_EXPIRY|EXPIRED|OK`, `WARNING` = cận hạn + hết hạn), `categoryCode`, `productId`, `quarantined=true`, `inStockOnly=true`, `page`, `pageSize` (4 bộ lọc cuối chỉ có tác dụng với người xem đủ) · **Response 200:** `PaginatedData<StockBatchItem>` sắp theo FEFO (HSD sớm trước)
+
+### `GET /stock/summary` — STK-02
+- **Quyền:** `STOCK_VIEW` | `STOCK_EXPIRY_VIEW` · **Response 200:** `{ skuCount, lotCount, nearExpiryLots, expiredLots, quarantinedUnits, quarantinedValue, expiryWarningDays }` (chỉ tính lô còn tồn thực > 0)
+
+### `GET /stock/fefo?code=` — STK-02 (nút "Quét FEFO", D19)
+- **Quyền:** `STOCK_VIEW` | `STOCK_VIEW_AVAILABLE` · **Query:** `code` = barcode hoặc SKU · **Response 200:** `{ productId, sku, productName, barcode, batches: StockBatchItem[] }` (chỉ lô bán được, sắp FEFO)
+- **Lỗi:** `400 COMMON_VALIDATION_FAILED` (thiếu code), `404 PROD_NOT_FOUND`
+
+### `GET /stock/batches/{id}` — STK-02
+- **Quyền:** `STOCK_VIEW` | `STOCK_EXPIRY_VIEW` · **Response 200:** `StockBatchDetail = StockBatchItem + { supplierName, retailPrice, pendingDisposalQty, movements: [{ id, batchId, referenceType, referenceId, referenceCode, quantityChange, balanceAfter, reason, createdBy, createdByName, createdAt }] }` (thẻ kho mới nhất trước) · **Lỗi:** `404 STK_BATCH_NOT_FOUND`

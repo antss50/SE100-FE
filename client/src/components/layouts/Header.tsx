@@ -100,7 +100,7 @@ export function Header() {
         {canScanStock && (
           <button
             type="button"
-            onClick={() => navigate('/stock')}
+            onClick={() => navigate('/stock?scan=1')}
             className="hidden items-center gap-1.5 rounded-xl border border-line bg-white px-3 py-2 text-xs font-semibold text-ink-soft hover:bg-card sm:inline-flex"
           >
             <ScanLine className="size-4 text-accent" aria-hidden="true" />
