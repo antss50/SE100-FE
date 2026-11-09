@@ -30,6 +30,9 @@ const PurchaseOrderFormPage = lazyNamed(() => import('../features/purchase-order
 const PurchaseOrderDetailPage = lazyNamed(() => import('../features/purchase-orders/PurchaseOrderDetailPage'), 'PurchaseOrderDetailPage')
 const StockPage = lazyNamed(() => import('../features/stock/StockPage'), 'StockPage')
 const StockBatchDetailPage = lazyNamed(() => import('../features/stock/StockBatchDetailPage'), 'StockBatchDetailPage')
+const InventoryChecksListPage = lazyNamed(() => import('../features/inventory-checks/InventoryChecksListPage'), 'InventoryChecksListPage')
+const InventoryCheckCreatePage = lazyNamed(() => import('../features/inventory-checks/InventoryCheckCreatePage'), 'InventoryCheckCreatePage')
+const InventoryCheckDetailPage = lazyNamed(() => import('../features/inventory-checks/InventoryCheckDetailPage'), 'InventoryCheckDetailPage')
 const ComingSoonPage = lazy(async () => ({ default: (await import('../features/common/ComingSoonPage')).ComingSoonPage }))
 
 /** Màn hình đã có, theo đường dẫn mục menu. Mục không có ở đây dùng trang "Đang phát triển". */
@@ -43,6 +46,7 @@ const PAGES: Record<string, ComponentType> = {
   '/rbac': RbacPage,
   '/suppliers': SuppliersListPage,
   '/stock': StockPage,
+  '/inventory-checks': InventoryChecksListPage,
   '/purchase-orders': PurchaseOrdersListPage,
 }
 
@@ -54,6 +58,8 @@ const SUB_ROUTES: { path: string; permission: PermissionRequirement; element: Re
   { path: 'purchase-orders/:purchaseOrderId/edit', permission: 'STOCK_IMPORT_CREATE', element: <PurchaseOrderFormPage /> },
   { path: 'purchase-orders/:purchaseOrderId', permission: 'STOCK_IMPORT_VIEW', element: <PurchaseOrderDetailPage /> },
   { path: 'stock/:batchId', permission: ['STOCK_VIEW', 'STOCK_EXPIRY_VIEW'], element: <StockBatchDetailPage /> },
+  { path: 'inventory-checks/new', permission: 'STOCK_CHECK_CREATE', element: <InventoryCheckCreatePage /> },
+  { path: 'inventory-checks/:checkId', permission: 'STOCK_CHECK_VIEW', element: <InventoryCheckDetailPage /> },
   { path: 'suppliers/:supplierId', permission: 'SUPPLIER_VIEW', element: <SupplierDetailPage /> },
   { path: 'users/:userId', permission: 'USER_MANAGE', element: <UserDetailPage /> },
 ]

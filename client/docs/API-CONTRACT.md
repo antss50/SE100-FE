@@ -324,3 +324,38 @@ Kiểu: `PurchaseOrder` (header: `id, poCode, supplierId, supplierCode, supplier
 
 ### `GET /stock/batches/{id}` — STK-02
 - **Quyền:** `STOCK_VIEW` | `STOCK_EXPIRY_VIEW` · **Response 200:** `StockBatchDetail = StockBatchItem + { supplierName, retailPrice, pendingDisposalQty, movements: [{ id, batchId, referenceType, referenceId, referenceCode, quantityChange, balanceAfter, reason, createdBy, createdByName, createdAt }] }` (thẻ kho mới nhất trước) · **Lỗi:** `404 STK_BATCH_NOT_FOUND`
+
+## STOCK · Kiểm kho (STK-04, STK-05)
+
+Kiểu: `InventoryCheck` (`id, checkCode (CHKyyyymmdd-nn), scopeNote, status IN_PROGRESS|WAITING_APPROVAL|APPROVED|REJECTED|CANCELLED|NO_DIFFERENCE, snapshotAt, createdBy, createdByName, submittedAt, approvedBy, approvedByName, approvedAt, rejectReason, lineCount, differenceLineCount, totalDifference`), `InventoryCheckDetail = InventoryCheck + lines[]` (dòng: `id, batchId, productId, sku, productName, lotCode, expDate, snapshotQty, countedQty (null = chưa nhập), differenceQty, note`).
+
+### `GET /inventory-checks`
+- **Quyền:** `STOCK_CHECK_VIEW` · **Query:** `keyword` (mã phiếu, phạm vi), `status`, `page`, `pageSize` · **Response 200:** `PaginatedData<InventoryCheck>`
+
+### `GET /inventory-checks/{id}`
+- **Quyền:** `STOCK_CHECK_VIEW` · **Response 200:** `InventoryCheckDetail` · **Lỗi:** `404 STK_CHECK_NOT_FOUND`
+
+### `POST /inventory-checks` — STK-04 (bắt đầu kiểm: chụp tồn + khóa lô)
+- **Quyền:** `STOCK_CHECK_CREATE` · **Request:** `{ scopeNote?, batchIds: number[] (>= 1) }` · **Response 201:** `InventoryCheckDetail` (`IN_PROGRESS`, `snapshotQty` = tồn lúc bấm, mỗi lô `lockedByCheckId` = id phiếu)
+- **Lỗi:** `400 COMMON_VALIDATION_FAILED`, `404 STK_BATCH_NOT_FOUND`, `409 STK_BATCH_LOCKED` (lô đang bị phiếu khác khóa)
+
+### `PUT /inventory-checks/{id}/counts` — STK-04 (lưu nháp)
+- **Quyền:** `STOCK_CHECK_CREATE` · **Request:** `{ lines: [{ lineId, countedQty: number | null, note? }] }` (`null` = chưa nhập; ô trống không phải 0) · **Response 200:** `InventoryCheckDetail`
+- **Lỗi:** `404 STK_CHECK_LINE_NOT_FOUND`, `409 STK_CHECK_NOT_IN_PROGRESS`
+
+### `POST /inventory-checks/{id}/submit` — STK-04
+- **Quyền:** `STOCK_CHECK_CREATE` · **Request:** như `counts` (lưu số đếm lần cuối rồi gửi) · **Response 200:** `InventoryCheckDetail`
+- Mọi dòng phải có `countedQty`; tính `differenceQty = countedQty − snapshotQty`; gỡ khóa các lô. Không dòng nào chênh lệch thì `NO_DIFFERENCE` (tự hoàn tất, luật 32); ngược lại `WAITING_APPROVAL`.
+- **Lỗi:** `422 STK_CHECK_INCOMPLETE`, `409 STK_CHECK_NOT_IN_PROGRESS`
+
+### `POST /inventory-checks/{id}/cancel` — STK-04
+- **Quyền:** `STOCK_CHECK_CREATE` · **Response 200:** `InventoryCheckDetail` (`CANCELLED`, gỡ khóa lô) · **Lỗi:** `409 STK_CHECK_NOT_IN_PROGRESS`
+
+### `POST /inventory-checks/{id}/approve` — STK-05
+- **Quyền:** `STOCK_ADJUST_APPROVE` · **Response 200:** `InventoryCheckDetail` (`APPROVED`)
+- Một giao dịch: với mỗi dòng `differenceQty ≠ 0` cộng `differenceQty` vào `onHandQty` **hiện tại** của lô (không đặt lại bằng số đếm) và ghi `STOCK_MOVEMENTS` `CHECK_ADJUST`.
+- **Lỗi:** `409 STK_CHECK_NOT_WAITING`, `422 STK_INSUFFICIENT_STOCK` (tồn hiện tại không đủ để trừ), `422 STK_BLOCKED_EXCEEDS_ON_HAND`
+
+### `POST /inventory-checks/{id}/reject` — STK-05
+- **Quyền:** `STOCK_ADJUST_APPROVE` · **Request:** `{ reason }` (bắt buộc) · **Response 200:** `InventoryCheckDetail` (`REJECTED`, tồn không đổi)
+- **Lỗi:** `400 COMMON_VALIDATION_FAILED`, `409 STK_CHECK_NOT_WAITING`

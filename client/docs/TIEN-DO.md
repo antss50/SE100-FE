@@ -37,8 +37,8 @@ Trạng thái: `Chưa làm` · `Đang code` · `Đang test` · `Đang sửa` · 
 | STK-01 | Phiếu nhập kho theo lô | 1 | Đang test | Đường găng |
 | STK-02 | Tra cứu tồn theo SP & lô | 2 | Đang test | |
 | STK-03 | Cận hạn / hết hạn | 2 | Đang test | |
-| STK-04 | Lập phiếu kiểm kho | 2 | Chưa làm | |
-| STK-05 | Duyệt kiểm kho | 2 | Chưa làm | |
+| STK-04 | Lập phiếu kiểm kho | 2 | Đang test | |
+| STK-05 | Duyệt kiểm kho | 2 | Đang test | |
 | STK-06 | Lập phiếu xuất khác | 2 | Chưa làm | |
 | STK-07 | Duyệt phiếu xuất khác | 2 | Chưa làm | |
 | CUS-01 | Tra cứu & hồ sơ KH | 3 | Chưa làm | Có code cũ |

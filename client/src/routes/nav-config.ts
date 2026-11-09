@@ -79,7 +79,6 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: ClipboardCheck,
         permission: 'STOCK_CHECK_VIEW',
         uc: 'STK-04, STK-05',
-        plannedPhase: 2,
       },
       {
         to: '/disposals',

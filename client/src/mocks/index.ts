@@ -2,6 +2,7 @@ import { resetMockDb } from './db'
 import { authRoutes } from './handlers/auth'
 import { customerRoutes } from './handlers/customers'
 import { catalogRoutes } from './handlers/products'
+import { inventoryCheckRoutes } from './handlers/inventory-checks'
 import { promotionRoutes } from './handlers/promotions'
 import { purchaseOrderRoutes } from './handlers/purchase-orders'
 import { rbacRoutes } from './handlers/rbac'
@@ -25,6 +26,7 @@ export const mockRoutes: MockRoute[] = [
   ...supplierRoutes,
   ...purchaseOrderRoutes,
   ...stockRoutes,
+  ...inventoryCheckRoutes,
 ]
 
 /**
