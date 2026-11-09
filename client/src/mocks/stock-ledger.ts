@@ -130,8 +130,8 @@ export function referenceCodeOf(db: MockTransaction, movement: StockMovement): s
     case 'SUPPLIER_RETURN':
       return db.read('disposals').find((d) => d.id === id)?.disposalCode ?? `DISP#${id}`
     case 'SALE':
-      return `HD#${id}`
+      return db.read('orders').find((o) => o.id === id)?.orderCode ?? `HD#${id}`
     case 'RETURN':
-      return `TH#${id}`
+      return db.read('returns').find((r) => r.id === id)?.returnCode ?? `TH#${id}`
   }
 }

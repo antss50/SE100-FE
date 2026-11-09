@@ -65,3 +65,4 @@ Không xóa hay sửa dòng cũ; ghi sai thì thêm dòng mới đính chính.
 | 2026-11-09 09:03 | fe-coder | 1 | Kết thúc | GĐ1 Kho code xong: commit 97aead8 (SUPP), 14cba6f (STK-01), c10d9b9 (STK-02/03), bf2c7cf (STK-04/05), 920f22a (STK-06/07), bb6434c (seed + sổ kiến thức). Build qua ở mọi commit; không chạy lint/test theo D22. UC -> Đang test |
 | 2026-11-09 09:15 | fe-coder | 2 | Bắt đầu | GĐ2: bán hàng trước rồi sửa phần cũ; đọc KIEN-THUC, CLAUDE, TIEN-DO, QUYET-DINH, QUY_TAC, KHUYEN_MAI, DATABASE 7, 21-30 |
 | 2026-11-09 09:15 | fe-coder | 2 | Commit | 0596825 feat(prom-01,prom-02): khuyến mãi 7 loại, khóa sửa khi có đơn; build qua. PROM-01/02 -> Đang test |
+| 2026-11-09 09:17 | fe-coder | 2 | Commit | 6bc72e2 feat(pos-01,pos-05): mở ca, chốt ca có kiểm đếm, lịch sử/biên bản ca, bàn giao; build qua. (hash trước: 0596825 khuyến mãi 7 loại) |

@@ -37,15 +37,15 @@
 | CUS-01 | Tra cứu & hồ sơ KH | 3 | Chưa làm | Có code cũ |
 | CUS-02 | Quản lý hồ sơ KH | 3 | Chưa làm | Có code cũ |
 | CUS-03 | Tích/thu hồi điểm, xét hạng (hệ thống) | 3 | Chưa làm | Hiện ở lịch sử điểm |
-| CUS-04 | Dùng điểm khi thanh toán | 4 | Chưa làm | |
+| CUS-04 | Dùng điểm khi thanh toán | 4 | Đang test | Dùng điểm tối đa theo POINT_MAX_REDEEM_PERCENT |
 | CUS-05 | Cấu hình điểm & hạng | 3 | Chưa làm | Có code cũ |
 | PROM-01 | Tra cứu KM | 3 | Đang test | 7 loại, phase theo ngày |
 | PROM-02 | Quản lý KM | 3 | Đang test | 7 loại, khóa sửa khi có đơn |
-| PROM-03 | Áp voucher khi bán | 4 | Chưa làm | |
+| PROM-03 | Áp voucher khi bán | 4 | Đang test | Voucher qua domain pricing |
 | PROM-04 | Hiệu quả KM | 6 | Chưa làm | |
 | POS-01 | Mở ca | 4 | Đang test | Mở ca qua modal, mỗi thu ngân 1 ca |
-| POS-02 | Lập đơn FEFO | 4 | Chưa làm | Đường găng, viết lại |
-| POS-03 | Thanh toán & hóa đơn | 4 | Chưa làm | Đường găng |
+| POS-02 | Lập đơn FEFO | 4 | Đang test | POS FEFO viết lại, phím tắt F1-F9, đơn nháp |
+| POS-03 | Thanh toán & hóa đơn | 4 | Đang test | Thanh toán 1 giao dịch mock, lịch sử + chi tiết đơn, in hóa đơn |
 | POS-04 | Đổi trả & hoàn tiền | 5 | Chưa làm | Đường găng |
 | POS-05 | Kiểm đếm & chốt ca | 5 | Đang test | Kiểm đếm, chốt ca, lịch sử, bàn giao |
 | REP-01 | Dashboard | 6 | Chưa làm | Có code cũ |

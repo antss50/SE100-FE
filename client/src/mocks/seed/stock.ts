@@ -13,6 +13,12 @@ import { SEED_USERS } from './users'
 /** Cấu hình hệ thống mock (SYSTEM_SETTINGS). Màn cấu hình đầy đủ làm ở GĐ2 (AUTH-07). */
 export const SEED_SYSTEM_SETTINGS: Record<string, string> = {
   EXPIRY_WARNING_DAYS: '60',
+  POINT_EARN_AMOUNT: '10000',
+  POINT_REDEEM_VALUE: '100',
+  POINT_MAX_REDEEM_PERCENT: '50',
+  STORE_NAME: 'Lumina Beauty',
+  STORE_ADDRESS: '124 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM',
+  STORE_PHONE: '028 3822 0000',
 }
 
 interface LotSeed {

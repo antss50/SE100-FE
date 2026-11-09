@@ -4,9 +4,11 @@ import { customerRoutes } from './handlers/customers'
 import { catalogRoutes } from './handlers/products'
 import { disposalRoutes } from './handlers/disposals'
 import { inventoryCheckRoutes } from './handlers/inventory-checks'
+import { orderRoutes } from './handlers/orders'
 import { promotionRoutes } from './handlers/promotions'
 import { purchaseOrderRoutes } from './handlers/purchase-orders'
 import { rbacRoutes } from './handlers/rbac'
+import { settingsRoutes } from './handlers/settings'
 import { shiftRoutes } from './handlers/shifts'
 import { stockRoutes } from './handlers/stock'
 import { supplierRoutes } from './handlers/suppliers'
@@ -24,6 +26,8 @@ export const mockRoutes: MockRoute[] = [
   ...catalogRoutes,
   ...promotionRoutes,
   ...shiftRoutes,
+  ...settingsRoutes,
+  ...orderRoutes,
   ...supplierRoutes,
   ...purchaseOrderRoutes,
   ...stockRoutes,

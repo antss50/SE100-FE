@@ -100,7 +100,6 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: ReceiptText,
         permission: 'POS_VIEW',
         uc: 'POS-03',
-        plannedPhase: 4,
       },
       {
         to: '/returns',

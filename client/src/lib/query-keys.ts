@@ -19,6 +19,7 @@ export const queryKeys = {
     products: (params: object) => ['pos', 'products', params] as const,
     lots: (productId: number) => ['pos', 'lots', productId] as const,
     drafts: ['pos', 'drafts'] as const,
+    quote: (cart: object) => ['pos', 'quote', cart] as const,
   },
   orders: {
     all: ['orders'] as const,
@@ -33,10 +34,12 @@ export const queryKeys = {
   },
   settings: {
     all: ['settings'] as const,
+    store: ['settings', 'store'] as const,
   },
   customers: {
     all: ['customers'] as const,
     byPhone: (phone: string) => ['customers', 'by-phone', phone] as const,
+    detail: (id: number | string) => ['customers', 'detail', String(id)] as const,
   },
   suppliers: {
     all: ['suppliers'] as const,
