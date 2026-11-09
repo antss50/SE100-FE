@@ -468,3 +468,16 @@ Kiểu: `Disposal` (`id, disposalCode (DISPyyyymmdd-nn), issueType DESTROY|TESTE
 ### `POST /disposals/{id}/reject` — STK-07
 - **Quyền:** `STOCK_DISPOSAL_APPROVE` · **Request:** `{ reason }` (bắt buộc) · **Response 200:** `DisposalDetail` (`REJECTED`; `blockedQty −= blockedAddedQty` từng dòng, tồn thực tế không đổi)
 - **Lỗi:** `400 COMMON_VALIDATION_FAILED`, `409 STK_DISPOSAL_NOT_WAITING`
+
+## REPORT · Báo cáo (REP-01..06, PROM-04)
+
+Chung: query `fromDate`, `toDate` (`YYYY-MM-DD`, mặc định 30 ngày gần nhất), sai `fromDate > toDate` hoặc ngày sai định dạng trả `422 REP_INVALID_RANGE`. Số liệu tính trực tiếp từ ORDERS, RETURN_ORDERS, BATCHES... (không có bảng tổng hợp sẵn). Đơn tính theo `completed_at`, phiếu trả theo ngày trả (luật 53-54). Kiểu ở `src/types/reports.ts`. Xuất CSV làm phía client.
+
+### `GET /reports/revenue` — REP-02
+- **Quyền:** `REPORT_REVENUE`. Có thêm `REPORT_PROFIT` (Admin) thì trả `cogs`, `grossProfit`, `marginPercent`; không có (Manager) thì các trường này vắng và `showProfit=false`.
+- **Query:** `fromDate`, `toDate`, `granularity` = `DAY|WEEK|MONTH` (mặc định `DAY`), `compare=true` (kèm kỳ trước cùng độ dài liền trước `fromDate`).
+- **Response 200:** `RevenueReport = { range, granularity, showProfit, totals, previousRange|null, previous|null, series[] }`; `totals` và mỗi `series[i]` (kèm `periodStart`, `label`) là `RevenueFigures`: `orderCount, returnCount, grossAmount (Σ subtotalAmount), discountAmount (+ 4 loại: line/tier/order/points), returnedAmount (Σ totalRefundAmount), netRevenue = gross − discount − returned (luật 55), vatAmount, netRevenueExVat, cogs = Σ costPrice×qty dòng bán − Σ unitCost×qty dòng trả, grossProfit = netRevenueExVat − cogs (luật 56), marginPercent`.
+
+### `GET /reports/sales` — REP-03
+- **Quyền:** `REPORT_SALES` (mọi ca) hoặc `REPORT_SALES_OWN_SHIFT` (thu ngân: server lọc theo `cashierId` của người gọi, `scope = "OWN"`).
+- **Response 200:** `SalesReport = { range, scope, summary {orderCount,totalAmount,averageOrderValue,itemsSold,returnCount,returnedAmount}, topProducts[] (SalesProductRow: productId,sku,productName,quantity,returnedQuantity,revenue,returnedAmount; tối đa 10, theo số lượng giảm dần), slowProducts[] (bán ít nhất, kể cả SKU chưa bán được), byPayment[] {method,orderCount,amount}, byCashier[] {cashierId,cashierName,orderCount,amount,returnCount,returnedAmount}, byShift[] {shiftId,shiftCode,cashierName,openedAt,closedAt,status,orderCount,amount,differenceAmount} }`.

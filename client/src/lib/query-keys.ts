@@ -1,5 +1,9 @@
 /** Khai báo tập trung query key cho TanStack Query (CLAUDE.md mục 4). */
 export const queryKeys = {
+  reports: {
+    all: ['reports'] as const,
+    report: (name: string, params: object) => ['reports', name, params] as const,
+  },
   shifts: {
     all: ['shifts'] as const,
     current: ['shifts', 'current'] as const,

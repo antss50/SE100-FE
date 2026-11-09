@@ -9,6 +9,7 @@ import { promotionRoutes } from './handlers/promotions'
 import { purchaseOrderRoutes } from './handlers/purchase-orders'
 import { rbacRoutes } from './handlers/rbac'
 import { settingsRoutes } from './handlers/settings'
+import { reportRoutes } from './handlers/reports'
 import { returnRoutes } from './handlers/returns'
 import { shiftRoutes } from './handlers/shifts'
 import { stockRoutes } from './handlers/stock'
@@ -35,6 +36,7 @@ export const mockRoutes: MockRoute[] = [
   ...stockRoutes,
   ...inventoryCheckRoutes,
   ...disposalRoutes,
+  ...reportRoutes,
 ]
 
 /**

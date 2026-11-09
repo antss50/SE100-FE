@@ -43,6 +43,7 @@ const OrderDetailPage = lazyNamed(() => import('../features/orders/OrderDetailPa
 const ReturnsListPage = lazyNamed(() => import('../features/returns/ReturnsListPage'), 'ReturnsListPage')
 const ReturnCreatePage = lazyNamed(() => import('../features/returns/ReturnCreatePage'), 'ReturnCreatePage')
 const ReturnDetailPage = lazyNamed(() => import('../features/returns/ReturnDetailPage'), 'ReturnDetailPage')
+const ReportsPage = lazyNamed(() => import('../features/reports/ReportsPage'), 'ReportsPage')
 const SettingsPage = lazyNamed(() => import('../features/settings/SettingsPage'), 'SettingsPage')
 const ComingSoonPage = lazy(async () => ({ default: (await import('../features/common/ComingSoonPage')).ComingSoonPage }))
 
@@ -63,6 +64,7 @@ const PAGES: Record<string, ComponentType> = {
   '/shifts': ShiftsPage,
   '/orders': OrdersListPage,
   '/returns': ReturnsListPage,
+  '/reports': ReportsPage,
   '/settings': SettingsPage,
 }
 
