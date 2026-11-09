@@ -59,12 +59,12 @@ const moduleCards = [
   },
   {
     title: 'Chi tiết Hoạt động Nhân viên',
-    subtitle: 'Hồ sơ Nguyễn Thu Hà (LUM-084) · Thu ngân POS',
+    subtitle: 'Hồ sơ Nguyễn Thu Hà (NV0003) · Thu ngân POS',
     description:
       'Xem biểu đồ doanh thu thuần 7 ngày, trạng thái bảo mật tài khoản (0/5 lần sai mật khẩu), thu hồi phiên đăng nhập và nhật ký OVERRIDE_FEFO.',
-    to: '/users/LUM-084',
+    to: '/users/NV0003',
     icon: UserCheck,
-    badge: 'LUM-084',
+    badge: 'NV0003',
   },
   {
     title: 'Phân quyền & Ma trận Vai trò RBAC (G02)',
@@ -89,7 +89,7 @@ const moduleCards = [
     subtitle: 'POST /api/v1/customers · GET /api/v1/customers/:customerCode',
     description:
       'Form thêm mới khách hàng kèm kiểm tra trùng SĐT (409 Conflict), phân loại làn da/dị ứng mỹ phẩm và thẻ đặc quyền Lumina VIP Club.',
-    to: '/customers/KH-2024-001',
+    to: '/customers/KH0001',
     icon: UserPlus,
     badge: 'VIP Club',
   },

@@ -7,7 +7,7 @@ import { toIsoLocal } from '../time'
 import { toAuthUser } from './auth'
 
 const createUserSchema = z.object({
-  employeeCode: z.string().trim().min(1, 'Vui lòng nhập mã nhân viên'),
+  employeeCode: z.string().trim().optional(),
   username: z.string().trim().min(3, 'Tên đăng nhập tối thiểu 3 ký tự'),
   password: z.string().min(8, 'Mật khẩu tạm tối thiểu 8 ký tự'),
   fullName: z.string().trim().min(1, 'Vui lòng nhập họ tên'),
@@ -66,11 +66,13 @@ export const userRoutes: MockRoute[] = [
     handler: ({ db, body }) => {
       const input = parseBody(createUserSchema, body)
       const users = db.read('users')
+      const nextNumber = users.reduce((max, u) => Math.max(max, Number(/^NV(\d+)$/i.exec(u.employeeCode)?.[1] ?? 0)), 0) + 1
+      const employeeCode = (input.employeeCode || `NV${String(nextNumber).padStart(4, '0')}`).toUpperCase()
       if (
         users.some(
           (u) =>
             sameText(u.username, input.username) ||
-            sameText(u.employeeCode, input.employeeCode) ||
+            sameText(u.employeeCode, employeeCode) ||
             sameText(u.email, input.email)
         )
       ) {
@@ -83,7 +85,7 @@ export const userRoutes: MockRoute[] = [
       const id = users.reduce((max, u) => Math.max(max, u.id), 0) + 1
       const created: MockUser = {
         id,
-        employeeCode: input.employeeCode.toUpperCase(),
+        employeeCode,
         username: input.username,
         fullName: input.fullName,
         email: input.email,

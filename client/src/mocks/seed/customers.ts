@@ -4,7 +4,7 @@ import { serializeCustomerNote } from '../../utils/customer-note'
 export const SEED_CUSTOMERS: CustomerItem[] = [
   {
     id: 1,
-    customerCode: 'KH-2024-001',
+    customerCode: 'KH0001',
     phoneNumber: '0918234567',
     fullName: 'Nguyễn Thị Thùy Dung',
     email: 'dung.nguyen@lumina-beauty.vn',
@@ -134,7 +134,7 @@ export const SEED_CUSTOMERS: CustomerItem[] = [
   },
   {
     id: 2,
-    customerCode: 'KH-2024-042',
+    customerCode: 'KH0002',
     phoneNumber: '0983112989',
     fullName: 'Trần Minh Anh',
     email: 'minhanh.tran@gmail.com',
@@ -175,7 +175,7 @@ export const SEED_CUSTOMERS: CustomerItem[] = [
   },
   {
     id: 3,
-    customerCode: 'KH-2024-108',
+    customerCode: 'KH0003',
     phoneNumber: '0905778334',
     fullName: 'Lê Hoàng Yến Nhi',
     email: 'yennhi.le@outlook.com',
@@ -206,7 +206,7 @@ export const SEED_CUSTOMERS: CustomerItem[] = [
   },
   {
     id: 4,
-    customerCode: 'KH-2023-899',
+    customerCode: 'KH0004',
     phoneNumber: '0932445661',
     fullName: 'Võ Phạm Quỳnh Như',
     email: 'quynhnhu.vp@gmail.com',
@@ -232,7 +232,7 @@ export const SEED_CUSTOMERS: CustomerItem[] = [
   },
   {
     id: 5,
-    customerCode: 'KH-2023-512',
+    customerCode: 'KH0005',
     phoneNumber: '0979882100',
     fullName: 'Đặng Thu Thảo',
     email: 'thuthao.dang@gmail.com',
@@ -258,7 +258,7 @@ export const SEED_CUSTOMERS: CustomerItem[] = [
   },
   {
     id: 6,
-    customerCode: 'KH-2023-1102',
+    customerCode: 'KH0006',
     phoneNumber: '0988776554',
     fullName: 'Lê Minh Tâm',
     email: 'minhtam.le@gmail.com',

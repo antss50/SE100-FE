@@ -19,6 +19,7 @@ import {
   UserCheck,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useCan } from '../../app/usePermission'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { customersService } from '../../services/customers.service'
 import {
@@ -38,6 +39,7 @@ import {
 export function CustomerDetailPage() {
   const { customerCode } = useParams<{ customerCode: string }>()
   const navigate = useNavigate()
+  const canLock = useCan('CUSTOMER_LOCK')
 
   const [customer, setCustomer] = useState<CustomerItem | null>(null)
   const [activeTab, setActiveTab] = useState<'ORDERS' | 'POINTS' | 'PROFILE'>(
@@ -55,12 +57,12 @@ export function CustomerDetailPage() {
 
   useEffect(() => {
     customersService
-      .getCustomerByCode(customerCode || 'KH-2024-001')
+      .getCustomerByCode(customerCode || 'KH0001')
       .then((res) => setCustomer(res.data))
       .catch(() => {
         // fallback to first customer
         customersService
-          .getCustomerByCode('KH-2024-001')
+          .getCustomerByCode('KH0001')
           .then((res) => setCustomer(res.data))
       })
   }, [customerCode])
@@ -179,6 +181,7 @@ export function CustomerDetailPage() {
             <span>Chỉnh sửa hồ sơ</span>
           </button>
 
+          {canLock && (
           <button
             type="button"
             onClick={handleToggleStatus}
@@ -187,6 +190,7 @@ export function CustomerDetailPage() {
             <Ban className="size-3.5" />
             <span>{isInactive ? 'Kích hoạt lại' : 'Ngừng hoạt động'}</span>
           </button>
+          )}
 
           <button
             type="button"

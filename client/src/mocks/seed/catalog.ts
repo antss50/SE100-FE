@@ -7,7 +7,6 @@ export const SEED_CATEGORIES: CategoryItem[] = [
     categoryName: 'Chăm sóc da (Serum)',
     description: 'Tinh chất phục hồi, chống lão hóa và cấp ẩm chuyên sâu',
     status: 'ACTIVE',
-    productCount: 410,
   },
   {
     id: 2,
@@ -15,7 +14,6 @@ export const SEED_CATEGORIES: CategoryItem[] = [
     categoryName: 'Trang điểm (Son môi)',
     description: 'Son thỏi lì, kem nền, phấn nước cao cấp',
     status: 'ACTIVE',
-    productCount: 320,
   },
   {
     id: 3,
@@ -23,7 +21,6 @@ export const SEED_CATEGORIES: CategoryItem[] = [
     categoryName: 'Chống nắng (Suncare)',
     description: 'Kem và sữa chống nắng phổ rộng bảo vệ da UV',
     status: 'ACTIVE',
-    productCount: 145,
   },
   {
     id: 4,
@@ -31,7 +28,6 @@ export const SEED_CATEGORIES: CategoryItem[] = [
     categoryName: 'Làm sạch da (Cleanser)',
     description: 'Nước tẩy trang, sữa rửa mặt dịu nhẹ chuẩn pH',
     status: 'ACTIVE',
-    productCount: 160,
   },
   {
     id: 5,
@@ -39,7 +35,6 @@ export const SEED_CATEGORIES: CategoryItem[] = [
     categoryName: 'Trang điểm (Son bóng)',
     description: 'Son tint bóng dưỡng ẩm trẻ trung MLBB',
     status: 'ACTIVE',
-    productCount: 95,
   },
   {
     id: 6,
@@ -47,7 +42,6 @@ export const SEED_CATEGORIES: CategoryItem[] = [
     categoryName: 'Nước hoa',
     description: 'Nước hoa Eau de Parfum & Eau de Toilette chính hãng',
     status: 'ACTIVE',
-    productCount: 64,
   },
   {
     id: 7,
@@ -55,7 +49,6 @@ export const SEED_CATEGORIES: CategoryItem[] = [
     categoryName: 'Dưỡng thể (Bodycare)',
     description: 'Sữa dưỡng thể, tẩy tế bào chết toàn thân',
     status: 'ACTIVE',
-    productCount: 32,
   },
   {
     id: 8,
@@ -63,7 +56,6 @@ export const SEED_CATEGORIES: CategoryItem[] = [
     categoryName: 'Mặt nạ dưỡng da',
     description: 'Mặt nạ ngủ và mặt nạ giấy cấp ẩm tức thì',
     status: 'ACTIVE',
-    productCount: 14,
   },
 ]
 
@@ -73,7 +65,6 @@ export const SEED_BRANDS: BrandItem[] = [
     brandCode: 'EL',
     brandName: 'Estée Lauder',
     description: 'Thương hiệu mỹ phẩm cao cấp Hoa Kỳ',
-    productCount: 42,
     status: 'ACTIVE',
   },
   {
@@ -81,7 +72,6 @@ export const SEED_BRANDS: BrandItem[] = [
     brandCode: 'YSL',
     brandName: 'YSL Beauty',
     description: 'Mỹ phẩm trang điểm & nước hoa xa xỉ Pháp',
-    productCount: 38,
     status: 'ACTIVE',
   },
   {
@@ -89,7 +79,6 @@ export const SEED_BRANDS: BrandItem[] = [
     brandCode: 'ANE',
     brandName: 'Anessa (Shiseido)',
     description: 'Thương hiệu chống nắng số 1 Nhật Bản',
-    productCount: 24,
     status: 'ACTIVE',
   },
   {
@@ -97,7 +86,6 @@ export const SEED_BRANDS: BrandItem[] = [
     brandCode: 'BIO',
     brandName: 'Bioderma',
     description: 'Dược mỹ phẩm làm sạch và phục hồi da từ Pháp',
-    productCount: 28,
     status: 'ACTIVE',
   },
   {
@@ -105,7 +93,6 @@ export const SEED_BRANDS: BrandItem[] = [
     brandCode: 'ROM',
     brandName: 'Rom&nd',
     description: 'Thương hiệu trang điểm xu hướng Hàn Quốc',
-    productCount: 50,
     status: 'ACTIVE',
   },
   {
@@ -113,7 +100,6 @@ export const SEED_BRANDS: BrandItem[] = [
     brandCode: 'LRP',
     brandName: 'La Roche-Posay',
     description: 'Dược mỹ phẩm Pháp chuyên biệt cho da nhạy cảm',
-    productCount: 35,
     status: 'ACTIVE',
   },
   {
@@ -121,7 +107,6 @@ export const SEED_BRANDS: BrandItem[] = [
     brandCode: 'KIE',
     brandName: "Kiehl's",
     description: 'Mỹ phẩm dưỡng da thiên nhiên từ New York',
-    productCount: 19,
     status: 'ACTIVE',
   },
   {
@@ -129,7 +114,6 @@ export const SEED_BRANDS: BrandItem[] = [
     brandCode: 'CLI',
     brandName: 'Clinique',
     description: 'Mỹ phẩm kiểm nghiệm dị ứng 100% không hương liệu',
-    productCount: 0,
     status: 'ACTIVE',
   },
 ]

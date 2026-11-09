@@ -40,7 +40,7 @@ type PaginatedData<T> = { items: T[]; page: number; pageSize: number; totalItems
 
 ### `POST /auth/login` — AUTH-01
 - **Quyền:** Công khai
-- **Request:** `{ username: string, password: string }` — `username` nhận username hoặc mã nhân viên (`LUM-084`, `LUM084`).
+- **Request:** `{ username: string, password: string }` — `username` nhận username hoặc mã nhân viên (`NV0003`).
 - **Response 200:** `{ accessToken, refreshToken, user: AuthUser }`; `user.permissions` là danh sách mã quyền hiệu lực.
 - **Lỗi:** `401 AUTH_INVALID_CREDENTIALS` (kèm số lần sai), `403 AUTH_ACCOUNT_LOCKED` (Admin khóa), `403 AUTH_ACCOUNT_TEMP_LOCKED` (sai 5 lần → khóa 15 phút, luật 46).
 - **Ghi chú:** `user.mustChangePassword = true` thì FE bắt đổi mật khẩu trước khi dùng (luật 47).

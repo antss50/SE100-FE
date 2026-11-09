@@ -67,7 +67,7 @@ export interface LogoutRequest {
 }
 
 // 3. MODULE USERS (G02)
-export type UserStatus = 'ACTIVE' | 'LOCKED' | 'INACTIVE'
+export type UserStatus = 'ACTIVE' | 'LOCKED'
 
 export interface StaffActivityLog {
   id: string
@@ -117,7 +117,8 @@ export interface GetUsersParams {
 }
 
 export interface CreateUserRequest {
-  employeeCode: string
+  /** Bỏ trống thì máy chủ tự sinh (NV0007) */
+  employeeCode?: string
   username: string
   password: string
   fullName: string

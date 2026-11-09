@@ -18,6 +18,7 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import { type FormEvent, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useCan } from '../../app/usePermission'
 import { ApiClientError } from '../../lib/api-client'
 import { queryKeys } from '../../lib/query-keys'
 import { customersService } from '../../services/customers.service'
@@ -62,6 +63,7 @@ export function CreateCustomerPage() {
   const [careNote, setCareNote] = useState(
     'Ưa chuộng serum chống oxy hóa và kem chống nắng nâng tông nhẹ. Thích các sản phẩm kết cấu mỏng nhẹ thẩm thấu nhanh.'
   )
+  const canLock = useCan('CUSTOMER_LOCK')
   const [status, setStatus] = useState<'ACTIVE' | 'INACTIVE'>('ACTIVE')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -197,7 +199,7 @@ export function CreateCustomerPage() {
             </div>
             <div className="mt-1.5 rounded-xl bg-[#f7ede6] border border-[#e7d4c8] px-4 py-3 flex items-center justify-between">
               <span className="font-mono text-sm font-extrabold text-[#9a462d]">
-                KH-2024-3843
+                KH#### (cấp khi lưu)
               </span>
               <span className="inline-flex items-center gap-1 text-[11px] text-[#7c6255]">
                 <Lock className="size-3" />
@@ -281,12 +283,12 @@ export function CreateCustomerPage() {
               <p className="text-[11px] text-red-700 leading-relaxed">
                 Số điện thoại này đã thuộc về khách hàng{' '}
                 <Link
-                  to={`/customers/${duplicateCustomer?.customerCode || 'KH-2023-1102'}`}
+                  to={`/customers/${duplicateCustomer?.customerCode || 'KH0006'}`}
                   className="font-bold underline"
                 >
                   {duplicateCustomer?.fullName || 'Lê Minh Tâm'}
                 </Link>{' '}
-                (Mã thẻ: {duplicateCustomer?.customerCode || 'KH-2023-1102'}).
+                (Mã thẻ: {duplicateCustomer?.customerCode || 'KH0006'}).
                 Vui lòng kiểm tra lại.
               </p>
             </div>
@@ -550,6 +552,7 @@ export function CreateCustomerPage() {
                     type="radio"
                     name="customerStatus"
                     checked={status === 'INACTIVE'}
+                    disabled={!canLock}
                     onChange={() => setStatus('INACTIVE')}
                     className="mt-0.5 accent-[#8f422a]"
                   />

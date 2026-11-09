@@ -11,7 +11,7 @@ export const SEED_PASSWORD = 'Password@123'
 export const SEED_USERS: MockUser[] = [
   {
     id: 1,
-    employeeCode: 'LUM-002',
+    employeeCode: 'NV0001',
     username: 'admin',
     fullName: 'Đặng Quốc Khang',
     email: 'khang.dang@lumina.vn',
@@ -32,7 +32,7 @@ export const SEED_USERS: MockUser[] = [
   },
   {
     id: 2,
-    employeeCode: 'LUM-012',
+    employeeCode: 'NV0002',
     username: 'manager01',
     fullName: 'Trần Lê Ngọc Mai',
     email: 'mai.tran@lumina.vn',
@@ -83,7 +83,7 @@ export const SEED_USERS: MockUser[] = [
   },
   {
     id: 3,
-    employeeCode: 'LUM-084',
+    employeeCode: 'NV0003',
     username: 'cashier01',
     fullName: 'Nguyễn Thu Hà',
     email: 'namy@lumina.vn',
@@ -152,7 +152,7 @@ export const SEED_USERS: MockUser[] = [
   },
   {
     id: 4,
-    employeeCode: 'LUM-045',
+    employeeCode: 'NV0004',
     username: 'inventory01',
     fullName: 'Lê Vũ Hoàng An',
     email: 'an.levu@lumina.vn',
@@ -173,7 +173,7 @@ export const SEED_USERS: MockUser[] = [
   },
   {
     id: 5,
-    employeeCode: 'LUM-105',
+    employeeCode: 'NV0005',
     username: 'newstaff',
     fullName: 'Phạm Bảo Ngọc',
     email: 'ngoc.pham@lumina.vn',
@@ -189,7 +189,7 @@ export const SEED_USERS: MockUser[] = [
   },
   {
     id: 6,
-    employeeCode: 'LUM-091',
+    employeeCode: 'NV0006',
     username: 'trang.bui',
     fullName: 'Bùi Thu Trang',
     email: 'trang.bui@lumina.vn',

@@ -21,7 +21,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useUiStore } from '../../app/store'
+import { useAuthStore, useUiStore } from '../../app/store'
 import { ApiClientError } from '../../lib/api-client'
 import { usersService } from '../../services/users.service'
 import type { UserItem } from '../../types/api'
@@ -30,6 +30,7 @@ import { formatNumber, getInitials, getRoleBadgeMeta } from '../../utils/format'
 export function UserDetailPage() {
   const { userId } = useParams<{ userId: string }>()
   const openChangePassword = useUiStore((s) => s.openChangePassword)
+  const currentUserId = useAuthStore((s) => s.user?.id)
 
   const [staff, setStaff] = useState<UserItem | null>(null)
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'LOGS'>('OVERVIEW')
@@ -41,7 +42,7 @@ export function UserDetailPage() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    usersService.getUserById(userId || 'LUM-084').then((data) => {
+    usersService.getUserById(userId || 'NV0003').then((data) => {
       setStaff(data)
       setEditFullName(data.fullName)
       setEditEmail(data.email)
@@ -244,6 +245,7 @@ export function UserDetailPage() {
               <RotateCcw className="size-3.5" />
               <span>Đặt lại mật khẩu</span>
             </button>
+            {staff.id !== currentUserId && (
             <button
               type="button"
               onClick={handleToggleLock}
@@ -261,6 +263,7 @@ export function UserDetailPage() {
                 </>
               )}
             </button>
+            )}
           </div>
           <p className="text-[11px] text-[#9a8174]">
             Không thể khóa tài khoản Quản trị viên hệ thống.
@@ -551,7 +554,7 @@ export function UserDetailPage() {
                 </span>
               </div>
               <p className="mt-1 text-[11px] text-[#8d7467] leading-relaxed">
-                Nếu nhập sai 5 lần: Khóa tạm 30 phút kèm đồng hồ đếm ngược tự
+                Nếu nhập sai 5 lần: Khóa tạm 15 phút kèm đồng hồ đếm ngược tự
                 động.
               </p>
             </div>

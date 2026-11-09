@@ -78,7 +78,7 @@ const OLD_PAGES: { path: string; user: string }[] = [
   { path: '/customers', user: 'manager01' },
   { path: '/customers', user: 'cashier01' },
   { path: '/customers/new', user: 'cashier01' },
-  { path: '/customers/KH-2024-001', user: 'cashier01' },
+  { path: '/customers/KH0001', user: 'cashier01' },
   { path: '/loyalty', user: 'manager01' },
   { path: '/users', user: 'admin' },
   { path: '/users/2', user: 'admin' },

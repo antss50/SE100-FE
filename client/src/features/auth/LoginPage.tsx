@@ -232,7 +232,7 @@ export function LoginPage() {
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Nhập mã NV hoặc username (VD: LUM084, admin)"
+                    placeholder="Nhập mã NV hoặc username (VD: NV0003, admin)"
                     className="w-full rounded-xl bg-[#fdf2eb] border border-[#f3dfd3] focus:border-[#d57252] focus:bg-white pl-11 pr-4 py-3.5 text-sm font-mono font-medium text-[#2b1d16] outline-none transition"
                     required
                   />

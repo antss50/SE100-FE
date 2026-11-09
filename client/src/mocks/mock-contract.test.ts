@@ -79,9 +79,9 @@ describe('AUTH-01: đăng nhập 5 tài khoản seed', () => {
     expect((await loginAs('cashier01')).user.mustChangePassword).toBe(false)
   })
 
-  it('đăng nhập bằng mã nhân viên LUM-084 và LUM084 (API-CONTRACT)', async () => {
-    expect((await loginAs('LUM-084')).user.username).toBe('cashier01')
-    expect((await loginAs('LUM084')).user.username).toBe('cashier01')
+  it('đăng nhập bằng mã nhân viên NV0003 và NV0003 (API-CONTRACT)', async () => {
+    expect((await loginAs('NV0003')).user.username).toBe('cashier01')
+    expect((await loginAs('NV0003')).user.username).toBe('cashier01')
   })
 
   it('sai mật khẩu → 401 AUTH_INVALID_CREDENTIALS; tài khoản không tồn tại cũng 401', async () => {
@@ -174,7 +174,7 @@ describe('403 AUTH_FORBIDDEN theo ma trận quyền', () => {
     ['cashier01', '/audit-logs', undefined],
     ['cashier01', '/promotions/WELCOME10/report', undefined],
     ['cashier01', '/products', post({})],
-    ['cashier01', '/customers/KH-2024-001/deactivate', post({})],
+    ['cashier01', '/customers/KH0001/deactivate', post({})],
     ['cashier01', '/loyalty-config', put({ amountPerPoint: 1 })],
     ['manager01', '/users', undefined],
     ['manager01', '/rbac/roles', undefined],

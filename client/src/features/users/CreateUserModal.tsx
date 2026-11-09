@@ -21,7 +21,7 @@ export function CreateUserModal({
   onClose,
   onCreated,
 }: CreateUserModalProps) {
-  const [employeeCode, setEmployeeCode] = useState('LUM-095')
+  const [employeeCode, setEmployeeCode] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('Password@123')
   const [fullName, setFullName] = useState('')
@@ -111,15 +111,14 @@ export function CreateUserModal({
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-[#543e34]">
-                Mã nhân viên (employeeCode) *
+                Mã nhân viên (employeeCode)
               </label>
               <input
                 type="text"
                 value={employeeCode}
                 onChange={(e) => setEmployeeCode(e.target.value)}
-                placeholder="VD: LUM-095 hoặc NV0005"
+                placeholder="Để trống: hệ thống tự sinh (NV0007)"
                 className="mt-1.5 w-full rounded-xl bg-[#fcf7f4] border border-[#e6d5ca] px-3.5 py-2.5 text-xs font-mono font-semibold text-[#2b1d16] outline-none focus:border-[#b4533c]"
-                required
               />
             </div>
 

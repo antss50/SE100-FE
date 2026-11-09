@@ -78,8 +78,11 @@ export const customerRoutes: MockRoute[] = [
     method: 'POST',
     path: '/customers',
     permission: 'CUSTOMER_EDIT',
-    handler: ({ db, body, now }) => {
+    handler: ({ db, body, now, permissions }) => {
       const input = parseBody(createSchema, body)
+      if (input.status === 'INACTIVE' && !permissions.includes('CUSTOMER_LOCK')) {
+        throw new MockHttpError(403, 'AUTH_FORBIDDEN', 'Bạn không có quyền tạo hồ sơ ở trạng thái ngừng hoạt động')
+      }
       const customers = db.read('customers')
       assertPhoneUnique(customers, input.phoneNumber)
       const id = customers.reduce((max, c) => Math.max(max, c.id), 0) + 1

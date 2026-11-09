@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuthStore } from '../../app/store'
 import { ApiClientError } from '../../lib/api-client'
 import { usersService } from '../../services/users.service'
 import type { UserItem } from '../../types/api'
@@ -23,6 +24,7 @@ import { getInitials, getRoleBadgeMeta } from '../../utils/format'
 import { CreateUserModal } from './CreateUserModal'
 
 export function UsersListPage() {
+  const currentUserId = useAuthStore((s) => s.user?.id)
   const [users, setUsers] = useState<UserItem[]>([])
   const [totalItems, setTotalItems] = useState(0)
   const [keyword, setKeyword] = useState('')
@@ -185,11 +187,11 @@ export function UsersListPage() {
           <div className="mt-4 pt-3 border-t border-[#f3e6de] flex items-center gap-4 text-xs">
             <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-700">
               <span className="size-2 rounded-full bg-emerald-600" />
-              {Math.max(28, activeCount)} Active
+              {activeCount} Hoạt động
             </span>
             <span className="inline-flex items-center gap-1.5 font-semibold text-red-700">
               <span className="size-2 rounded-full bg-red-600" />
-              {Math.max(4, lockedCount)} Tạm khóa
+              {lockedCount} Đã khóa
             </span>
           </div>
         </div>
@@ -268,7 +270,7 @@ export function UsersListPage() {
               setKeyword(e.target.value)
               setPage(1)
             }}
-            placeholder="Tìm theo Họ tên, Email, SĐT hoặc Mã NV (VD: LUM-084, LUM-012)..."
+            placeholder="Tìm theo Họ tên, Email, SĐT hoặc Mã NV (VD: NV0003, NV0002)..."
             className="w-full rounded-2xl bg-white border border-[#ead9ce] pl-11 pr-4 py-2.5 text-xs text-[#2b1d16] placeholder:text-[#a3897c] outline-none focus:border-[#b4533c]"
           />
         </div>
@@ -465,6 +467,7 @@ export function UsersListPage() {
                         >
                           <RefreshCw className="size-4" />
                         </button>
+                        {staff.id !== currentUserId && (
                         <button
                           type="button"
                           onClick={() => handleToggleLock(staff)}
@@ -481,6 +484,7 @@ export function UsersListPage() {
                             <Ban className="size-4" />
                           )}
                         </button>
+                        )}
                       </div>
                     </td>
                   </tr>
