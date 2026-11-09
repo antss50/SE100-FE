@@ -8,14 +8,13 @@ Trạng thái: `Chưa làm` · `Đang code` · `Đang test` · `Đang sửa` · 
 
 | GĐ | Nội dung | UC | Trạng thái |
 |---|---|---|---|
-| 0 | Nền tảng: mock adapter + `VITE_USE_MOCK`, chuyển service cũ sang adapter, bỏ tự đăng nhập, `domain/permissions.ts` + guard, component `ui/`, token màu, lazy route, sidebar theo thiết kế, cài Vitest + Playwright, port `pricing.ts` và `returns.ts` từ code mẫu kèm 12 test | Nền | Xong |
-| 1 | Nhà cung cấp, nhập kho | SUPP-01..03, STK-01 | Chưa làm |
-| 2 | Tồn kho, cận hạn, kiểm kho, xuất đặc biệt | STK-02..07 | Chưa làm |
-| 3 | Rà và sửa phần cũ cho khớp tài liệu; cấu hình | AUTH-01..05, AUTH-07, PROD-01..03, CUS-01..05, PROM-01..02 | Chưa làm |
-| 4 | Mở ca, bán hàng FEFO, voucher, dùng điểm, thanh toán, lịch sử và chi tiết đơn | POS-01..03, PROM-03, CUS-04 | Chưa làm |
-| 5 | Đổi trả, chốt ca, lịch sử và chi tiết ca | POS-04, POS-05 | Chưa làm |
-| 6 | Báo cáo, dashboard, nhật ký, hiệu quả khuyến mãi | REP-01..06, AUTH-06, PROM-04 | Chưa làm |
-| 7 | Hồi quy toàn bộ, E2E xuyên suốt, rà luật nghiệp vụ | Tất cả | Chưa làm |
+| 0 | Nền tảng (mock adapter, đăng nhập, phân quyền, component ui, layout, domain giá, công cụ test) | Nền | Xong |
+| 1 | **Kho** (gộp cũ GĐ1+2): nhà cung cấp, nhập kho, tồn kho, cận hạn, kiểm kho, xuất đặc biệt. Gồm sửa B1 | SUPP-01..03, STK-01..07 | Đang code |
+| 2 | **Sửa phần cũ + bán hàng** (gộp cũ GĐ3+4+5): sửa AUTH/PROD/CUS/PROM cho khớp tài liệu (7 loại KM, status, luật 47), cấu hình hệ thống; mở ca, POS FEFO, voucher, dùng điểm, thanh toán, lịch sử và chi tiết đơn, đổi trả, chốt ca, lịch sử ca | AUTH-01..05, AUTH-07, PROD-01..03, CUS-01..05, PROM-01..03, POS-01..05 | Chưa làm |
+| 3 | **Báo cáo** (cũ GĐ6): dashboard, 5 báo cáo, nhật ký, hiệu quả KM | REP-01..06, AUTH-06, PROM-04 | Chưa làm |
+| 4 | **Kiểm thử toàn bộ** (cũ GĐ7): unit/component/E2E cho mọi UC, E2E xuyên suốt, sửa lỗi Critical/High | Tất cả | Chưa làm |
+
+> Đổi ngày 2026-11-09 (D21): gộp 8 giai đoạn thành 5, kiểm thử dồn về GĐ4. Các dòng nhật ký cũ ghi GĐ theo cách đánh số cũ; GĐ0 không đổi.
 
 ## Trạng thái từng UC
 

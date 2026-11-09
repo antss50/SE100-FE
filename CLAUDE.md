@@ -142,6 +142,7 @@ Không cần chép lại 59 luật; dưới đây là những luật dễ làm s
 
 ## 9. Kiểm thử
 
+- **(D21) Test dồn về GĐ4.** Các quy định dưới đây áp dụng cho GĐ4; GĐ1–3 chỉ cần unit test hàm thuần `domain/`.
 - `npm run test` (Vitest, jsdom), `npm run test:e2e` (Playwright, Chromium, tự khởi động `vite` với `VITE_USE_MOCK=true` và tắt độ trễ mock).
 - **Unit (bắt buộc):** mọi file trong `domain/`, mock handler có luật nghiệp vụ (ca, kho, đổi trả, thanh toán).
 - **Component:** form có validate phức tạp (tạo phiếu nhập, thanh toán, phiếu trả, chốt ca).
@@ -158,7 +159,7 @@ Chạy trong `SE100-FE/client`, tất cả phải qua:
 npm run lint
 npm run build          # gồm tsc -b
 npm run test
-npm run test:e2e       # khi đã có test E2E của phần vừa làm
+npm run test:e2e       # chỉ từ GĐ4 (D21); GĐ1–3 bỏ qua dòng này
 ```
 
 Không bỏ qua, không tắt rule, không `--no-verify`. Lỗi của test có sẵn trước khi bạn làm cũng phải báo lại.
