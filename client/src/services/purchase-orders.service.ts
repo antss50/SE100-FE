@@ -6,6 +6,7 @@ import type {
   PurchaseOrder,
   PurchaseOrderDetail,
   PurchaseOrderInput,
+  PurchaseOrderLineInput,
   PurchaseWarning,
 } from '../types/stock'
 import { toQueryString } from './query'
@@ -30,8 +31,8 @@ export const purchaseOrdersService = {
     return apiRequest<PurchaseOrderDetail>(`/purchase-orders/${id}`, { method: 'PUT', body: json(input) })
   },
   /** STK-01: POST /purchase-orders/preview-warnings (cảnh báo xoay kệ / cận hạn, không ghi dữ liệu) */
-  previewWarnings(input: PurchaseOrderInput): Promise<ApiSuccessResponse<PurchaseWarning[]>> {
-    return apiRequest<PurchaseWarning[]>('/purchase-orders/preview-warnings', { method: 'POST', body: json(input) })
+  previewWarnings(lines: PurchaseOrderLineInput[]): Promise<ApiSuccessResponse<PurchaseWarning[]>> {
+    return apiRequest<PurchaseWarning[]>('/purchase-orders/preview-warnings', { method: 'POST', body: json({ lines }) })
   },
   /** STK-01: POST /purchase-orders/{id}/confirm, bắt buộc kèm Idempotency-Key (luật 30) */
   confirm(id: number, idempotencyKey: string): Promise<ApiSuccessResponse<ConfirmPurchaseOrderResult>> {

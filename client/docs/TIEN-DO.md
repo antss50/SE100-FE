@@ -34,7 +34,7 @@ Trạng thái: `Chưa làm` · `Đang code` · `Đang test` · `Đang sửa` · 
 | SUPP-01 | Quản lý NCC | 1 | Đang test | |
 | SUPP-02 | Tra cứu & chi tiết NCC | 1 | Đang test | |
 | SUPP-03 | Lịch sử nhập của NCC | 1 | Đang test | |
-| STK-01 | Phiếu nhập kho theo lô | 1 | Chưa làm | Đường găng |
+| STK-01 | Phiếu nhập kho theo lô | 1 | Đang test | Đường găng |
 | STK-02 | Tra cứu tồn theo SP & lô | 2 | Chưa làm | |
 | STK-03 | Cận hạn / hết hạn | 2 | Chưa làm | |
 | STK-04 | Lập phiếu kiểm kho | 2 | Chưa làm | |

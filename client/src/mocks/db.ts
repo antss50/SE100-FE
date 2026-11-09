@@ -1,4 +1,4 @@
-import type { PurchaseOrderDetail } from '../types/stock'
+import type { Batch, PurchaseOrderDetail, StockMovement } from '../types/stock'
 import type { Supplier } from '../types/suppliers'
 import type {
   AuditLogItem,
@@ -15,6 +15,7 @@ import { SEED_BRANDS, SEED_CATEGORIES, SEED_PRODUCTS } from './seed/catalog'
 import { SEED_CUSTOMERS } from './seed/customers'
 import { SEED_LOYALTY_CONFIG } from './seed/loyalty'
 import { seedPromotions } from './seed/promotions'
+import { SEED_SYSTEM_SETTINGS, seedStock } from './seed/stock'
 import { seedSuppliers } from './seed/suppliers'
 import { seedPermissions, seedRoles, type MockPermission, type MockRole } from './seed/rbac'
 import { SEED_PASSWORD, SEED_USERS, type MockUser } from './seed/users'
@@ -50,6 +51,13 @@ export interface MockTables {
   suppliers: Supplier[]
   /** Phiếu nhập kho kèm dòng chi tiết (PURCHASE_ORDERS + PURCHASE_ORDER_DETAILS). */
   purchaseOrders: PurchaseOrderDetail[]
+  batches: Batch[]
+  /** Thẻ kho (STOCK_MOVEMENTS): mọi thay đổi tồn đều có một dòng ở đây (luật 28). */
+  stockMovements: StockMovement[]
+  /** SYSTEM_SETTINGS dạng khóa → giá trị chuỗi. */
+  systemSettings: Record<string, string>
+  /** Idempotency-Key đã xử lý → id chứng từ (luật 30). */
+  idempotencyKeys: Record<string, number>
   /** Bộ đếm sinh id/mã tất định. */
   counters: Record<string, number>
 }
@@ -60,7 +68,7 @@ export type TableName = keyof MockTables
  * Phiên bản cấu trúc seed. Đổi cấu trúc bảng hoặc dữ liệu seed thì tăng số này
  * (CLAUDE.md mục 5.2) để trình duyệt bỏ dữ liệu cũ.
  */
-export const MOCK_DB_VERSION = 3
+export const MOCK_DB_VERSION = 4
 const KEY_PREFIX = 'se100_mock_'
 const keyOf = (table: string) => `${KEY_PREFIX}${table}_v${MOCK_DB_VERSION}`
 const META_KEY = keyOf('meta')
@@ -69,6 +77,15 @@ const META_KEY = keyOf('meta')
 export function buildSeed(today: Date = new Date()): MockTables {
   const permissions = seedPermissions()
   const clone = <T>(value: T): T => structuredClone(value)
+  const suppliers = seedSuppliers(today)
+  const stock = seedStock(today, suppliers, SEED_PRODUCTS)
+  const stockByProduct = new Map<number, number>()
+  for (const b of stock.batches) stockByProduct.set(b.productId, (stockByProduct.get(b.productId) ?? 0) + b.onHandQty)
+  const products = clone(SEED_PRODUCTS).map((p) => ({
+    ...p,
+    isSellable: p.isSellable ?? true,
+    currentStock: stockByProduct.get(p.id as number) ?? 0,
+  }))
   return {
     users: clone(SEED_USERS),
     passwords: Object.fromEntries(SEED_USERS.map((u) => [String(u.id), SEED_PASSWORD])),
@@ -80,11 +97,15 @@ export function buildSeed(today: Date = new Date()): MockTables {
     customers: clone(SEED_CUSTOMERS),
     categories: clone(SEED_CATEGORIES),
     brands: clone(SEED_BRANDS),
-    products: clone(SEED_PRODUCTS),
+    products,
     loyaltyConfig: clone(SEED_LOYALTY_CONFIG),
     promotions: seedPromotions(today),
-    suppliers: seedSuppliers(today),
-    purchaseOrders: [],
+    suppliers,
+    purchaseOrders: stock.purchaseOrders,
+    batches: stock.batches,
+    stockMovements: stock.stockMovements,
+    systemSettings: { ...SEED_SYSTEM_SETTINGS },
+    idempotencyKeys: {},
     counters: {},
   }
 }

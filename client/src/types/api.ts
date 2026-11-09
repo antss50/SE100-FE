@@ -366,6 +366,8 @@ export interface ProductItem {
   description?: string
   imageUrl?: string | null
   images?: ProductImageItem[]
+  /** `false` = SKU tester của hãng: không bao giờ bán ở POS, chỉ xuất bằng phiếu TESTER/DESTROY (DATABASE.md mục 11). */
+  isSellable?: boolean
   status: 'ACTIVE' | 'INACTIVE'
   visualTheme?: 'serum' | 'lipstick' | 'sunscreen' | 'cleanser' | 'tint'
 }

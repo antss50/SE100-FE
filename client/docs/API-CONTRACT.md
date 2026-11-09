@@ -276,3 +276,33 @@ Quy ước chung: `SupplierItem = Supplier + { orderCount, totalPurchaseAmount, 
 
 ### `POST /suppliers/{id}/activate` — SUPP-01
 - **Quyền:** `SUPPLIER_MANAGE` · **Response 200:** `SupplierItem` (`ACTIVE`) · **Lỗi:** `404 SUPP_NOT_FOUND`, `409 SUPP_ALREADY_ACTIVE`
+
+## STOCK · Nhập kho (STK-01)
+
+Kiểu: `PurchaseOrder` (header: `id, poCode, supplierId, supplierCode, supplierName, supplierInvoiceNo, totalAmount, status DRAFT|COMPLETED|CANCELLED, note, createdBy, createdByName, createdAt, confirmedAt, lineCount, totalQuantity`), `PurchaseOrderDetail = PurchaseOrder + lines[]` (dòng: `id, productId, sku, productName, lotCode, mfgDate, expDate, quantity, unitCost, lineTotal, batchId, existingBatch?`), `PurchaseWarning = { type: ROTATE_SHELF|NEAR_EXPIRY|EXPIRED|COST_AVERAGED, lineIndex, sku, lotCode, message }`. Mã phiếu `PNyyyymmdd-nn`. Tiền là số nguyên đồng.
+
+### `GET /purchase-orders` — STK-01, SUPP-03
+- **Quyền:** `STOCK_IMPORT_VIEW` · **Query:** `keyword` (mã phiếu, tên NCC, số hóa đơn), `status`, `supplierId`, `page`, `pageSize` · **Response 200:** `PaginatedData<PurchaseOrder>` (mới nhất trước)
+
+### `GET /purchase-orders/{id}` — STK-01
+- **Quyền:** `STOCK_IMPORT_VIEW` · **Response 200:** `PurchaseOrderDetail` · **Lỗi:** `404 STK_PO_NOT_FOUND`
+
+### `POST /purchase-orders` — STK-01 (lưu nháp)
+- **Quyền:** `STOCK_IMPORT_CREATE` · **Request:** `{ supplierId, supplierInvoiceNo?, note?, lines: [{ productId, lotCode, mfgDate?, expDate, quantity (>0), unitCost (>=0) }] }` · **Response 201:** `PurchaseOrderDetail` (`DRAFT`)
+- **Lỗi:** `400 COMMON_VALIDATION_FAILED`, `404 SUPP_NOT_FOUND`, `404 PROD_NOT_FOUND`, `422 STK_SUPPLIER_INACTIVE` (chỉ NCC `ACTIVE`), `422 STK_PRODUCT_INACTIVE`, `422 STK_DUPLICATE_LOT` (trùng sản phẩm + mã lô trong phiếu), `422 STK_EXP_DATE_INVALID` (HSD phải sau ngày nhập), `422 STK_MFG_DATE_INVALID`
+
+### `PUT /purchase-orders/{id}` — STK-01
+- **Quyền:** `STOCK_IMPORT_CREATE` · **Request / Lỗi:** như tạo mới · **Response 200:** `PurchaseOrderDetail`
+- **Lỗi thêm:** `409 STK_PO_NOT_EDITABLE` (chỉ sửa `DRAFT`; phiếu `COMPLETED` không sửa/xóa, luật 41)
+
+### `POST /purchase-orders/preview-warnings` — STK-01
+- **Quyền:** `STOCK_IMPORT_VIEW` · **Request:** `{ lines: [{ productId, lotCode, expDate }] }` · **Response 200:** `PurchaseWarning[]` (không ghi dữ liệu). Cảnh báo xoay kệ khi HSD lô mới sớm hơn lô còn tồn (luật 31), cận hạn/quá hạn theo `EXPIRY_WARNING_DAYS`, giá vốn bình quân khi lô đã có (luật 29).
+
+### `POST /purchase-orders/{id}/confirm` — STK-01
+- **Quyền:** `STOCK_IMPORT_CREATE` · **Header bắt buộc:** `Idempotency-Key` · **Response 200:** `{ order: PurchaseOrderDetail, warnings: PurchaseWarning[] }`
+- Một giao dịch: với mỗi dòng tạo lô mới hoặc cộng vào lô `(productId, lotCode)` đã có (giá vốn bình quân gia quyền), cộng `onHandQty`, ghi `STOCK_MOVEMENTS` `PURCHASE` (`balanceAfter`, `createdBy`), gán `batchId`, đặt `COMPLETED` + `confirmedAt`. Lỗi ở bất kỳ dòng nào thì không ghi gì (luật 28, 40).
+- Gửi lại cùng `Idempotency-Key` cho cùng phiếu: trả lại kết quả cũ (`warnings: []`), không cộng tồn lần hai (luật 30).
+- **Lỗi:** `400 COMMON_IDEMPOTENCY_KEY_REQUIRED`, `409 COMMON_IDEMPOTENCY_KEY_REUSED`, `409 STK_PO_ALREADY_CONFIRMED` (khóa khác nhưng phiếu đã hoàn tất), `409 STK_PO_NOT_EDITABLE` (đã hủy), `409 STK_BATCH_LOCKED` (lô đang khóa kiểm kho), `422 STK_LOT_EXP_MISMATCH` (lô đã có nhưng khác HSD), cùng các lỗi nghiệp vụ như tạo mới
+
+### `POST /purchase-orders/{id}/cancel` — STK-01
+- **Quyền:** `STOCK_IMPORT_CREATE` · **Response 200:** `PurchaseOrderDetail` (`CANCELLED`) · **Lỗi:** `404 STK_PO_NOT_FOUND`, `409 STK_PO_NOT_EDITABLE`

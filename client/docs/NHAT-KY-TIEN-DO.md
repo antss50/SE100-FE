@@ -54,3 +54,5 @@ Không xóa hay sửa dòng cũ; ghi sai thì thêm dòng mới đính chính.
 | 2026-11-08 23:23 | fe-tester | 0 | Kết thúc | GĐ0 → Xong (không còn lỗi Critical/High; B1 Low mở). Commit ad9287c và commit nhật ký này |
 | 2026-11-09 08:47 | fe-coder | 1 | Bắt đầu | GĐ1 nhóm Kho (SUPP, STK-01..07); đọc KIEN-THUC, CLAUDE, TIEN-DO |
 | 2026-11-09 08:47 | fe-coder | 1 | Commit | 927bdfa feat(supp-01): NCC (SUPP-01..03) xong, build qua; trạng thái UC -> Đang test |
+| 2026-11-09 08:52 | fe-coder | 1 | Hash đính chính | Commit SUPP-01..03 có hash thực là 97aead8 (dòng log trước ghi hash cũ do amend) |
+| 2026-11-09 08:52 | fe-coder | 1 | Xong việc | STK-01 nhập kho: domain/stock (batch, purchase-warnings), mocks/stock-ledger.ts, seed lô/phiếu nhập, handler purchase-orders (idempotency, bình quân gia quyền, cảnh báo xoay kệ), màn danh sách/form/chi tiết; build qua |

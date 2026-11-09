@@ -65,7 +65,6 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: PackageOpen,
         permission: 'STOCK_IMPORT_VIEW',
         uc: 'STK-01',
-        plannedPhase: 1,
       },
       {
         to: '/stock',

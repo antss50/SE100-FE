@@ -169,6 +169,7 @@ const productRoutes: MockRoute[] = [
         taxRate: input.taxRate,
         minStockAlert: input.minStockAlert ?? 5,
         currentStock: 0,
+        isSellable: true,
         barcode: input.barcode || undefined,
         images,
         imageUrl: images[0]?.url ?? null,

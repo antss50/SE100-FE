@@ -25,6 +25,9 @@ const UserDetailPage = lazyNamed(() => import('../features/users/UserDetailPage'
 const RbacPage = lazyNamed(() => import('../features/rbac/RbacPage'), 'RbacPage')
 const SuppliersListPage = lazyNamed(() => import('../features/suppliers/SuppliersListPage'), 'SuppliersListPage')
 const SupplierDetailPage = lazyNamed(() => import('../features/suppliers/SupplierDetailPage'), 'SupplierDetailPage')
+const PurchaseOrdersListPage = lazyNamed(() => import('../features/purchase-orders/PurchaseOrdersListPage'), 'PurchaseOrdersListPage')
+const PurchaseOrderFormPage = lazyNamed(() => import('../features/purchase-orders/PurchaseOrderFormPage'), 'PurchaseOrderFormPage')
+const PurchaseOrderDetailPage = lazyNamed(() => import('../features/purchase-orders/PurchaseOrderDetailPage'), 'PurchaseOrderDetailPage')
 const ComingSoonPage = lazy(async () => ({ default: (await import('../features/common/ComingSoonPage')).ComingSoonPage }))
 
 /** Màn hình đã có, theo đường dẫn mục menu. Mục không có ở đây dùng trang "Đang phát triển". */
@@ -37,12 +40,16 @@ const PAGES: Record<string, ComponentType> = {
   '/users': UsersListPage,
   '/rbac': RbacPage,
   '/suppliers': SuppliersListPage,
+  '/purchase-orders': PurchaseOrdersListPage,
 }
 
 /** Route con không có trên menu. */
 const SUB_ROUTES: { path: string; permission: PermissionRequirement; element: ReactNode }[] = [
   { path: 'customers/new', permission: 'CUSTOMER_EDIT', element: <CreateCustomerPage /> },
   { path: 'customers/:customerCode', permission: 'CUSTOMER_VIEW', element: <CustomerDetailPage /> },
+  { path: 'purchase-orders/new', permission: 'STOCK_IMPORT_CREATE', element: <PurchaseOrderFormPage /> },
+  { path: 'purchase-orders/:purchaseOrderId/edit', permission: 'STOCK_IMPORT_CREATE', element: <PurchaseOrderFormPage /> },
+  { path: 'purchase-orders/:purchaseOrderId', permission: 'STOCK_IMPORT_VIEW', element: <PurchaseOrderDetailPage /> },
   { path: 'suppliers/:supplierId', permission: 'SUPPLIER_VIEW', element: <SupplierDetailPage /> },
   { path: 'users/:userId', permission: 'USER_MANAGE', element: <UserDetailPage /> },
 ]

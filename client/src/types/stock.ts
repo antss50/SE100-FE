@@ -82,7 +82,8 @@ export type PurchaseWarningType = 'ROTATE_SHELF' | 'NEAR_EXPIRY' | 'EXPIRED' | '
 /** Cảnh báo khi xem trước / xác nhận phiếu nhập (luật 29, 31). */
 export interface PurchaseWarning {
   type: PurchaseWarningType
-  lineId?: number
+  /** Chỉ số dòng trong phiếu (bắt đầu từ 0). */
+  lineIndex: number
   sku: string
   lotCode: string
   message: string

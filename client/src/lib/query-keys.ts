@@ -17,6 +17,7 @@ export const queryKeys = {
     all: ['purchase-orders'] as const,
     list: (params: object) => ['purchase-orders', 'list', params] as const,
     detail: (id: number | string) => ['purchase-orders', 'detail', String(id)] as const,
+    warnings: (lines: object) => ['purchase-orders', 'warnings', lines] as const,
   },
   stock: {
     all: ['stock'] as const,
