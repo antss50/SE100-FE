@@ -132,6 +132,11 @@ function validate(db: MockTransaction, input: Input, selfId: number | null): voi
       ) {
         throw new MockHttpError(409, 'PROM_VOUCHER_DUPLICATED', 'Mã voucher này đã tồn tại, vui lòng chọn mã khác')
       }
+      if (input.customerId != null) {
+        const target = db.read('customers').find((c) => c.id === input.customerId)
+        if (!target) throw new MockHttpError(404, 'CUS_NOT_FOUND', 'Không tìm thấy khách hàng của voucher riêng')
+        if (target.status !== 'ACTIVE') throw invalid('Khách hàng đã bị khóa ưu đãi, không gán voucher riêng được')
+      }
       break
   }
   const productIds = db.read('products').map((p) => p.id)

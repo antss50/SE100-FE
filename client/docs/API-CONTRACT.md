@@ -205,7 +205,7 @@ type PaginatedData<T> = { items: T[]; page: number; pageSize: number; totalItems
 
 ### `PUT /loyalty-config` — CUS-05
 - **Quyền:** `LOYALTY_CONFIG`
-- **Request:** `{ amountPerPoint (>0), redemptionValuePerPoint?, tiers: { tier: BRONZE|SILVER|GOLD|DIAMOND, minSpend }[] }`
+- **Request:** `{ amountPerPoint (>0), redemptionValuePerPoint?, tiers: { tier: BRONZE|SILVER|GOLD|DIAMOND, minSpend, discountPercent? (0-100, = CUSTOMER_TIERS.discount_rate x 100) }[] }`
 - **Response 200:** `LoyaltyConfigData`
 - **Lỗi:** `422 CUS_TIER_SPEND_INVALID` (BRONZE = 0, hạng sau lớn hơn hạng trước)
 

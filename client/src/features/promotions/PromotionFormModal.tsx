@@ -10,6 +10,7 @@ import { productsService } from '../../services/products.service'
 import { promotionsService } from '../../services/promotions.service'
 import { PROMOTION_TYPE_LABELS, type PromotionType, type PromotionView } from '../../types/promotions'
 import { getErrorMessage } from '../../utils/error'
+import { VoucherCustomerField, type VoucherCustomer } from './VoucherCustomerField'
 import { CheckGroup, ProductRowsEditor, StepsEditor, WeekdaysPicker, type PickerOption } from './PromotionEditors'
 import {
   emptyFormValues,
@@ -39,6 +40,7 @@ interface PromotionFormModalProps {
 export function PromotionFormModal({ open, promotion, onClose }: PromotionFormModalProps) {
   const queryClient = useQueryClient()
   const [extras, setExtras] = useState<PromotionFormExtras>(EMPTY_EXTRAS)
+  const [voucherCustomer, setVoucherCustomer] = useState<VoucherCustomer | null>(null)
   const submitStatus = useRef<'DRAFT' | 'ACTIVE'>('ACTIVE')
   const locked = Boolean(promotion?.locked)
 
@@ -56,9 +58,13 @@ export function PromotionFormModal({ open, promotion, onClose }: PromotionFormMo
       const form = formFromPromotion(promotion)
       reset(form.values)
       setExtras(form.extras)
+      setVoucherCustomer(
+        promotion.customerId === null ? null : { id: promotion.customerId, name: promotion.customerName ?? `Khách #${promotion.customerId}`, phone: null }
+      )
     } else {
       reset(emptyFormValues())
       setExtras(EMPTY_EXTRAS)
+      setVoucherCustomer(null)
     }
   }, [open, promotion, reset])
 
@@ -90,7 +96,11 @@ export function PromotionFormModal({ open, promotion, onClose }: PromotionFormMo
 
   const mutation = useMutation({
     mutationFn: (values: PromotionFormValues) => {
-      const payload = { ...toPromotionInput(values, extras), status: submitStatus.current }
+      const payload = {
+        ...toPromotionInput(values, extras),
+        customerId: values.promotionType === 'VOUCHER' ? (voucherCustomer?.id ?? null) : null,
+        status: submitStatus.current,
+      }
       return promotion ? promotionsService.update(promotion.id, payload) : promotionsService.create(payload)
     },
     onSuccess: (res) => {
@@ -176,6 +186,7 @@ export function PromotionFormModal({ open, promotion, onClose }: PromotionFormMo
             {...register('voucherCode')}
           />
         )}
+        {type === 'VOUCHER' && <VoucherCustomerField value={voucherCustomer} onChange={setVoucherCustomer} disabled={locked} />}
         <FieldShell id="promotion-description" label="Mô tả" className="sm:col-span-2">
           <textarea id="promotion-description" rows={2} className={TEXTAREA_CLASS} {...register('description')} />
         </FieldShell>

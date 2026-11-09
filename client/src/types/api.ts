@@ -424,7 +424,8 @@ export interface LoyaltyTierThreshold {
   minSpend: number
   // UI enriched fields
   tierName?: string
-  earnRatePercent?: number
+  /** CUSTOMER_TIERS.discount_rate dạng phần trăm (0-100): chiết khấu tầng 2 */
+  discountPercent?: number
   perks?: string[]
 }
 

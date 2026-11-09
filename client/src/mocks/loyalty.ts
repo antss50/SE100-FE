@@ -22,12 +22,10 @@ export function loyaltySettings(db: MockTransaction): LoyaltySettings {
   }
 }
 
-/** Chiết khấu từng hạng (CUSTOMER_TIERS.discount_rate); màn CUS-05 chỉ sửa mốc chi tiêu. */
-export const TIER_DISCOUNT_RATE: Record<CustomerTierCode, number> = {
-  BRONZE: 0,
-  SILVER: 0.05,
-  GOLD: 0.08,
-  DIAMOND: 0.12,
+/** Chiết khấu hiện hành của một hạng (CUSTOMER_TIERS.discount_rate, dạng 0-1); CUS-05 chỉnh được. */
+export function tierDiscountRateOf(db: MockTransaction, code: CustomerTierCode): number {
+  const pct = db.read('loyaltyConfig').tiers.find((t) => t.tier === code)?.discountPercent ?? 0
+  return pct / 100
 }
 
 const TIER_ORDER: CustomerTierCode[] = ['BRONZE', 'SILVER', 'GOLD', 'DIAMOND']
@@ -48,7 +46,7 @@ export function tierForSpend(db: MockTransaction, totalSpent: number): CustomerT
     id: TIER_ORDER.indexOf(code) + 1,
     tierCode: code,
     tierName: TIER_NAMES[code],
-    discountRate: TIER_DISCOUNT_RATE[code].toFixed(2),
+    discountRate: tierDiscountRateOf(db, code).toFixed(2),
   }
 }
 

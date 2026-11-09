@@ -11,7 +11,7 @@ import type { CartInput, LotAllocation, OrderQuote, QuoteLine } from '../types/p
 import type { Batch } from '../types/stock'
 import type { MockTransaction } from './db'
 import { MockHttpError } from './http'
-import { loyaltySettings, tierRankOf } from './loyalty'
+import { loyaltySettings, tierDiscountRateOf, tierRankOf } from './loyalty'
 import { buildUsageIndex, toDomainPromotions } from './promotion-engine'
 import { todayOf } from './stock-ledger'
 
@@ -55,11 +55,11 @@ export function domainProducts(db: MockTransaction): Map<number, DomainProduct> 
   return map
 }
 
-export function toDomainCustomer(c: CustomerItem): DomainCustomer {
+export function toDomainCustomer(c: CustomerItem, tierDiscountRate: number): DomainCustomer {
   return {
     id: c.id,
     tierRank: tierRankOf(c),
-    tierDiscountRate: Number(c.tier.discountRate ?? 0),
+    tierDiscountRate,
     points: c.rewardPoints,
   }
 }
@@ -122,7 +122,7 @@ export function priceCart(
     cart: [...merged].map(([productId, v]) => ({ productId, quantity: v.quantity })),
     products: domainProducts(db),
     promotions: toDomainPromotions(db, customer?.id ?? null, usage),
-    customer: customer ? toDomainCustomer(customer) : null,
+    customer: customer ? toDomainCustomer(customer, tierDiscountRateOf(db, customer.tier.tierCode)) : null,
     voucherCode: cart.voucherCode ? cart.voucherCode.trim().toUpperCase() : null,
     pointsRequested: Math.max(0, Math.floor(cart.pointsRequested)),
     now,

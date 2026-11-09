@@ -8,7 +8,13 @@ import { SEED_LOYALTY_CONFIG } from '../seed/loyalty'
 const loyaltySchema = z.object({
   amountPerPoint: z.number().positive('Tỷ lệ quy đổi điểm phải lớn hơn 0'),
   redemptionValuePerPoint: z.number().positive().optional(),
-  tiers: z.array(z.object({ tier: z.enum(['BRONZE', 'SILVER', 'GOLD', 'DIAMOND']), minSpend: z.number().min(0) })),
+  tiers: z.array(
+    z.object({
+      tier: z.enum(['BRONZE', 'SILVER', 'GOLD', 'DIAMOND']),
+      minSpend: z.number().min(0),
+      discountPercent: z.number().min(0, '% giảm không được âm').max(100, '% giảm tối đa 100').optional(),
+    })
+  ),
 })
 
 /** CUS-05: tỷ lệ tích điểm và giá trị 1 điểm lưu ở SYSTEM_SETTINGS; mốc hạng ở CUSTOMER_TIERS. */
@@ -51,7 +57,12 @@ export const loyaltyRoutes: MockRoute[] = [
         redemptionValuePerPoint: input.redemptionValuePerPoint ?? loyaltySettings(db).redeemValue,
         tiers: SEED_LOYALTY_CONFIG.tiers.map((tmpl) => {
           const old = current.tiers.find((t) => t.tier === tmpl.tier) ?? tmpl
-          return { ...old, minSpend: spend(tmpl.tier) ?? old.minSpend }
+          const sent = input.tiers.find((t) => t.tier === tmpl.tier)
+          return {
+            ...old,
+            minSpend: spend(tmpl.tier) ?? old.minSpend,
+            discountPercent: sent?.discountPercent ?? old.discountPercent ?? 0,
+          }
         }),
       }
       db.write('loyaltyConfig', next)

@@ -8,7 +8,7 @@ export const SEED_LOYALTY_CONFIG: LoyaltyConfigData = {
       tier: 'BRONZE',
       minSpend: 0,
       tierName: 'Hạng ĐỒNG',
-      earnRatePercent: 0,
+      discountPercent: 0,
       perks: [
         'Voucher sinh nhật 50.000 đ',
         'Đổi trả theo chính sách chung của cửa hàng',
@@ -19,7 +19,7 @@ export const SEED_LOYALTY_CONFIG: LoyaltyConfigData = {
       tier: 'SILVER',
       minSpend: 3000000,
       tierName: 'Hạng BẠC',
-      earnRatePercent: 5,
+      discountPercent: 5,
       perks: [
         'Giảm 5% đơn hàng trong tháng sinh nhật',
         'Giảm 5% mọi đơn hàng (tầng 2)',
@@ -30,7 +30,7 @@ export const SEED_LOYALTY_CONFIG: LoyaltyConfigData = {
       tier: 'GOLD',
       minSpend: 10000000,
       tierName: 'Hạng VÀNG',
-      earnRatePercent: 8,
+      discountPercent: 8,
       perks: [
         'Giảm 10% hóa đơn tháng sinh nhật',
         'Miễn phí soi da & phác đồ định kỳ',
@@ -41,7 +41,7 @@ export const SEED_LOYALTY_CONFIG: LoyaltyConfigData = {
       tier: 'DIAMOND',
       minSpend: 25000000,
       tierName: 'Hạng KIM CƯƠNG',
-      earnRatePercent: 12,
+      discountPercent: 12,
       perks: [
         'Chăm sóc da chuyên sâu 1 lần/quý',
         'Vé mời Private Launch mỹ phẩm mới',

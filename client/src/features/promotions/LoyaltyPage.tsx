@@ -32,6 +32,12 @@ export function LoyaltyPage() {
   const [silverSpendInput, setSilverSpendInput] = useState('3000000')
   const [goldSpendInput, setGoldSpendInput] = useState('10000000')
   const [diamondSpendInput, setDiamondSpendInput] = useState('25000000')
+  const [discountInputs, setDiscountInputs] = useState<Record<CustomerTierCode, string>>({
+    BRONZE: '0',
+    SILVER: '5',
+    GOLD: '8',
+    DIAMOND: '12',
+  })
 
   const [isSaving, setIsSaving] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -66,6 +72,12 @@ export function LoyaltyPage() {
     setSilverSpendInput(String(silver))
     setGoldSpendInput(String(gold))
     setDiamondSpendInput(String(diamond))
+    setDiscountInputs({
+      BRONZE: String(config.tiers.find((t) => t.tier === 'BRONZE')?.discountPercent ?? 0),
+      SILVER: String(config.tiers.find((t) => t.tier === 'SILVER')?.discountPercent ?? 5),
+      GOLD: String(config.tiers.find((t) => t.tier === 'GOLD')?.discountPercent ?? 8),
+      DIAMOND: String(config.tiers.find((t) => t.tier === 'DIAMOND')?.discountPercent ?? 12),
+    })
     setIsModalOpen(true)
   }
 
@@ -83,21 +95,25 @@ export function LoyaltyPage() {
             ...config.tiers[0],
             tier: 'BRONZE',
             minSpend: 0,
+            discountPercent: Number(discountInputs.BRONZE || 0),
           },
           {
             ...config.tiers[1],
             tier: 'SILVER',
             minSpend: Number(silverSpendInput),
+            discountPercent: Number(discountInputs.SILVER || 0),
           },
           {
             ...config.tiers[2],
             tier: 'GOLD',
             minSpend: Number(goldSpendInput),
+            discountPercent: Number(discountInputs.GOLD || 0),
           },
           {
             ...config.tiers[3],
             tier: 'DIAMOND',
             minSpend: Number(diamondSpendInput),
+            discountPercent: Number(discountInputs.DIAMOND || 0),
           },
         ],
       }
@@ -240,7 +256,7 @@ export function LoyaltyPage() {
             <div className="mt-4 rounded-xl bg-[#faefe7] px-4 py-2.5 flex items-center justify-between text-xs">
               <span className="text-[#5e473b]">Chiết khấu hạng (tầng 2):</span>
               <span className="font-mono text-sm font-extrabold text-[#9a3b20]">
-                {bronzeTier?.earnRatePercent ?? 0}%
+                {bronzeTier?.discountPercent ?? 0}%
               </span>
             </div>
 
@@ -291,7 +307,7 @@ export function LoyaltyPage() {
             <div className="mt-4 rounded-xl bg-[#faefe7] px-4 py-2.5 flex items-center justify-between text-xs">
               <span className="text-[#5e473b]">Chiết khấu hạng (tầng 2):</span>
               <span className="font-mono text-sm font-extrabold text-[#9a3b20]">
-                {silverTier?.earnRatePercent ?? 5}%
+                {silverTier?.discountPercent ?? 5}%
               </span>
             </div>
 
@@ -350,7 +366,7 @@ export function LoyaltyPage() {
             <div className="mt-4 rounded-xl bg-[#faefe7] px-4 py-2.5 flex items-center justify-between text-xs">
               <span className="text-[#5e473b]">Chiết khấu hạng (tầng 2):</span>
               <span className="font-mono text-sm font-extrabold text-[#9a3b20]">
-                {goldTier?.earnRatePercent ?? 8}%
+                {goldTier?.discountPercent ?? 8}%
               </span>
             </div>
 
@@ -405,7 +421,7 @@ export function LoyaltyPage() {
             <div className="mt-4 rounded-xl bg-[#faefe7] px-4 py-2.5 flex items-center justify-between text-xs">
               <span className="text-[#5e473b]">Chiết khấu hạng (tầng 2):</span>
               <span className="font-mono text-sm font-extrabold text-[#9a3b20]">
-                {diamondTier?.earnRatePercent ?? 12}%
+                {diamondTier?.discountPercent ?? 12}%
               </span>
             </div>
 
@@ -555,6 +571,32 @@ export function LoyaltyPage() {
                       required
                     />
                   </div>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-[#f2e6de] space-y-3">
+                <p className="text-xs font-extrabold uppercase tracking-wider text-[#8c673a]">
+                  % giảm giá từng hạng (tầng 2, áp lên mọi đơn của khách hạng đó)
+                </p>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  {([['BRONZE', 'Hạng ĐỒNG'], ['SILVER', 'Hạng BẠC'], ['GOLD', 'Hạng VÀNG'], ['DIAMOND', 'Hạng KIM CƯƠNG']] as const).map(([code, label]) => (
+                    <div key={code}>
+                      <label htmlFor={`discount-${code}`} className="block font-bold text-[#221712]">
+                        % giảm {label}
+                      </label>
+                      <input
+                        id={`discount-${code}`}
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={1}
+                        value={discountInputs[code]}
+                        onChange={(e) => setDiscountInputs((prev) => ({ ...prev, [code]: e.target.value }))}
+                        className="mt-1 w-full rounded-xl bg-[#fcf7f4] border border-[#e5d2c6] px-3.5 py-2 font-mono font-bold text-[#221712]"
+                        required
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
 
