@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Lock, Pause, Pencil, Play, Plus, Search } from 'lucide-react'
+import { BarChart3, Lock, Pause, Pencil, Play, Plus, Search } from 'lucide-react'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useCan } from '../../app/usePermission'
 import {
   Button,
@@ -42,6 +43,8 @@ function statusOf(p: PromotionView): { tone: StatusTone; label: string } {
 export function PromotionsPage() {
   const queryClient = useQueryClient()
   const canManage = useCan('PROMOTION_MANAGE')
+  const canReport = useCan('PROMOTION_REPORT')
+  const navigate = useNavigate()
   const [keyword, setKeyword] = useState('')
   const [type, setType] = useState<PromotionType | 'ALL'>('ALL')
   const [status, setStatus] = useState<PromotionStatus | 'ALL'>('ALL')
@@ -124,13 +127,24 @@ export function PromotionsPage() {
       },
     },
   ]
-  if (canManage) {
+  if (canManage || canReport) {
     columns.push({
       key: 'actions',
       header: '',
       align: 'right',
       render: (p) => (
         <div className="flex justify-end gap-1">
+          {canReport && (
+            <Button
+              size="sm"
+              variant="ghost"
+              icon={<BarChart3 className="size-3.5" aria-hidden="true" />}
+              onClick={() => navigate(`/promotions/${p.id}/report`)}
+            >
+              Xem hiệu quả
+            </Button>
+          )}
+          {canManage && (<>
           <Button
             size="sm"
             variant="ghost"
@@ -157,6 +171,7 @@ export function PromotionsPage() {
               Kích hoạt
             </Button>
           )}
+          </>)}
         </div>
       ),
     })

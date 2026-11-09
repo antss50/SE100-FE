@@ -2,11 +2,12 @@ import { buildRevenueSeries, computeRevenueFigures, withoutProfit } from '../../
 import { buildDashboard } from '../../domain/reports/dashboard'
 import { buildCustomerReport } from '../../domain/reports/customers'
 import { buildPurchaseReport } from '../../domain/reports/purchase'
+import { buildPromotionEffect } from '../../domain/reports/promotion-effect'
 import { buildSalesReport } from '../../domain/reports/sales'
 import { buildStockReport } from '../../domain/reports/stock'
 import { addDaysTo, previousRange, validateRange } from '../../domain/reports/period'
 import type { ReportGranularity, ReportRange, RevenueReport } from '../../types/reports'
-import { MockHttpError, ok } from '../http'
+import { MockHttpError, notFound, ok } from '../http'
 import type { MockRoute } from '../router'
 import { expiryWarningDays, todayOf } from '../stock-ledger'
 import { toDateOnly, toIsoLocal } from '../time'
@@ -135,5 +136,15 @@ export const reportRoutes: MockRoute[] = [
           permissions.includes('REPORT_DASHBOARD')
         )
       ),
+  },
+  {
+    method: 'GET',
+    path: '/promotions/:id/effect',
+    permission: 'PROMOTION_REPORT',
+    handler: ({ db, params, query, now }) => {
+      const promotion = db.read('promotions').find((p) => String(p.id) === params.id)
+      if (!promotion) throw notFound('PROMOTION_NOT_FOUND', 'Không tìm thấy chương trình khuyến mãi')
+      return ok(buildPromotionEffect(db.read('orders'), promotion, rangeFromQuery(query, now)))
+    },
   },
 ]
