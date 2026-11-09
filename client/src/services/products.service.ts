@@ -75,7 +75,7 @@ export const productsService = {
   },
 
   /** PROD-01: PATCH /products/{sku}/deactivate */
-  deactivateProduct(sku: string): Promise<ApiSuccessResponse<StatusChange<'sku', 'INACTIVE'>>> {
+  deactivateProduct(sku: string): Promise<ApiSuccessResponse<StatusChange<'sku', 'DISCONTINUED'>>> {
     return send('PATCH', `/products/${seg(sku)}/deactivate`)
   },
 

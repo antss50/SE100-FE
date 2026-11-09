@@ -153,7 +153,6 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Settings,
         permission: 'SYSTEM_SETTINGS_MANAGE',
         uc: 'AUTH-07',
-        plannedPhase: 3,
       },
     ],
   },

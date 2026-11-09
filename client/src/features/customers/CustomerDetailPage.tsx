@@ -27,10 +27,12 @@ import {
 } from '../../utils/customer-note'
 import type { CustomerItem, SkinType } from '../../types/api'
 import {
+  formatAnyDateTime,
   formatCurrency,
   formatNumber,
   getInitials,
   getSkinTypeLabel,
+  pointActionLabel,
 } from '../../utils/format'
 
 export function CustomerDetailPage() {
@@ -356,7 +358,7 @@ export function CustomerDetailPage() {
               <strong className="font-mono text-[#9a462d]">
                 {customer.lastOrderCode || '#HD-90823'}
               </strong>{' '}
-              {customer.lastOrderBranch || 'Chi nhánh Q.1'}
+              Tại cửa hàng
             </p>
           </div>
         </div>
@@ -522,7 +524,7 @@ export function CustomerDetailPage() {
                           {ord.orderCode}
                         </td>
                         <td className="py-4 px-4 font-mono text-[11px] text-[#5e473b]">
-                          {ord.purchasedAt}
+                          {formatAnyDateTime(ord.purchasedAt)}
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-3">
@@ -610,7 +612,7 @@ export function CustomerDetailPage() {
         {activeTab === 'POINTS' && (
           <div className="rounded-3xl bg-white border border-[#ead9ce] p-6 shadow-2xs space-y-4">
             <h3 className="text-sm font-bold text-[#221712]">
-              10 giao dịch tích/trừ điểm thưởng gần nhất (POINT_HISTORIES)
+              Lịch sử điểm thưởng: tích, dùng, thu hồi, điều chỉnh (POINT_HISTORIES)
             </h3>
 
             {customer.pointHistories && customer.pointHistories.length > 0 ? (
@@ -629,14 +631,14 @@ export function CustomerDetailPage() {
                               : 'bg-amber-50 text-amber-800'
                           }`}
                         >
-                          {ph.actionType}
+                          {pointActionLabel(ph.actionType)}
                         </span>
                         <span className="font-bold text-[#221712]">
                           {ph.description || `Giao dịch đơn #${ph.orderId}`}
                         </span>
                       </div>
                       <p className="mt-1 font-mono text-[11px] text-[#8a7062]">
-                        Thời gian: {ph.createdAt}
+                        Thời gian: {formatAnyDateTime(ph.createdAt)}
                       </p>
                     </div>
 

@@ -43,6 +43,7 @@ const OrderDetailPage = lazyNamed(() => import('../features/orders/OrderDetailPa
 const ReturnsListPage = lazyNamed(() => import('../features/returns/ReturnsListPage'), 'ReturnsListPage')
 const ReturnCreatePage = lazyNamed(() => import('../features/returns/ReturnCreatePage'), 'ReturnCreatePage')
 const ReturnDetailPage = lazyNamed(() => import('../features/returns/ReturnDetailPage'), 'ReturnDetailPage')
+const SettingsPage = lazyNamed(() => import('../features/settings/SettingsPage'), 'SettingsPage')
 const ComingSoonPage = lazy(async () => ({ default: (await import('../features/common/ComingSoonPage')).ComingSoonPage }))
 
 /** Màn hình đã có, theo đường dẫn mục menu. Mục không có ở đây dùng trang "Đang phát triển". */
@@ -62,6 +63,7 @@ const PAGES: Record<string, ComponentType> = {
   '/shifts': ShiftsPage,
   '/orders': OrdersListPage,
   '/returns': ReturnsListPage,
+  '/settings': SettingsPage,
 }
 
 /** Route con không có trên menu. */

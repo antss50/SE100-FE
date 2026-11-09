@@ -112,7 +112,7 @@ export function CreateProductModal({
     normalizeProductImages(editingProduct?.images, editingProduct?.imageUrl)
   )
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
-  const [status, setStatus] = useState<'ACTIVE' | 'INACTIVE'>(
+  const [status, setStatus] = useState<'ACTIVE' | 'DISCONTINUED'>(
     () => editingProduct?.status || 'ACTIVE'
   )
 
@@ -289,7 +289,7 @@ export function CreateProductModal({
   }
 
   // UC-PROD-07 & UC-PROD-08: Ngừng kinh doanh / Khôi phục sản phẩm
-  const handleToggleProductStatus = async (clearStockFirst = false) => {
+  const handleToggleProductStatus = async () => {
     if (!editingProduct) return
     setErrorMsg(null)
     setHasStockConflict(false)
@@ -300,12 +300,11 @@ export function CreateProductModal({
       if (status === 'ACTIVE') {
         const res = await productsService.deactivateProduct(editingProduct.sku)
         setStatus(res.data.status)
-        if (clearStockFirst) setCurrentStock(0)
         setSuccessMsg(`${res.message} (${res.data.sku} -> ${res.data.status})`)
         onSaved({
           ...editingProduct,
           status: res.data.status,
-          currentStock: clearStockFirst ? 0 : currentStock,
+          currentStock,
         })
       } else {
         const res = await productsService.restoreProduct(editingProduct.sku)
@@ -452,16 +451,9 @@ export function CreateProductModal({
                   <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-red-200/80">
                     <span className="text-[11px] text-red-700 font-medium">
                       Tồn kho hiện tại của {editingProduct.sku}:{' '}
-                      <strong>{currentStock}</strong> đơn vị (Quy tắc
-                      UC-PROD-07).
+                      <strong>{currentStock}</strong> đơn vị. Muốn hết tồn hãy
+                      lập phiếu xuất hủy hoặc trả NCC (luật 28).
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleProductStatus(true)}
-                      className="px-3 py-1.5 rounded-lg bg-red-700 hover:bg-red-800 text-white text-[11px] font-bold transition cursor-pointer"
-                    >
-                      Xuất/Đặt tồn kho = 0 & Ngừng kinh doanh
-                    </button>
                   </div>
                 )}
               </div>
@@ -772,14 +764,14 @@ export function CreateProductModal({
                       >
                         {status === 'ACTIVE'
                           ? 'Đang kinh doanh (ACTIVE)'
-                          : 'Ngừng kinh doanh (INACTIVE)'}
+                          : 'Ngừng kinh doanh (DISCONTINUED)'}
                       </span>
                     </div>
 
                     <button
                       type="button"
                       disabled={isSubmitting}
-                      onClick={() => handleToggleProductStatus(false)}
+                      onClick={() => handleToggleProductStatus()}
                       className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
                         status === 'ACTIVE'
                           ? 'bg-red-50 hover:bg-red-100 text-red-700 border border-red-200'

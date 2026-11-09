@@ -362,19 +362,10 @@ export function InventoryPage() {
         <div className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-xs font-semibold text-red-800 flex flex-wrap items-center justify-between gap-3">
           <span>{pageError.message}</span>
           <div className="flex items-center gap-2">
-            {pageError.isStockConflict && pageError.sku && (
-              <button
-                type="button"
-                onClick={() => {
-                  const prod = products.find((p) => p.sku === pageError.sku)
-                  if (prod) {
-                    handleToggleProductStatus(prod)
-                  }
-                }}
-                className="px-3 py-1.5 rounded-xl bg-red-700 hover:bg-red-800 text-white text-[11px] font-bold transition cursor-pointer"
-              >
-                Xuất/Đặt tồn = 0 & Ngừng kinh doanh ({pageError.sku})
-              </button>
+            {pageError.isStockConflict && (
+              <span className="text-[11px] font-medium text-red-700">
+                Muốn hết tồn hãy lập phiếu xuất hủy hoặc trả NCC (mọi thay đổi tồn phải có thẻ kho).
+              </span>
             )}
             <button
               type="button"
@@ -577,7 +568,7 @@ export function InventoryPage() {
           >
             <option value="ACTIVE">Đang kinh doanh (ACTIVE)</option>
             <option value="LOW_STOCK">Dưới định mức an toàn</option>
-            <option value="INACTIVE">Ngừng kinh doanh (INACTIVE)</option>
+            <option value="DISCONTINUED">Ngừng kinh doanh</option>
             <option value="ALL">Tất cả trạng thái</option>
           </select>
 
@@ -619,7 +610,7 @@ export function InventoryPage() {
                     onClick={() => handleOpenEditProduct(prod)}
                     title="Bấm để xem chi tiết hoặc chỉnh sửa sản phẩm"
                     className={`hover:bg-[#fdf9f6] transition cursor-pointer group ${
-                      prod.status === 'INACTIVE' ? 'opacity-70 bg-zinc-50/40' : ''
+                      prod.status === 'DISCONTINUED' ? 'opacity-70 bg-zinc-50/40' : ''
                     }`}
                   >
                     {/* Column 1: Product Thumbnail + Name + Description */}
@@ -631,7 +622,7 @@ export function InventoryPage() {
                             <p className="font-extrabold text-sm text-[#221712] group-hover:text-[#9a3b20] transition">
                               {prod.productName}
                             </p>
-                            {prod.status === 'INACTIVE' ? (
+                            {prod.status === 'DISCONTINUED' ? (
                               <span className="px-2 py-0.5 rounded-full bg-zinc-200 text-zinc-700 text-[10px] font-bold">
                                 Ngừng KD
                               </span>

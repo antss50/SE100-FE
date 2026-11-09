@@ -2,7 +2,7 @@
 
 > Mục đích: tiết kiệm token. Agent mới **đọc file này + CLAUDE.md + phần tài liệu nghiệp vụ của UC được giao**, rồi code luôn. Không `ls`/đọc lại toàn bộ `src/` để tìm hiểu cấu trúc. Chỉ mở file khi cần sửa nó.
 > Agent học thêm điều gì mới (quy ước, bẫy, hàm dùng chung) thì **thêm vào mục 9 "Ghi chú tích lũy"** ở cuối file này, ngắn gọn.
-> Cập nhật lần cuối: 2026-11-09 (sau GĐ0 + B1 + GĐ1 Kho).
+> Cập nhật lần cuối: 2026-11-09 (sau GĐ0 + B1 + GĐ1 Kho + GĐ2 bán hàng).
 
 ## 1. Cách làm hiện tại (D21–D23)
 
@@ -42,7 +42,7 @@ Style màu: token Tailwind `@theme` trong `index.css` (`bg-accent-soft`, `text-m
 
 1. **Type** trong `src/types/<module>.ts` (camelCase 1-1 với cột DATABASE.md; enum giữ nguyên giá trị mục 7).
 2. **Seed** trong `src/mocks/seed/<module>.ts` (hàm `seedXxx(today: Date)`, ngày tính tương đối bằng `addDays` từ `mocks/time.ts`).
-3. **Bảng mock**: thêm vào `MockTables` + `buildSeed()` trong `mocks/db.ts`; **tăng `MOCK_DB_VERSION`** (đang là 5) mỗi khi đổi cấu trúc/seed.
+3. **Bảng mock**: thêm vào `MockTables` + `buildSeed()` trong `mocks/db.ts`; **tăng `MOCK_DB_VERSION`** (đang là 7) mỗi khi đổi cấu trúc/seed.
 4. **Handler** `src/mocks/handlers/<module>.ts` xuất mảng `MockRoute[]`; đăng ký trong `mocks/index.ts` (`mockRoutes`).
 5. **Service** `src/services/<module>.service.ts` gọi `apiRequest`.
 6. **Query key** trong `lib/query-keys.ts`.
@@ -91,3 +91,6 @@ Xem CLAUDE.md mục 3 (UC → PDF). Tài liệu: bảng trong `docs/DATABASE.md`
 - GĐ1 — UI dùng chung mới: `app/usePermission.ts` (`useCan(quyền)`), `utils/error.ts` (`getErrorMessage`), `utils/format.ts` thêm `formatDate`/`formatDateTime`, `features/stock/LotPicker.tsx` (chọn lô cho kiểm kho/xuất khác), `ExpiryBadge`, `FefoScanPanel`. Chuyển trang kèm dữ liệu qua `navigate(path, { state: { batchIds, issueType } })` (màn Tồn kho → `/inventory-checks/new`, `/disposals/new`).
 - GĐ1 — cách chạy thử mock mà không viết test: bundle bằng `npx rolldown src/mocks/index.ts --format esm --platform node -o <scratchpad>/mocks.mjs`, `sed` thay `import.meta.env.VITE_MOCK_DELAY_MS` bằng `"0"`, polyfill `localStorage` bằng Map rồi gọi `handleMockRequest(path, {method, headers: new Headers(...), body})` trong một file `.mjs` ở scratchpad (không đưa vào repo). Đã kiểm: nhập kho + idempotency + bình quân gia quyền, kiểm kho, xuất khác, quyền thu ngân.
 - Công cụ Bash của agent đôi khi báo `unexpected EOF while looking for matching '` với heredoc/chuỗi chứa dấu nháy lẫn tiếng Việt: ghi file bằng công cụ Write/Edit thay vì heredoc dài.
+- GĐ2 — **bán hàng** (mock = "máy chủ"): `mocks/sales-engine.ts` `priceCart(db, cart, now, {exchangeCreditAmount})` = `domain/pricing.calculateOrder` + phân bổ lô FEFO (lô đổi tay đứng đầu) → `OrderQuote`; `mocks/sales-complete.ts` `completeSale` (một giao dịch: trừ tồn bằng `applyStockChange` `SALE`, ghi ORDERS/ORDER_DETAILS, tích/dùng điểm bằng `mocks/loyalty.ts` `recordPoints`, xét hạng, audit `OVERRIDE_FEFO`); `mocks/returns-engine.ts` (`evaluateReturn` dùng `calculateReturn`, `describeReturnable`); `mocks/sales-views.ts` (`summarizeShift`, `cashInDrawer`, `amountDueOf`); `mocks/promotion-engine.ts` (`buildUsageIndex` đếm lượt từ đơn COMPLETED, `toDomainPromotions`). Bảng mock mới: `orders` (kèm `lines`, đơn nháp lưu `draftCart`), `returns` (kèm `lines`), `returnPolicies`; `promotions` đổi sang `PromotionRecord` (DATABASE.md 24, id số); `shifts` = `CashierShift`. `MOCK_DB_VERSION = 7`.
+- GĐ2 — FE bán hàng: `features/pos/` (PosPage + `components/` + `pos-store.ts` Zustand giỏ nháp + `receipt.ts` in hóa đơn bằng cửa sổ mới, lỗi in chỉ báo), `features/orders/`, `features/returns/`, `features/shifts/`, `features/settings/`, `features/promotions/` (PromotionFormModal + PromotionEditors). Phím tắt POS F1-F4, F8, F9 gắn ở `PosPage`. Services: `orders.service.ts`, `returns.service.ts`, `shifts.service.ts`, `settings.service.ts`, `promotions.service.ts` (theo id). Kiểu: `types/pos.ts`, `types/promotions.ts`, `types/settings.ts`. Điểm dùng/giá trị 1 điểm: `SYSTEM_SETTINGS` là nguồn duy nhất (`mocks/loyalty.ts` `loyaltySettings`).
+- GĐ2 — bẫy: nhiều file trong repo là CRLF nên `node -e` replace chuỗi nhiều dòng hay trượt (dùng công cụ Edit, hoặc regex `\r?\n`); `node -e` trong bash với chuỗi tiếng Việt có dấu nháy/`${}` dễ vỡ, ghi file bằng Write. Chạy thử mock: bundle `npx rolldown src/mocks/index.ts --format esm --platform node -o <scratch>/mocks.mjs` rồi `sed` VITE_MOCK_DELAY_MS thành `"0"`; đã có kịch bản bán hàng, hoàn tất, chốt ca, trả hàng, đổi hàng chạy qua (scratchpad, không đưa vào repo). Router mock chặn người `mustChangePassword` ngoài nhóm `/auth` (luật 47).

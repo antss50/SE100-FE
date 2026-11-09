@@ -16,12 +16,12 @@
 |---|---|---|---|---|
 | AUTH-01 | Đăng nhập | 3 | Chưa làm | Có code cũ |
 | AUTH-02 | Đăng xuất | 3 | Chưa làm | Có code cũ |
-| AUTH-03 | Đổi mật khẩu | 3 | Chưa làm | Có code cũ |
+| AUTH-03 | Đổi mật khẩu | 3 | Đang test | Bắt đổi MK lần đầu: hộp không đóng được, mock chặn API (luật 47) |
 | AUTH-04 | Quản lý tài khoản nhân viên | 3 | Chưa làm | Có code cũ |
 | AUTH-05 | Vai trò & phân quyền | 3 | Chưa làm | Có code cũ |
 | AUTH-06 | Nhật ký hệ thống | 6 | Chưa làm | |
-| AUTH-07 | Cấu hình hệ thống | 3 | Chưa làm | |
-| PROD-01 | Sản phẩm / SKU | 3 | Chưa làm | Có code cũ |
+| AUTH-07 | Cấu hình hệ thống | 3 | Đang test | Màn /settings + API; nguồn duy nhất cho tham số điểm |
+| PROD-01 | Sản phẩm / SKU | 3 | Đang test | Status ACTIVE/DISCONTINUED, bỏ nút đặt tồn = 0 |
 | PROD-02 | Danh mục | 3 | Chưa làm | Có code cũ |
 | PROD-03 | Thương hiệu | 3 | Chưa làm | Có code cũ |
 | SUPP-01 | Quản lý NCC | 1 | Đang test | |
@@ -34,11 +34,11 @@
 | STK-05 | Duyệt kiểm kho | 2 | Đang test | |
 | STK-06 | Lập phiếu xuất khác | 2 | Đang test | |
 | STK-07 | Duyệt phiếu xuất khác | 2 | Đang test | |
-| CUS-01 | Tra cứu & hồ sơ KH | 3 | Chưa làm | Có code cũ |
+| CUS-01 | Tra cứu & hồ sơ KH | 3 | Đang test | Mã KH KH0007; bỏ chi nhánh |
 | CUS-02 | Quản lý hồ sơ KH | 3 | Chưa làm | Có code cũ |
-| CUS-03 | Tích/thu hồi điểm, xét hạng (hệ thống) | 3 | Chưa làm | Hiện ở lịch sử điểm |
+| CUS-03 | Tích/thu hồi điểm, xét hạng (hệ thống) | 3 | Đang test | Lịch sử điểm EARN/REDEEM/REVOKE/ADJUST trong hồ sơ khách; tích/thu hồi chạy ở POS |
 | CUS-04 | Dùng điểm khi thanh toán | 4 | Đang test | Dùng điểm tối đa theo POINT_MAX_REDEEM_PERCENT |
-| CUS-05 | Cấu hình điểm & hạng | 3 | Chưa làm | Có code cũ |
+| CUS-05 | Cấu hình điểm & hạng | 3 | Đang test | Đọc/ghi điểm qua SYSTEM_SETTINGS; hiển thị chiết khấu hạng (Q4) |
 | PROM-01 | Tra cứu KM | 3 | Đang test | 7 loại, phase theo ngày |
 | PROM-02 | Quản lý KM | 3 | Đang test | 7 loại, khóa sửa khi có đơn |
 | PROM-03 | Áp voucher khi bán | 4 | Đang test | Voucher qua domain pricing |
@@ -70,3 +70,6 @@ Agent ghi câu hỏi ở đây thay vì tự đoán. Chủ dự án trả lời 
 | Q1 | 0 | Nút "Quét FEFO" trên header (thiết kế LUMINA) làm gì? Tài liệu không mô tả. | Mở màn tra cứu tồn theo lô (STK-02) với ô quét barcode được focus sẵn. GĐ0 tạm cho nút chuyển tới `/stock`, chỉ hiện với người có quyền xem tồn. | |
 | Q2 | 1 | Kiểm kho (STK-04): ô giải trình chênh lệch từng lô có bắt buộc khi `differenceQty ≠ 0` không? Tài liệu chỉ ghi `note` là "Giải trình chênh lệch", không nói bắt buộc. | Hiện để tùy chọn (giao diện chỉ gợi ý). Nếu bắt buộc: thêm kiểm tra ở `submit` (422 `STK_CHECK_NOTE_REQUIRED`) và đánh dấu * ở cột giải trình. | Không bắt buộc (D30) |
 | Q3 | 1 | Phiếu xuất khác loại trả NCC (STK-06): thiết kế có nhà cung cấp, người nhận hàng trả, tham chiếu phiếu nhập, nhưng bảng DISPOSAL_REQUESTS không có cột nào cho các thông tin này. Có thêm cột (vd. `supplier_id`, `po_id`) không? | Giữ theo DATABASE.md (không có), nhập thông tin NCC vào ô diễn giải lý do. Nếu cần: thêm `supplier_id`, `ref_po_id` vào DISPOSAL_REQUESTS rồi cập nhật form. | Giữ theo DATABASE.md, không lưu NCC (D30) |
+| Q4 | 2 | `CUSTOMER_TIERS.discount_rate` (QUY_TAC mục 9: "mốc chi tiêu và % giảm từng hạng" chỉnh được) nên sửa ở đâu? Màn CUS-05 hiện chỉ sửa mốc chi tiêu. | Thêm ô "% giảm" từng hạng vào màn CUS-05 và lưu cùng `PUT /loyalty-config` (mock đang để cố định 0/5/8/12%). | |
+| Q5 | 2 | Voucher riêng 1 khách (`PROMOTIONS.customer_id`, "quản lý tạo thủ công khi cần"): chọn khách ở đâu trong form tạo khuyến mãi? | Thêm ô tìm khách theo SĐT vào form loại `VOUCHER` (khi chọn thì chỉ khách đó dùng được). | |
+| Q6 | 2 | Đơn đổi hàng (`exchange_return_id`) hoàn tất: voucher/khuyến mãi áp bình thường trên hàng mới, hay đơn đổi không được dùng voucher (vì đã có giá trị quy đổi)? Tài liệu chỉ nói tổng đơn phải ≥ giá trị hàng trả. | Cho áp khuyến mãi như đơn thường; giá trị quy đổi chỉ trừ ở bước thanh toán (đang làm vậy). | |

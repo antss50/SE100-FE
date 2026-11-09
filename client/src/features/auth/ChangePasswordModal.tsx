@@ -6,9 +6,12 @@ import { ApiClientError } from '../../lib/api-client'
 import { authService } from '../../services/auth.service'
 
 export function ChangePasswordModal() {
-  const isOpen = useUiStore((s) => s.isChangePasswordOpen)
+  const requested = useUiStore((s) => s.isChangePasswordOpen)
   const closeChangePassword = useUiStore((s) => s.closeChangePassword)
   const user = useAuthStore((s) => s.user)
+  // Luật 47: tài khoản bắt buộc đổi mật khẩu lần đầu thì hộp này luôn mở và không đóng được.
+  const forced = Boolean(user?.mustChangePassword)
+  const isOpen = requested || forced
   const clearSession = useAuthStore((s) => s.clearSession)
   const navigate = useNavigate()
 
@@ -28,6 +31,10 @@ export function ChangePasswordModal() {
     setErrorMsg(null)
     setSuccessMsg(null)
     closeChangePassword()
+    if (forced) {
+      clearSession()
+      navigate('/login')
+    }
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -82,13 +89,16 @@ export function ChangePasswordModal() {
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={handleClose}
-            className="rounded-lg p-1.5 text-[#8c7365] hover:bg-[#f6ede7]"
-          >
-            <X className="size-4" />
-          </button>
+          {!forced && (
+            <button
+              type="button"
+              aria-label="Đóng"
+              onClick={handleClose}
+              className="rounded-lg p-1.5 text-[#8c7365] hover:bg-[#f6ede7]"
+            >
+              <X className="size-4" />
+            </button>
+          )}
         </div>
 
         {user?.mustChangePassword && (
@@ -173,7 +183,7 @@ export function ChangePasswordModal() {
               onClick={handleClose}
               className="px-4 py-2.5 rounded-xl border border-[#e3d2c7] text-xs font-semibold text-[#644c40] hover:bg-[#f8f0eb]"
             >
-              Hủy bỏ
+              {forced ? 'Đăng xuất' : 'Hủy bỏ'}
             </button>
             <button
               type="submit"

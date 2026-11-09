@@ -238,7 +238,7 @@ export function LoyaltyPage() {
             </p>
 
             <div className="mt-4 rounded-xl bg-[#faefe7] px-4 py-2.5 flex items-center justify-between text-xs">
-              <span className="text-[#5e473b]">Tỷ lệ tích điểm:</span>
+              <span className="text-[#5e473b]">Chiết khấu hạng (tầng 2):</span>
               <span className="font-mono text-sm font-extrabold text-[#9a3b20]">
                 {bronzeTier?.earnRatePercent ?? 0}%
               </span>
@@ -289,9 +289,9 @@ export function LoyaltyPage() {
             </p>
 
             <div className="mt-4 rounded-xl bg-[#faefe7] px-4 py-2.5 flex items-center justify-between text-xs">
-              <span className="text-[#5e473b]">Tỷ lệ tích điểm:</span>
+              <span className="text-[#5e473b]">Chiết khấu hạng (tầng 2):</span>
               <span className="font-mono text-sm font-extrabold text-[#9a3b20]">
-                {silverTier?.earnRatePercent ?? 3}%
+                {silverTier?.earnRatePercent ?? 5}%
               </span>
             </div>
 
@@ -348,9 +348,9 @@ export function LoyaltyPage() {
             </p>
 
             <div className="mt-4 rounded-xl bg-[#faefe7] px-4 py-2.5 flex items-center justify-between text-xs">
-              <span className="text-[#5e473b]">Tỷ lệ tích điểm:</span>
+              <span className="text-[#5e473b]">Chiết khấu hạng (tầng 2):</span>
               <span className="font-mono text-sm font-extrabold text-[#9a3b20]">
-                {goldTier?.earnRatePercent ?? 5}%
+                {goldTier?.earnRatePercent ?? 8}%
               </span>
             </div>
 
@@ -403,9 +403,9 @@ export function LoyaltyPage() {
             </p>
 
             <div className="mt-4 rounded-xl bg-[#faefe7] px-4 py-2.5 flex items-center justify-between text-xs">
-              <span className="text-[#5e473b]">Tỷ lệ tích điểm:</span>
+              <span className="text-[#5e473b]">Chiết khấu hạng (tầng 2):</span>
               <span className="font-mono text-sm font-extrabold text-[#9a3b20]">
-                {diamondTier?.earnRatePercent ?? 8}%
+                {diamondTier?.earnRatePercent ?? 12}%
               </span>
             </div>
 

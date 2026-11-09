@@ -85,7 +85,7 @@ export const customerRoutes: MockRoute[] = [
       const id = customers.reduce((max, c) => Math.max(max, c.id), 0) + 1
       const created: CustomerItem = {
         id,
-        customerCode: `KH-${String(id).padStart(4, '0')}`,
+        customerCode: `KH${String(id).padStart(4, '0')}`,
         phoneNumber: input.phoneNumber,
         fullName: input.fullName,
         email: input.email || undefined,

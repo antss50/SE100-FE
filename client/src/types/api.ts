@@ -239,7 +239,6 @@ export interface CustomerItem {
   completedOrdersCount?: number
   lastOrderText?: string
   lastOrderCode?: string
-  lastOrderBranch?: string
   favoriteBrands?: string
   pointHistories?: PointHistoryItem[]
   orderHistories?: CustomerOrderHistoryItem[]
@@ -370,7 +369,7 @@ export interface ProductItem {
   images?: ProductImageItem[]
   /** `false` = SKU tester của hãng: không bao giờ bán ở POS, chỉ xuất bằng phiếu TESTER/DESTROY (DATABASE.md mục 11). */
   isSellable?: boolean
-  status: 'ACTIVE' | 'INACTIVE'
+  status: 'ACTIVE' | 'DISCONTINUED'
   visualTheme?: 'serum' | 'lipstick' | 'sunscreen' | 'cleanser' | 'tint'
 }
 

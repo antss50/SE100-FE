@@ -214,9 +214,9 @@ const productRoutes: MockRoute[] = [
       if ((target.currentStock ?? 0) > 0) {
         throw new MockHttpError(409, 'PROD_HAS_STOCK', 'Sản phẩm còn tồn kho, không thể ngừng kinh doanh')
       }
-      target.status = 'INACTIVE'
+      target.status = 'DISCONTINUED'
       db.touch('products')
-      return ok({ sku: target.sku, status: 'INACTIVE' as const }, 'Ngừng kinh doanh sản phẩm thành công')
+      return ok({ sku: target.sku, status: 'DISCONTINUED' as const }, 'Ngừng kinh doanh sản phẩm thành công')
     },
   },
   {

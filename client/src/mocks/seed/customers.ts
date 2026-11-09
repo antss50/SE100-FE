@@ -19,7 +19,6 @@ export const SEED_CUSTOMERS: CustomerItem[] = [
     completedOrdersCount: 26,
     lastOrderText: 'Hôm qua, 14:20',
     lastOrderCode: '#HD-90823',
-    lastOrderBranch: 'Chi nhánh Q.1',
     favoriteBrands: 'Estée Lauder, YSL',
     note: serializeCustomerNote({
       skinConcerns: ['Chống lão hóa', 'Nhạy cảm nhẹ'],
@@ -150,7 +149,6 @@ export const SEED_CUSTOMERS: CustomerItem[] = [
     completedOrdersCount: 14,
     lastOrderText: '3 ngày trước, 16:10',
     lastOrderCode: '#HD-90412',
-    lastOrderBranch: 'Chi nhánh Q.1',
     note: serializeCustomerNote({
       skinConcerns: ['Mụn ẩn', 'Lỗ chân lông to'],
       allergyNote: 'Dị ứng BHA nồng độ > 2% và tinh dầu bạc hà',
@@ -192,7 +190,6 @@ export const SEED_CUSTOMERS: CustomerItem[] = [
     completedOrdersCount: 6,
     lastOrderText: '12/10/2024, 11:05',
     lastOrderCode: '#HD-88901',
-    lastOrderBranch: 'Chi nhánh Q.1',
     note: serializeCustomerNote({
       skinConcerns: ['Lão hóa', 'Thâm nám'],
       allergyNote: 'Không có tiền sử dị ứng',
@@ -224,7 +221,6 @@ export const SEED_CUSTOMERS: CustomerItem[] = [
     completedOrdersCount: 2,
     lastOrderText: '01/10/2024, 19:30',
     lastOrderCode: '#HD-87012',
-    lastOrderBranch: 'Chi nhánh Q.1',
     note: 'Khách vãng lai chưa lưu chi tiết loại da chuyên sâu',
     tier: {
       id: 1,
@@ -251,7 +247,6 @@ export const SEED_CUSTOMERS: CustomerItem[] = [
     completedOrdersCount: 5,
     lastOrderText: '15/03/2024, 15:00',
     lastOrderCode: '#HD-71022',
-    lastOrderBranch: 'Chi nhánh Q.1',
     note: 'Yêu cầu bảo mật thông tin cá nhân',
     tier: {
       id: 2,
@@ -278,7 +273,6 @@ export const SEED_CUSTOMERS: CustomerItem[] = [
     completedOrdersCount: 7,
     lastOrderText: '18/10/2024, 10:20',
     lastOrderCode: '#HD-89550',
-    lastOrderBranch: 'Chi nhánh Q.1',
     note: 'Khách hàng thân thiết mua định kỳ kem chống nắng mỗi 2 tháng',
     tier: {
       id: 2,

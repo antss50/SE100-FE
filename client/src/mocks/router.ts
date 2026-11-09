@@ -102,6 +102,10 @@ export async function dispatch(
     if (!route.public && !user) {
       throw new MockHttpError(401, 'AUTH_UNAUTHORIZED', 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn')
     }
+    // Luật 47: chưa đổi mật khẩu lần đầu thì chỉ được gọi nhóm /auth.
+    if (user?.mustChangePassword && !route.public && !route.path.startsWith('/auth/')) {
+      throw new MockHttpError(403, 'AUTH_PASSWORD_CHANGE_REQUIRED', 'Bạn cần đổi mật khẩu lần đầu trước khi sử dụng hệ thống')
+    }
     const permissions = user ? permissionsOfUser(db, user) : []
     if (!route.public && !hasPermission(permissions, route.permission)) {
       throw new MockHttpError(403, 'AUTH_FORBIDDEN', 'Bạn không có quyền thực hiện thao tác này')

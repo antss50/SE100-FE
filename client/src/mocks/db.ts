@@ -78,7 +78,7 @@ export type TableName = keyof MockTables
  * Phiên bản cấu trúc seed. Đổi cấu trúc bảng hoặc dữ liệu seed thì tăng số này
  * (CLAUDE.md mục 5.2) để trình duyệt bỏ dữ liệu cũ.
  */
-export const MOCK_DB_VERSION = 6
+export const MOCK_DB_VERSION = 7
 const KEY_PREFIX = 'se100_mock_'
 const keyOf = (table: string) => `${KEY_PREFIX}${table}_v${MOCK_DB_VERSION}`
 const META_KEY = keyOf('meta')

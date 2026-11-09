@@ -149,3 +149,21 @@ export function formatDateTime(value?: string | null): string {
   if (Number.isNaN(d.getTime())) return '—'
   return `${formatDate(value)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`
 }
+
+const ACTION_LABELS: Record<string, string> = {
+  EARN: 'Tích điểm',
+  REDEEM: 'Dùng điểm',
+  REVOKE: 'Thu hồi điểm',
+  ADJUST: 'Điều chỉnh',
+}
+
+/** Nhãn tiếng Việt của POINT_HISTORIES.action_type (CUS-03). */
+export function pointActionLabel(actionType: string): string {
+  return ACTION_LABELS[actionType] ?? actionType
+}
+
+/** ISO thì định dạng `dd/MM/yyyy HH:mm`; chuỗi đã định dạng sẵn (dữ liệu mẫu cũ) thì giữ nguyên. */
+export function formatAnyDateTime(value?: string | null): string {
+  if (!value) return '—'
+  return /^\d{4}-\d{2}-\d{2}T/.test(value) ? formatDateTime(value) : value
+}

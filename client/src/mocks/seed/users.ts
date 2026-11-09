@@ -66,7 +66,7 @@ export const SEED_USERS: MockUser[] = [
         title: 'Vừa duyệt Phiếu hủy lô',
         highlightCode: 'PKK-20241012-01',
         description:
-          '12 chai Serum B5 La Roche-Posay cận hạn 15 ngày · Chi nhánh Flagship Q.1',
+          '12 chai Serum B5 La Roche-Posay cận hạn 15 ngày',
         timestamp: 'Hôm nay · 14:28:19',
         severity: 'warning',
       },
