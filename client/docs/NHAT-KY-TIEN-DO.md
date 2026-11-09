@@ -59,3 +59,4 @@ Không xóa hay sửa dòng cũ; ghi sai thì thêm dòng mới đính chính.
 | 2026-11-09 08:55 | fe-coder | 1 | Xong việc | STK-02/03: types stock + inventory (kiểm kho, xuất khác), handler /stock/*, màn Tồn kho (tab cận hạn/cách ly, quét FEFO D19, thu ngân chỉ thấy tồn khả dụng), chi tiết lô + thẻ kho; build qua |
 | 2026-11-09 08:55 | fe-coder | 1 | Commit | 14cba6f feat(stk-01) đã commit trước đó |
 | 2026-11-09 08:58 | fe-coder | 1 | Xong việc | STK-04/05 kiểm kho: handler inventory-checks (chụp tồn + khóa lô, ô trống != 0, gửi duyệt/tự hoàn tất, duyệt cộng chênh vào tồn hiện tại + CHECK_ADJUST, từ chối bắt buộc lý do), LotPicker dùng chung, màn danh sách/tạo/nhập kết quả/duyệt; build qua |
+| 2026-11-09 09:01 | fe-coder | 1 | Xong việc | STK-06/07 xuất hủy/tester/trả NCC: handler disposals (cách ly ngay, duyệt trừ tồn + thẻ kho DISPOSAL/TESTER/SUPPLIER_RETURN, từ chối trả cách ly), màn danh sách/tạo/chi tiết duyệt; build qua |

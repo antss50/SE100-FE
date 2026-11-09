@@ -39,8 +39,8 @@ Trạng thái: `Chưa làm` · `Đang code` · `Đang test` · `Đang sửa` · 
 | STK-03 | Cận hạn / hết hạn | 2 | Đang test | |
 | STK-04 | Lập phiếu kiểm kho | 2 | Đang test | |
 | STK-05 | Duyệt kiểm kho | 2 | Đang test | |
-| STK-06 | Lập phiếu xuất khác | 2 | Chưa làm | |
-| STK-07 | Duyệt phiếu xuất khác | 2 | Chưa làm | |
+| STK-06 | Lập phiếu xuất khác | 2 | Đang test | |
+| STK-07 | Duyệt phiếu xuất khác | 2 | Đang test | |
 | CUS-01 | Tra cứu & hồ sơ KH | 3 | Chưa làm | Có code cũ |
 | CUS-02 | Quản lý hồ sơ KH | 3 | Chưa làm | Có code cũ |
 | CUS-03 | Tích/thu hồi điểm, xét hạng (hệ thống) | 3 | Chưa làm | Hiện ở lịch sử điểm |

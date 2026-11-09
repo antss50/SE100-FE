@@ -33,6 +33,9 @@ const StockBatchDetailPage = lazyNamed(() => import('../features/stock/StockBatc
 const InventoryChecksListPage = lazyNamed(() => import('../features/inventory-checks/InventoryChecksListPage'), 'InventoryChecksListPage')
 const InventoryCheckCreatePage = lazyNamed(() => import('../features/inventory-checks/InventoryCheckCreatePage'), 'InventoryCheckCreatePage')
 const InventoryCheckDetailPage = lazyNamed(() => import('../features/inventory-checks/InventoryCheckDetailPage'), 'InventoryCheckDetailPage')
+const DisposalsListPage = lazyNamed(() => import('../features/disposals/DisposalsListPage'), 'DisposalsListPage')
+const DisposalCreatePage = lazyNamed(() => import('../features/disposals/DisposalCreatePage'), 'DisposalCreatePage')
+const DisposalDetailPage = lazyNamed(() => import('../features/disposals/DisposalDetailPage'), 'DisposalDetailPage')
 const ComingSoonPage = lazy(async () => ({ default: (await import('../features/common/ComingSoonPage')).ComingSoonPage }))
 
 /** Màn hình đã có, theo đường dẫn mục menu. Mục không có ở đây dùng trang "Đang phát triển". */
@@ -47,6 +50,7 @@ const PAGES: Record<string, ComponentType> = {
   '/suppliers': SuppliersListPage,
   '/stock': StockPage,
   '/inventory-checks': InventoryChecksListPage,
+  '/disposals': DisposalsListPage,
   '/purchase-orders': PurchaseOrdersListPage,
 }
 
@@ -60,6 +64,8 @@ const SUB_ROUTES: { path: string; permission: PermissionRequirement; element: Re
   { path: 'stock/:batchId', permission: ['STOCK_VIEW', 'STOCK_EXPIRY_VIEW'], element: <StockBatchDetailPage /> },
   { path: 'inventory-checks/new', permission: 'STOCK_CHECK_CREATE', element: <InventoryCheckCreatePage /> },
   { path: 'inventory-checks/:checkId', permission: 'STOCK_CHECK_VIEW', element: <InventoryCheckDetailPage /> },
+  { path: 'disposals/new', permission: 'STOCK_DISPOSAL_CREATE', element: <DisposalCreatePage /> },
+  { path: 'disposals/:disposalId', permission: 'STOCK_DISPOSAL_VIEW', element: <DisposalDetailPage /> },
   { path: 'suppliers/:supplierId', permission: 'SUPPLIER_VIEW', element: <SupplierDetailPage /> },
   { path: 'users/:userId', permission: 'USER_MANAGE', element: <UserDetailPage /> },
 ]

@@ -86,7 +86,6 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: PackageMinus,
         permission: 'STOCK_DISPOSAL_VIEW',
         uc: 'STK-06, STK-07',
-        plannedPhase: 2,
       },
       { to: '/suppliers', label: 'Nhà cung cấp', icon: Truck, permission: 'SUPPLIER_VIEW', uc: 'SUPP-01..03' },
     ],

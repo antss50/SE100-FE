@@ -359,3 +359,27 @@ Kiểu: `InventoryCheck` (`id, checkCode (CHKyyyymmdd-nn), scopeNote, status IN_
 ### `POST /inventory-checks/{id}/reject` — STK-05
 - **Quyền:** `STOCK_ADJUST_APPROVE` · **Request:** `{ reason }` (bắt buộc) · **Response 200:** `InventoryCheckDetail` (`REJECTED`, tồn không đổi)
 - **Lỗi:** `400 COMMON_VALIDATION_FAILED`, `409 STK_CHECK_NOT_WAITING`
+
+## STOCK · Xuất hủy / tester / trả NCC (STK-06, STK-07)
+
+Kiểu: `Disposal` (`id, disposalCode (DISPyyyymmdd-nn), issueType DESTROY|TESTER|RETURN_TO_SUPPLIER, reasonCode EXPIRED|NEAR_EXPIRY|DAMAGED|RECALL|RETURN_DEFECT|TESTER_USE, status WAITING_APPROVAL|APPROVED|REJECTED, reason, requestedBy, requestedByName, createdAt, approvedBy, approvedByName, approvedAt, rejectReason, lineCount, totalQuantity, totalCost (null đến khi duyệt)`), `DisposalDetail = Disposal + lines[]` (dòng: `id, batchId, productId, sku, productName, lotCode, expDate, quantity, blockedAddedQty, unitCost (null đến khi duyệt), itemReason`). Không có trạng thái Nháp (D8).
+
+### `GET /disposals`
+- **Quyền:** `STOCK_DISPOSAL_VIEW` · **Query:** `keyword` (mã phiếu, lý do), `status`, `issueType`, `page`, `pageSize` · **Response 200:** `PaginatedData<Disposal>`
+
+### `GET /disposals/{id}`
+- **Quyền:** `STOCK_DISPOSAL_VIEW` · **Response 200:** `DisposalDetail` · **Lỗi:** `404 STK_DISPOSAL_NOT_FOUND`
+
+### `POST /disposals` — STK-06 (lập phiếu, cách ly ngay)
+- **Quyền:** `STOCK_DISPOSAL_CREATE` · **Request:** `{ issueType, reasonCode, reason, lines: [{ batchId, quantity (>0), itemReason? }] }` · **Response 201:** `DisposalDetail` (`WAITING_APPROVAL`)
+- Cho mỗi lô, `pending` = tổng `quantity` các phiếu `WAITING_APPROVAL` khác trên lô; `freeBlocked = blockedQty − pending`; nếu `quantity > freeBlocked` thì `blockedQty += quantity − freeBlocked` và ghi `blockedAddedQty` (luật 33). Chặn nếu `quantity > onHandQty − pending`. Tồn thực tế chưa đổi, chưa có thẻ kho.
+- **Lỗi:** `400 COMMON_VALIDATION_FAILED`, `404 STK_BATCH_NOT_FOUND`, `409 STK_BATCH_LOCKED` (lô đang khóa kiểm kho), `422 STK_DUPLICATE_LOT`, `422 STK_INSUFFICIENT_STOCK`, `422 STK_ISSUE_TYPE_NOT_ALLOWED` (SKU `isSellable=false` chỉ xuất bằng `TESTER`/`DESTROY`)
+
+### `POST /disposals/{id}/approve` — STK-07
+- **Quyền:** `STOCK_DISPOSAL_APPROVE` · **Response 200:** `DisposalDetail` (`APPROVED`)
+- Một giao dịch: mỗi dòng `blockedQty −= quantity`, `onHandQty −= quantity`, ghi `STOCK_MOVEMENTS` (`DISPOSAL` / `TESTER` / `SUPPLIER_RETURN` theo `issueType`, `quantityChange = −quantity`), chụp `unitCost = costPrice` lô, tính `totalCost`.
+- **Lỗi:** `404 STK_DISPOSAL_NOT_FOUND`, `409 STK_DISPOSAL_NOT_WAITING`, `409 STK_BATCH_LOCKED`
+
+### `POST /disposals/{id}/reject` — STK-07
+- **Quyền:** `STOCK_DISPOSAL_APPROVE` · **Request:** `{ reason }` (bắt buộc) · **Response 200:** `DisposalDetail` (`REJECTED`; `blockedQty −= blockedAddedQty` từng dòng, tồn thực tế không đổi)
+- **Lỗi:** `400 COMMON_VALIDATION_FAILED`, `409 STK_DISPOSAL_NOT_WAITING`
