@@ -1,5 +1,5 @@
 import { Plus, Trash2 } from 'lucide-react'
-import { Button } from '../../components/ui'
+import { Button, NumberInput } from '../../components/ui'
 import type { DiscountType, PromotionItemRole, PromotionItemRow, PromotionStepRow } from '../../types/promotions'
 
 export interface PickerOption {
@@ -46,7 +46,7 @@ export function ProductRowsEditor({ title, role, items, products, onChange, quan
             ))}
           </select>
           {quantityLabel && (
-            <input
+            <NumberInput
               type="number"
               min={1}
               aria-label={quantityLabel}
@@ -90,7 +90,7 @@ export function StepsEditor({ steps, onChange, disabled }: StepsEditorProps) {
         <div key={i} className="grid grid-cols-[1fr_8rem_1fr_1fr_auto] items-end gap-2">
           <label className="text-xs text-muted">
             Đơn từ (đ)
-            <input
+            <NumberInput
               type="number"
               min={0}
               value={s.minOrderValue}
@@ -111,7 +111,7 @@ export function StepsEditor({ steps, onChange, disabled }: StepsEditorProps) {
           </label>
           <label className="text-xs text-muted">
             Mức giảm
-            <input
+            <NumberInput
               type="number"
               min={0}
               value={s.discountValue}
@@ -121,7 +121,7 @@ export function StepsEditor({ steps, onChange, disabled }: StepsEditorProps) {
           </label>
           <label className="text-xs text-muted">
             Trần giảm (đ)
-            <input
+            <NumberInput
               type="number"
               min={0}
               value={s.maxDiscountAmount ?? ''}

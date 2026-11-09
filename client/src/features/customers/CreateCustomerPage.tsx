@@ -1,5 +1,4 @@
 import {
-  AlertCircle,
   AlertTriangle,
   Award,
   Calendar,
@@ -24,6 +23,7 @@ import { queryKeys } from '../../lib/query-keys'
 import { customersService } from '../../services/customers.service'
 import type { GenderType, SkinType } from '../../types/api'
 import { serializeCustomerNote } from '../../utils/customer-note'
+import { toast } from '../../components/ui'
 
 const SKIN_TYPE_OPTIONS: { code: SkinType; label: string }[] = [
   { code: 'OILY', label: 'Da dầu' },
@@ -66,7 +66,6 @@ export function CreateCustomerPage() {
   const canLock = useCan('CUSTOMER_LOCK')
   const [status, setStatus] = useState<'ACTIVE' | 'INACTIVE'>('ACTIVE')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const cleanPhone = phoneNumber.replace(/\s+/g, '')
   const { data: duplicateCustomer } = useQuery({
@@ -86,7 +85,6 @@ export function CreateCustomerPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setErrorMsg(null)
     setIsSubmitting(true)
 
     try {
@@ -110,11 +108,12 @@ export function CreateCustomerPage() {
       })
 
       navigate(`/customers/${res.data.customerCode}`)
+      toast.success('Đã thêm khách hàng mới')
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setErrorMsg(`${err.message}`)
+        toast.error(err.message)
       } else {
-        setErrorMsg('Không thể thêm mới khách hàng. Vui lòng kiểm tra lại.')
+        toast.error('Không thể thêm mới khách hàng. Vui lòng kiểm tra lại.')
       }
     } finally {
       setIsSubmitting(false)
@@ -163,13 +162,6 @@ export function CreateCustomerPage() {
           </div>
         </div>
       </div>
-
-      {errorMsg && (
-        <div className="rounded-2xl bg-red-50 border border-red-200 p-4 text-xs text-red-800 font-semibold flex items-center gap-2">
-          <AlertCircle className="size-4 shrink-0" />
-          <span>{errorMsg}</span>
-        </div>
-      )}
 
       {/* Main 2-Column Form Layout */}
       <div className="grid lg:grid-cols-12 gap-6 items-start">

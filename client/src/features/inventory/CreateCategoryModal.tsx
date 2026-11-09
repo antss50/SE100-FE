@@ -3,6 +3,7 @@ import { type FormEvent, useEffect, useState } from 'react'
 import { ApiClientError } from '../../lib/api-client'
 import { productsService } from '../../services/products.service'
 import type { CategoryItem } from '../../types/api'
+import { toast } from '../../components/ui'
 
 interface CreateCategoryModalProps {
   isOpen: boolean
@@ -42,8 +43,6 @@ export function CreateCategoryModal({
     () => editingCategory || null
   )
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   // UC-PROD-12: Xem chi tiết danh mục GET /api/v1/categories/{categoryCode}
   useEffect(() => {
@@ -69,8 +68,6 @@ export function CreateCategoryModal({
   if (!isOpen) return null
 
   const handleClose = () => {
-    setErrorMsg(null)
-    setSuccessMsg(null)
     onClose()
   }
 
@@ -90,8 +87,6 @@ export function CreateCategoryModal({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setErrorMsg(null)
-    setSuccessMsg(null)
     setIsSubmitting(true)
 
     try {
@@ -114,17 +109,14 @@ export function CreateCategoryModal({
           description,
         })
         onSaved(res.data, 'create')
-        setSuccessMsg(
-          `Đã thêm danh mục "${res.data.categoryName}" (${res.data.categoryCode}) thành công!`
-        )
         setCategoryName('')
         setDescription('')
       }
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setErrorMsg(`${err.message}`)
+        toast.error(err.message)
       } else {
-        setErrorMsg('Không thể lưu danh mục')
+        toast.error('Không thể lưu danh mục')
       }
     } finally {
       setIsSubmitting(false)
@@ -134,8 +126,6 @@ export function CreateCategoryModal({
   const handleToggleStatus = async () => {
     const current = detailData || editingCategory
     if (!current) return
-    setErrorMsg(null)
-    setSuccessMsg(null)
     setIsSubmitting(true)
 
     try {
@@ -150,7 +140,6 @@ export function CreateCategoryModal({
         }
         setDetailData(updated)
         onSaved(updated, 'status')
-        setSuccessMsg(res.message || 'Ngừng sử dụng danh mục thành công')
       } else {
         // UC-PROD-15: PATCH /api/v1/categories/{categoryCode}/restore
         const res = await productsService.restoreCategory(current.categoryCode)
@@ -160,13 +149,12 @@ export function CreateCategoryModal({
         }
         setDetailData(updated)
         onSaved(updated, 'status')
-        setSuccessMsg(res.message || 'Khôi phục danh mục thành công')
       }
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setErrorMsg(`${err.message}`)
+        toast.error(err.message)
       } else {
-        setErrorMsg('Không thể thay đổi trạng thái danh mục')
+        toast.error('Không thể thay đổi trạng thái danh mục')
       }
     } finally {
       setIsSubmitting(false)
@@ -226,18 +214,6 @@ export function CreateCategoryModal({
                 </div>
               )}
             </div>
-
-            {errorMsg && (
-              <div className="rounded-xl bg-red-50 border border-red-200 px-3.5 py-2.5 text-xs font-semibold text-red-800">
-                {errorMsg}
-              </div>
-            )}
-
-            {successMsg && (
-              <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-2.5 text-xs font-semibold text-emerald-800">
-                {successMsg}
-              </div>
-            )}
 
             <div>
               <label className="block text-xs font-bold text-[#221712]">

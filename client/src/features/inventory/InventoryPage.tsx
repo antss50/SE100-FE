@@ -108,7 +108,6 @@ export function InventoryPage() {
   // Directory modal filter state (UC-PROD-11 & UC-PROD-16)
   const [dirKeyword, setDirKeyword] = useState('')
   const [dirStatus, setDirStatus] = useState('ALL')
-  const [dirError, setDirError] = useState<string | null>(null)
 
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null)
@@ -122,11 +121,6 @@ export function InventoryPage() {
   const [editingBrand, setEditingBrand] = useState<BrandItem | null>(null)
 
   const [isDirectoryModalOpen, setIsDirectoryModalOpen] = useState(false)
-  const [pageError, setPageError] = useState<{
-    message: string
-    sku?: string
-    isStockConflict?: boolean
-  } | null>(null)
 
   useEffect(() => {
     let active = true
@@ -210,7 +204,6 @@ export function InventoryPage() {
 
   // UC-PROD-07 & UC-PROD-08: Ngừng kinh doanh / Khôi phục sản phẩm
   const handleToggleProductStatus = async (product: ProductItem) => {
-    setPageError(null)
     try {
       if (product.status === 'ACTIVE') {
         const res = await productsService.deactivateProduct(product.sku)
@@ -224,18 +217,12 @@ export function InventoryPage() {
     } catch (err) {
       if (err instanceof ApiClientError) {
         toast.error(err.message)
-        setPageError({
-          message: `${err.message}`,
-          sku: product.sku,
-          isStockConflict: err.errorCode === 'PROD_HAS_STOCK',
-        })
       } else toast.error(getErrorMessage(err))
     }
   }
 
   // UC-PROD-14 & UC-PROD-15: Ngừng sử dụng / Khôi phục danh mục
   const handleToggleCategoryStatus = async (cat: CategoryItem) => {
-    setDirError(null)
     try {
       if (cat.status === 'ACTIVE') {
         const res = await productsService.deactivateCategory(cat.categoryCode)
@@ -253,14 +240,12 @@ export function InventoryPage() {
     } catch (err) {
       if (err instanceof ApiClientError) {
         toast.error(err.message)
-        setDirError(`${err.message}`)
       } else toast.error(getErrorMessage(err))
     }
   }
 
   // UC-PROD-19 & UC-PROD-20: Ngừng sử dụng / Khôi phục thương hiệu
   const handleToggleBrandStatus = async (brand: BrandItem) => {
-    setDirError(null)
     try {
       if (brand.status === 'ACTIVE') {
         const res = await productsService.deactivateBrand(brand.brandCode)
@@ -274,7 +259,6 @@ export function InventoryPage() {
     } catch (err) {
       if (err instanceof ApiClientError) {
         toast.error(err.message)
-        setDirError(`${err.message}`)
       } else toast.error(getErrorMessage(err))
     }
   }
@@ -306,7 +290,6 @@ export function InventoryPage() {
           <button
             type="button"
             onClick={() => {
-              setDirError(null)
               setIsDirectoryModalOpen(true)
             }}
             className="inline-flex items-center gap-2 rounded-2xl bg-[#fbf3ed] border border-[#e5d2c6] hover:bg-[#f5e6db] px-4 py-2.5 text-xs font-bold text-[#7a3f28] shadow-2xs transition cursor-pointer"
@@ -345,26 +328,6 @@ export function InventoryPage() {
       </div>
 
 
-      {pageError && (
-        <div className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-xs font-semibold text-red-800 flex flex-wrap items-center justify-between gap-3">
-          <span>{pageError.message}</span>
-          <div className="flex items-center gap-2">
-            {pageError.isStockConflict && (
-              <span className="text-[11px] font-medium text-red-700">
-                Muốn hết tồn hãy lập phiếu xuất hủy hoặc trả NCC (mọi thay đổi tồn phải có thẻ kho).
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={() => setPageError(null)}
-              className="text-[11px] font-bold text-red-700 hover:underline cursor-pointer"
-            >
-              Đóng
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* 4 KPI Summary Cards */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: TỔNG SKU HOẠT ĐỘNG */}
@@ -394,7 +357,6 @@ export function InventoryPage() {
         {/* Card 2: THƯƠNG HIỆU PHÂN PHỐI */}
         <div
           onClick={() => {
-            setDirError(null)
             setIsDirectoryModalOpen(true)
           }}
           className="rounded-3xl bg-white border border-[#ead9ce] hover:border-[#d57252] p-5 shadow-2xs flex flex-col justify-between cursor-pointer transition"
@@ -425,7 +387,6 @@ export function InventoryPage() {
         {/* Card 3: DANH MỤC NGÀNH HÀNG */}
         <div
           onClick={() => {
-            setDirError(null)
             setIsDirectoryModalOpen(true)
           }}
           className="rounded-3xl bg-white border border-[#ead9ce] hover:border-[#d57252] p-5 shadow-2xs flex flex-col justify-between cursor-pointer transition"
@@ -928,19 +889,6 @@ export function InventoryPage() {
                 </select>
               </div>
             </div>
-
-            {dirError && (
-              <div className="mx-6 mt-4 rounded-xl bg-red-50 border border-red-200 px-4 py-2.5 text-xs font-semibold text-red-800 flex items-center justify-between">
-                <span>{dirError}</span>
-                <button
-                  type="button"
-                  onClick={() => setDirError(null)}
-                  className="text-[11px] font-bold text-red-700 hover:underline cursor-pointer"
-                >
-                  Đóng
-                </button>
-              </div>
-            )}
 
             <div className="p-6 overflow-y-auto grid md:grid-cols-2 gap-6 text-xs">
               {/* Column 1: Categories (UC-PROD-11..15) */}

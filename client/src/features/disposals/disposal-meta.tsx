@@ -18,7 +18,7 @@ export const REASON_LABEL: Record<DisposalReasonCode, string> = {
   NEAR_EXPIRY: 'Cận hạn',
   DAMAGED: 'Hư hỏng',
   RECALL: 'Thu hồi',
-  RETURN_DEFECT: 'Hàng lỗi trả NCC',
+  RETURN_DEFECT: 'Hàng lỗi trả NCC và Giao sai sản phẩm và Hàng thu hồi theo lô của NCC',
   TESTER_USE: 'Dùng làm tester',
 }
 
@@ -26,7 +26,7 @@ export const REASON_LABEL: Record<DisposalReasonCode, string> = {
 export const REASONS_BY_TYPE: Record<DisposalIssueType, DisposalReasonCode[]> = {
   DESTROY: ['EXPIRED', 'NEAR_EXPIRY', 'DAMAGED', 'RECALL'],
   TESTER: ['TESTER_USE'],
-  RETURN_TO_SUPPLIER: ['RETURN_DEFECT', 'DAMAGED', 'RECALL'],
+  RETURN_TO_SUPPLIER: ['RETURN_DEFECT'],
 }
 
 const STATUS: Record<DisposalStatus, { tone: StatusTone; label: string }> = {

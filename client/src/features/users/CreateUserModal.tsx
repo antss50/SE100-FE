@@ -2,6 +2,7 @@ import { UserPlus, X } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { ApiClientError } from '../../lib/api-client'
 import { usersService } from '../../services/users.service'
+import { toast } from '../../components/ui'
 
 interface CreateUserModalProps {
   isOpen: boolean
@@ -29,7 +30,6 @@ export function CreateUserModal({
   const [phoneNumber, setPhoneNumber] = useState('')
   const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>([4])
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   if (!isOpen) return null
 
@@ -45,7 +45,6 @@ export function CreateUserModal({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setErrorMsg(null)
     setIsSubmitting(true)
 
     try {
@@ -66,9 +65,9 @@ export function CreateUserModal({
       setPhoneNumber('')
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setErrorMsg(`${err.message}`)
+        toast.error(err.message)
       } else {
-        setErrorMsg('Không thể tạo tài khoản nhân viên')
+        toast.error('Không thể tạo tài khoản nhân viên')
       }
     } finally {
       setIsSubmitting(false)
@@ -100,12 +99,6 @@ export function CreateUserModal({
             <X className="size-4" />
           </button>
         </div>
-
-        {errorMsg && (
-          <div className="mt-4 rounded-xl bg-red-50 border border-red-200 px-3.5 py-2.5 text-xs text-red-800">
-            {errorMsg}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           <div className="grid sm:grid-cols-2 gap-4">

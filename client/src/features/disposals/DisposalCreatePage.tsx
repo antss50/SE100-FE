@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
-import { Button, ConfirmDialog, PageHeader, Select, cn, toast } from '../../components/ui'
+import { Button, ConfirmDialog, NumberInput, PageHeader, Select, cn, toast } from '../../components/ui'
 import { FieldShell } from '../../components/ui/Input'
 import { queryKeys } from '../../lib/query-keys'
 import { disposalsService } from '../../services/disposals.service'
@@ -20,6 +20,10 @@ const schema = z.object({
   issueType: z.enum(['DESTROY', 'TESTER', 'RETURN_TO_SUPPLIER']),
   reasonCode: z.string().min(1, 'Vui lòng chọn mã lý do'),
   reason: z.string().trim().min(1, 'Vui lòng nhập diễn giải lý do'),
+}).superRefine(({ issueType, reasonCode }, ctx) => {
+  if (!REASONS_BY_TYPE[issueType].includes(reasonCode as DisposalReasonCode)) {
+    ctx.addIssue({ code: 'custom', path: ['reasonCode'], message: 'Mã lý do không phù hợp với loại phiếu' })
+  }
 })
 type FormValues = z.infer<typeof schema>
 
@@ -204,7 +208,7 @@ export function DisposalCreatePage() {
                     <td className="px-4 py-2">{formatDate(b.expDate)}</td>
                     <td className="px-4 py-2 text-right">{formatNumber(b.onHandQty)}</td>
                     <td className="w-28 px-4 py-2">
-                      <input
+                      <NumberInput
                         type="number"
                         min={1}
                         max={b.onHandQty}

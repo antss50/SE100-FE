@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Search, UserPlus, X } from 'lucide-react'
 import { useState, type RefObject } from 'react'
 import { useCan } from '../../../app/usePermission'
-import { Button, Input, Modal, StatusBadge, toast } from '../../../components/ui'
+import { Button, Input, Modal, NumberInput, StatusBadge, toast } from '../../../components/ui'
 import { queryKeys } from '../../../lib/query-keys'
 import { customersService } from '../../../services/customers.service'
 import type { OrderQuote } from '../../../types/pos'
@@ -99,7 +99,7 @@ export function CustomerPanel({ phoneRef, quote, disabled }: CustomerPanelProps)
                 <strong className="text-ink">{formatNumber(maxPoints)}</strong> điểm cho đơn này
               </p>
               <div className="mt-2 flex items-center gap-2">
-                <input
+                <NumberInput
                   type="number"
                   min={0}
                   max={maxPoints}

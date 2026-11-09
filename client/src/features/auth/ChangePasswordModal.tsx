@@ -1,9 +1,10 @@
-import { CheckCircle2, KeyRound, Lock, X } from 'lucide-react'
+import { KeyRound, Lock, X } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore, useUiStore } from '../../app/store'
 import { ApiClientError } from '../../lib/api-client'
 import { authService } from '../../services/auth.service'
+import { toast } from '../../components/ui'
 
 export function ChangePasswordModal() {
   const requested = useUiStore((s) => s.isChangePasswordOpen)
@@ -19,8 +20,6 @@ export function ChangePasswordModal() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   if (!isOpen) return null
 
@@ -28,8 +27,6 @@ export function ChangePasswordModal() {
     setOldPassword('')
     setNewPassword('')
     setConfirmPassword('')
-    setErrorMsg(null)
-    setSuccessMsg(null)
     closeChangePassword()
     if (forced) {
       clearSession()
@@ -39,11 +36,8 @@ export function ChangePasswordModal() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setErrorMsg(null)
-    setSuccessMsg(null)
-
     if (newPassword !== confirmPassword) {
-      setErrorMsg('Xác nhận mật khẩu mới không khớp')
+      toast.error('Xác nhận mật khẩu mới không khớp')
       return
     }
 
@@ -53,7 +47,7 @@ export function ChangePasswordModal() {
         oldPassword,
         newPassword,
       })
-      setSuccessMsg(
+      toast.success(
         res.message || 'Đổi mật khẩu thành công. Vui lòng đăng nhập lại'
       )
       setTimeout(() => {
@@ -63,9 +57,9 @@ export function ChangePasswordModal() {
       }, 1500)
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setErrorMsg(err.message)
+        toast.error(err.message)
       } else {
-        setErrorMsg('Không thể đổi mật khẩu. Vui lòng thử lại.')
+        toast.error('Không thể đổi mật khẩu. Vui lòng thử lại.')
       }
     } finally {
       setIsSubmitting(false)
@@ -105,19 +99,6 @@ export function ChangePasswordModal() {
           <div className="mt-4 rounded-xl bg-amber-50 border border-amber-200 px-3.5 py-2.5 text-xs text-amber-900">
             Tài khoản của bạn được yêu cầu đổi mật khẩu lần đầu trước khi tiếp tục
             giao dịch.
-          </div>
-        )}
-
-        {errorMsg && (
-          <div className="mt-4 rounded-xl bg-red-50 border border-red-200 px-3.5 py-2.5 text-xs text-red-800">
-            {errorMsg}
-          </div>
-        )}
-
-        {successMsg && (
-          <div className="mt-4 rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-2.5 text-xs text-emerald-800 flex items-center gap-2">
-            <CheckCircle2 className="size-4 shrink-0" />
-            <span>{successMsg}</span>
           </div>
         )}
 

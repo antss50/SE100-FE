@@ -83,7 +83,7 @@ describe('POS-01/05 ca bán hàng', () => {
     await expectFail('/shifts/open', post({ openingCash: 0 }), 403, 'AUTH_FORBIDDEN')
   })
 
-  it('chốt ca chặn khi còn đơn nháp (luật 36); lệch tiền bắt buộc giải trình (luật 37)', async () => {
+  it('chốt ca chặn khi còn đơn nháp ; lệch tiền bắt buộc giải trình (luật 37)', async () => {
     await loginAs('cashier01')
     const shift = await openShift(1_000_000)
     const draft = await send<Order>('/orders/drafts', post({ items: [{ productId: 5, quantity: 1 }] }))

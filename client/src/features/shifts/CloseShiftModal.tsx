@@ -85,7 +85,7 @@ export function CloseShiftModal({ open, shift, summary, onClose }: CloseShiftMod
         {hasDraft && (
           <p className="flex items-start gap-2 rounded-xl bg-danger-soft p-3 text-sm text-danger">
             <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-            Ca còn {summary.draftCount} đơn nháp. Hoàn tất hoặc hủy các đơn nháp trước khi chốt ca (luật 36).
+            Ca còn {summary.draftCount} đơn nháp. Hoàn tất hoặc hủy các đơn nháp trước khi chốt ca.
           </p>
         )}
         <div className="rounded-xl bg-card p-4">

@@ -1,5 +1,6 @@
 import { forwardRef, useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react'
 import { cn } from './cn'
+import { NumberInput } from './NumberInput'
 
 const FIELD_CLASS =
   'w-full rounded-xl border bg-white px-3 py-2 text-sm text-ink outline-none transition ' +
@@ -54,34 +55,41 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { label, error, hint, id, required, className, containerClassName, formatThousands, onChange, ...rest },
+  { label, error, hint, id, required, className, containerClassName, formatThousands, onChange, type, inputMode, ...rest },
   ref
 ) {
   const autoId = useId()
   const fieldId = id ?? autoId
+  const grouped = formatThousands || type === 'number' || inputMode === 'numeric'
   return (
     <FieldShell id={fieldId} label={label} error={error} hint={hint} required={required} className={containerClassName}>
-      <input
-        ref={ref}
-        id={fieldId}
-        required={required}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? `${fieldId}-error` : hint ? `${fieldId}-hint` : undefined}
-        className={cn(FIELD_CLASS, error ? 'border-danger' : 'border-line', className)}
-        onChange={(event) => {
-          if (!formatThousands) {
-            onChange?.(event)
-            return
-          }
-          const raw = event.currentTarget.value.replace(/\D/g, '')
-          const formatted = raw.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-          // RHF (including valueAsNumber) must read plain digits before the UI is grouped.
-          event.currentTarget.value = raw
-          onChange?.(event)
-          event.currentTarget.value = formatted
-        }}
-        {...rest}
-      />
+      {grouped ? (
+        <NumberInput
+          ref={ref}
+          id={fieldId}
+          required={required}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${fieldId}-error` : hint ? `${fieldId}-hint` : undefined}
+          className={cn(FIELD_CLASS, error ? 'border-danger' : 'border-line', className)}
+          onChange={onChange}
+          type={type === 'number' ? 'number' : 'text'}
+          inputMode={inputMode}
+          {...rest}
+        />
+      ) : (
+        <input
+          ref={ref}
+          id={fieldId}
+          type={type}
+          inputMode={inputMode}
+          required={required}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${fieldId}-error` : hint ? `${fieldId}-hint` : undefined}
+          className={cn(FIELD_CLASS, error ? 'border-danger' : 'border-line', className)}
+          onChange={onChange}
+          {...rest}
+        />
+      )}
     </FieldShell>
   )
 })

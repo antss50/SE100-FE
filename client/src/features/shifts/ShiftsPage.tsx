@@ -115,7 +115,7 @@ export function ShiftsPage() {
           {detail.summary.draftCount > 0 && (
             <p className="flex items-start gap-2 rounded-xl bg-danger-soft p-3 text-sm text-danger">
               <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-              Còn {detail.summary.draftCount} đơn nháp chưa thanh toán. Hoàn tất hoặc hủy trước khi chốt ca (luật 36).
+              Còn {detail.summary.draftCount} đơn nháp chưa thanh toán. Hoàn tất hoặc hủy trước khi chốt ca.
               <button type="button" className="font-semibold underline" onClick={() => navigate('/pos')}>
                 Mở màn POS
               </button>

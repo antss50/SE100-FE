@@ -17,6 +17,7 @@ import { homePathFor } from '../../routes/nav-config'
 import { authService } from '../../services/auth.service'
 import loginStoreImage from '../../assets/ảnh màn hình đăng nhập.jpg'
 import { DEMO_ACCOUNTS, DEMO_PASSWORD } from './demo-accounts'
+import { toast } from '../../components/ui'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -29,8 +30,6 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const [errorCode, setErrorCode] = useState<string | null>(null)
   const [showForgotModal, setShowForgotModal] = useState(false)
 
   /** Quay lại trang bảo vệ đã định vào (nếu có), không thì về trang chủ theo quyền. */
@@ -41,8 +40,6 @@ export function LoginPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setErrorMsg(null)
-    setErrorCode(null)
     setIsLoading(true)
 
     try {
@@ -56,10 +53,9 @@ export function LoginPage() {
       navigate(redirectTarget(response.data.user.permissions), { replace: true })
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setErrorMsg(err.message)
-        setErrorCode(err.errorCode)
+        toast.error(err.message)
       } else {
-        setErrorMsg('Không thể xác thực tài khoản. Vui lòng thử lại.')
+        toast.error('Không thể xác thực tài khoản. Vui lòng thử lại.')
       }
     } finally {
       setIsLoading(false)
@@ -69,8 +65,6 @@ export function LoginPage() {
   const fillDemoAccount = (demoUsername: string) => {
     setUsername(demoUsername)
     setPassword(DEMO_PASSWORD)
-    setErrorMsg(null)
-    setErrorCode(null)
   }
 
   if (isAuthenticated) {
@@ -199,26 +193,6 @@ export function LoginPage() {
             <p className="mt-2 text-sm text-[#786156]">
               Vui lòng xác thực tài khoản để bắt đầu ca
             </p>
-
-            {errorMsg && (
-              <div
-                role="alert"
-                className={`mt-5 rounded-2xl border p-4 text-xs leading-relaxed ${
-                  errorCode === 'AUTH_ACCOUNT_LOCKED'
-                    ? 'bg-red-50 border-red-200 text-red-800'
-                    : 'bg-amber-50/90 border-amber-200 text-amber-900'
-                }`}
-              >
-                <div className="font-bold flex items-center justify-between">
-                  <span>
-                    {errorCode === 'AUTH_ACCOUNT_LOCKED'
-                      ? 'Tài khoản bị khóa bảo mật'
-                      : 'Xác thực không thành công'}
-                  </span>
-                </div>
-                <p className="mt-1">{errorMsg}</p>
-              </div>
-            )}
 
             <form onSubmit={handleSubmit} className="mt-7 space-y-5" noValidate>
               <div>

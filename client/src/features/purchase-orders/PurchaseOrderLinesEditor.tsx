@@ -1,6 +1,6 @@
 import { Trash2 } from 'lucide-react'
 import type { FieldArrayWithId, FieldErrors, UseFormRegister } from 'react-hook-form'
-import { cn } from '../../components/ui'
+import { cn, NumberInput } from '../../components/ui'
 import type { ProductItem } from '../../types/api'
 import { formatCurrency } from '../../utils/format'
 import type { PurchaseOrderFormValues } from './purchase-order-form'
@@ -93,7 +93,7 @@ export function PurchaseOrderLinesEditor({ fields, products, register, errors, l
                 {err(index, 'expDate') && <p className="mt-1 text-xs text-danger">{err(index, 'expDate')}</p>}
               </td>
               <td className="w-20 px-1 py-1.5">
-                <input
+                <NumberInput
                   type="number"
                   min={1}
                   aria-label={`Số lượng dòng ${index + 1}`}
@@ -103,7 +103,7 @@ export function PurchaseOrderLinesEditor({ fields, products, register, errors, l
                 {err(index, 'quantity') && <p className="mt-1 text-xs text-danger">{err(index, 'quantity')}</p>}
               </td>
               <td className="w-36 px-1 py-1.5">
-                <input
+                <NumberInput
                   type="number"
                   min={0}
                   aria-label={`Giá nhập dòng ${index + 1}`}

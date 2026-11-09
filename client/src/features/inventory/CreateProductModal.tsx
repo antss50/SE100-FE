@@ -28,6 +28,7 @@ import type {
   ProductItem,
   ProductSkinType,
 } from '../../types/api'
+import { NumberInput, toast } from '../../components/ui'
 
 interface CreateProductModalProps {
   isOpen: boolean
@@ -124,9 +125,6 @@ export function CreateProductModal({
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const [hasStockConflict, setHasStockConflict] = useState(false)
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   // UC-PROD-05: Xem chi tiết sản phẩm GET /api/v1/products/{sku}
   useEffect(() => {
@@ -219,9 +217,6 @@ export function CreateProductModal({
     const selectedFiles = Array.from(fileList)
     e.target.value = ''
 
-    setErrorMsg(null)
-    setSuccessMsg(null)
-
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
     if (
       selectedFiles.length > 5 ||
@@ -229,7 +224,7 @@ export function CreateProductModal({
         (f) => !allowedTypes.includes(f.type) || f.size > 5 * 1024 * 1024
       )
     ) {
-      setErrorMsg(
+      toast.error(
         'File không đúng định dạng hoặc vượt quá dung lượng. Chỉ nhận JPG, PNG, WEBP; tối đa 5 ảnh/lần, mỗi ảnh tối đa 5 MB.'
       )
       return
@@ -243,9 +238,6 @@ export function CreateProductModal({
           selectedFiles
         )
         setImages(res.data.images)
-        setSuccessMsg(
-          `${res.message} (${res.data.images.length} ảnh - HTTP 201)`
-        )
         onSaved({
           ...editingProduct,
           images: res.data.images,
@@ -253,9 +245,9 @@ export function CreateProductModal({
         })
       } catch (err) {
         if (err instanceof ApiClientError) {
-          setErrorMsg(`${err.message}`)
+          toast.error(err.message)
         } else {
-          setErrorMsg('Không thể tải lên hình ảnh sản phẩm')
+          toast.error('Không thể tải lên hình ảnh sản phẩm')
         }
       } finally {
         setIsUploadingImage(false)
@@ -283,9 +275,6 @@ export function CreateProductModal({
 
   // UC-PROD-10: Xóa hình ảnh sản phẩm DELETE /api/v1/products/{sku}/images/{imageId}
   const handleDeleteImage = async (img: ProductImageItem, index: number) => {
-    setErrorMsg(null)
-    setSuccessMsg(null)
-
     if (editingProduct) {
       setIsUploadingImage(true)
       try {
@@ -295,7 +284,6 @@ export function CreateProductModal({
         )
         const remaining = images.filter((item) => item.imageId !== img.imageId)
         setImages(remaining)
-        setSuccessMsg(`${res.message} (imageId: ${img.imageId} HTTP 200)`)
         onSaved({
           ...editingProduct,
           images: remaining,
@@ -303,9 +291,9 @@ export function CreateProductModal({
         })
       } catch (err) {
         if (err instanceof ApiClientError) {
-          setErrorMsg(`${err.message}`)
+          toast.error(err.message)
         } else {
-          setErrorMsg('Không thể xóa hình ảnh sản phẩm')
+          toast.error('Không thể xóa hình ảnh sản phẩm')
         }
       } finally {
         setIsUploadingImage(false)
@@ -319,16 +307,12 @@ export function CreateProductModal({
   // UC-PROD-07 & UC-PROD-08: Ngừng kinh doanh / Khôi phục sản phẩm
   const handleToggleProductStatus = async () => {
     if (!editingProduct) return
-    setErrorMsg(null)
-    setHasStockConflict(false)
-    setSuccessMsg(null)
     setIsSubmitting(true)
 
     try {
       if (status === 'ACTIVE') {
         const res = await productsService.deactivateProduct(editingProduct.sku)
         setStatus(res.data.status)
-        setSuccessMsg(`${res.message} (${res.data.sku} -> ${res.data.status})`)
         onSaved({
           ...editingProduct,
           status: res.data.status,
@@ -337,7 +321,6 @@ export function CreateProductModal({
       } else {
         const res = await productsService.restoreProduct(editingProduct.sku)
         setStatus(res.data.status)
-        setSuccessMsg(`${res.message} (${res.data.sku} -> ${res.data.status})`)
         onSaved({
           ...editingProduct,
           status: res.data.status,
@@ -345,12 +328,9 @@ export function CreateProductModal({
       }
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setErrorMsg(`${err.message}`)
-        if (err.errorCode === 'PROD_HAS_STOCK') {
-          setHasStockConflict(true)
-        }
+        toast.error(err.message)
       } else {
-        setErrorMsg('Không thể chuyển trạng thái sản phẩm')
+        toast.error('Không thể chuyển trạng thái sản phẩm')
       }
     } finally {
       setIsSubmitting(false)
@@ -359,9 +339,6 @@ export function CreateProductModal({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setErrorMsg(null)
-    setHasStockConflict(false)
-    setSuccessMsg(null)
     setIsSubmitting(true)
 
     const numericPrice = Number(retailPriceDisplay.replace(/\D/g, ''))
@@ -422,9 +399,6 @@ export function CreateProductModal({
         }
 
         onSaved(createdProduct)
-        setSuccessMsg(
-          `Thêm sản phẩm "${createdProduct.productName}" (${createdProduct.sku}) thành công!`
-        )
         setProductName('')
         setImages([])
         setPendingFiles([])
@@ -433,9 +407,9 @@ export function CreateProductModal({
       }
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setErrorMsg(`${err.message}`)
+        toast.error(err.message)
       } else {
-        setErrorMsg('Không thể lưu sản phẩm. Vui lòng kiểm tra lại dữ liệu.')
+        toast.error('Không thể lưu sản phẩm. Vui lòng kiểm tra lại dữ liệu.')
       }
     } finally {
       setIsSubmitting(false)
@@ -471,27 +445,6 @@ export function CreateProductModal({
           noValidate
         >
           <div className="p-6 space-y-6">
-            {errorMsg && (
-              <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-xs font-semibold text-red-800 space-y-2">
-                <p>{errorMsg}</p>
-                {hasStockConflict && editingProduct && (
-                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-red-200/80">
-                    <span className="text-[11px] text-red-700 font-medium">
-                      Tồn kho hiện tại của {editingProduct.sku}:{' '}
-                      <strong>{currentStock}</strong> đơn vị. Muốn hết tồn hãy
-                      lập phiếu xuất hủy hoặc trả NCC (luật 28).
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {successMsg && (
-              <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-xs font-semibold text-emerald-800">
-                {successMsg}
-              </div>
-            )}
-
             {/* SECTION 1: THÔNG TIN ĐỊNH DANH & PHÂN LOẠI */}
             <div className="space-y-4">
               <p className="text-xs font-extrabold uppercase tracking-wider text-[#8c673a]">
@@ -649,7 +602,7 @@ export function CreateProductModal({
                     DUNG TÍCH / TRỌNG LƯỢNG *
                   </label>
                   <div className="mt-1.5 flex w-full overflow-hidden rounded-xl bg-[#fceddf]/70 border border-transparent focus-within:border-[#d57252] focus-within:bg-white">
-                    <input
+                    <NumberInput
                       type="text"
                       inputMode="decimal"
                       value={volume.replace(/[a-z]+$/i, '')}
@@ -676,7 +629,7 @@ export function CreateProductModal({
                     HẠN SỬ DỤNG TỐI ĐA
                   </label>
                   <div className="mt-1.5 relative">
-                    <input
+                    <NumberInput
                       type="number"
                       min={1}
                       value={shelfLifeMonths}
@@ -774,7 +727,7 @@ export function CreateProductModal({
                     Định mức tồn an toàn (Min stock)
                   </label>
                   <div className="mt-1.5 relative max-w-[240px]">
-                    <input
+                    <NumberInput
                       type="number"
                       min={0}
                       value={minStockAlert}

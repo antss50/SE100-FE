@@ -3,6 +3,19 @@ import { type FormEvent, useEffect, useState } from 'react'
 import { ApiClientError } from '../../lib/api-client'
 import { productsService } from '../../services/products.service'
 import type { BrandItem } from '../../types/api'
+import { toast } from '../../components/ui'
+
+const suggestBrandCode = (name: string) => {
+  const words = name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/gi, 'd')
+    .toUpperCase()
+    .match(/[A-Z0-9]+/g) || []
+
+  if (words.length > 1) return words.map((word) => word[0]).join('')
+  return (words[0] || '').slice(0, 10)
+}
 
 interface CreateBrandModalProps {
   isOpen: boolean
@@ -21,8 +34,9 @@ export function CreateBrandModal({
     () => editingBrand?.brandName || ''
   )
   const [brandCode, setBrandCode] = useState(
-    () => editingBrand?.brandCode || 'LRP'
+    () => editingBrand?.brandCode || ''
   )
+  const [isCodeAutoSuggested, setIsCodeAutoSuggested] = useState(!editingBrand)
   const [description, setDescription] = useState(
     () => editingBrand?.description || ''
   )
@@ -30,8 +44,6 @@ export function CreateBrandModal({
     () => editingBrand || null
   )
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   // UC-PROD-17: Xem chi tiết thương hiệu GET /api/v1/brands/{brandCode}
   useEffect(() => {
@@ -57,15 +69,11 @@ export function CreateBrandModal({
   if (!isOpen) return null
 
   const handleClose = () => {
-    setErrorMsg(null)
-    setSuccessMsg(null)
     onClose()
   }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setErrorMsg(null)
-    setSuccessMsg(null)
     setIsSubmitting(true)
 
     try {
@@ -85,17 +93,16 @@ export function CreateBrandModal({
           description,
         })
         onSaved(res.data, 'create')
-        setSuccessMsg(
-          `Đã thêm thương hiệu "${res.data.brandName}" (${res.data.brandCode}) thành công!`
-        )
         setBrandName('')
+                setBrandCode('')
+                setIsCodeAutoSuggested(true)
         setDescription('')
       }
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setErrorMsg(`${err.message}`)
+        toast.error(err.message)
       } else {
-        setErrorMsg('Không thể lưu thương hiệu')
+        toast.error('Không thể lưu thương hiệu')
       }
     } finally {
       setIsSubmitting(false)
@@ -105,8 +112,6 @@ export function CreateBrandModal({
   const handleToggleStatus = async () => {
     const current = detailData || editingBrand
     if (!current) return
-    setErrorMsg(null)
-    setSuccessMsg(null)
     setIsSubmitting(true)
 
     try {
@@ -119,7 +124,6 @@ export function CreateBrandModal({
         }
         setDetailData(updated)
         onSaved(updated, 'status')
-        setSuccessMsg(res.message || 'Ngừng sử dụng thương hiệu thành công')
       } else {
         // UC-PROD-20: PATCH /api/v1/brands/{brandCode}/restore
         const res = await productsService.restoreBrand(current.brandCode)
@@ -129,13 +133,12 @@ export function CreateBrandModal({
         }
         setDetailData(updated)
         onSaved(updated, 'status')
-        setSuccessMsg(res.message || 'Khôi phục thương hiệu thành công')
       }
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setErrorMsg(`${err.message}`)
+        toast.error(err.message)
       } else {
-        setErrorMsg('Không thể thay đổi trạng thái thương hiệu')
+        toast.error('Không thể thay đổi trạng thái thương hiệu')
       }
     } finally {
       setIsSubmitting(false)
@@ -195,18 +198,6 @@ export function CreateBrandModal({
               )}
             </div>
 
-            {errorMsg && (
-              <div className="rounded-xl bg-red-50 border border-red-200 px-3.5 py-2.5 text-xs font-semibold text-red-800">
-                {errorMsg}
-              </div>
-            )}
-
-            {successMsg && (
-              <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-2.5 text-xs font-semibold text-emerald-800">
-                {successMsg}
-              </div>
-            )}
-
             <div>
               <label className="block text-xs font-bold text-[#221712]">
                 Tên thương hiệu mỹ phẩm *
@@ -214,7 +205,13 @@ export function CreateBrandModal({
               <input
                 type="text"
                 value={brandName}
-                onChange={(e) => setBrandName(e.target.value)}
+                onChange={(e) => {
+                  const name = e.target.value
+                  setBrandName(name)
+                  if (!editingBrand && isCodeAutoSuggested) {
+                    setBrandCode(suggestBrandCode(name))
+                  }
+                }}
                 placeholder="Ví dụ: La Roche-Posay, Chanel, Dior..."
                 className="mt-2 w-full rounded-xl bg-[#fceddf]/70 border border-transparent focus:border-[#d57252] focus:bg-white px-4 py-3 text-sm text-[#221712] placeholder:text-[#9c8478] outline-none transition"
                 required
@@ -222,16 +219,24 @@ export function CreateBrandModal({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#221712]">
-                Mã thương hiệu nội bộ *
-              </label>
+              <div className="flex flex-wrap items-baseline gap-x-1">
+                <label className="block text-xs font-bold text-[#221712]">
+                  Mã thương hiệu nội bộ *
+                </label>
+                <span className="text-[11px] text-[#8a7062]">
+                  (Nhập mã mới hoặc chọn gợi ý chuẩn)
+                </span>
+              </div>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <input
                   type="text"
                   value={brandCode}
                   disabled={Boolean(editingBrand)}
-                  onChange={(e) => setBrandCode(e.target.value.toUpperCase())}
-                  placeholder="Ví dụ: LRP, CHN, DIO"
+                  onChange={(e) => {
+                    setIsCodeAutoSuggested(false)
+                    setBrandCode(e.target.value.toUpperCase())
+                  }}
+                  placeholder="Ví dụ: LRP"
                   className="w-56 rounded-xl bg-[#fceddf]/70 disabled:bg-zinc-100 disabled:text-zinc-500 border border-transparent focus:border-[#d57252] focus:bg-white px-4 py-3 font-mono text-sm font-semibold text-[#221712] outline-none transition"
                   required
                 />

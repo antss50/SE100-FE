@@ -1,4 +1,5 @@
 import type { ItemCondition, ReturnableLine } from '../../types/pos'
+import { NumberInput } from '../../components/ui/NumberInput'
 import { formatCurrency } from '../../utils/format'
 
 export interface ReturnSelection {
@@ -63,7 +64,7 @@ export function ReturnLinesTable({ lines, selection, onChange, changeOfMind }: R
                 <td className="px-2 py-2.5 text-right">{l.returnedQuantity}</td>
                 <td className="px-2 py-2.5 text-right">{formatCurrency(l.lineTotal)}</td>
                 <td className="px-2 py-2.5">
-                  <input
+                  <NumberInput
                     type="number"
                     min={1}
                     max={l.returnableQuantity}

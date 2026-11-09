@@ -23,6 +23,7 @@ import type {
   RbacRole,
   RoleCode,
 } from '../../types/api'
+import { toast } from '../../components/ui'
 
 /** Thứ tự và tên nhóm quyền lấy từ domain/permissions.ts. */
 const MODULE_ORDER = Object.keys(PERMISSION_MODULE_TITLES)
@@ -42,10 +43,6 @@ export function RbacPage() {
     'ALL' | 'INVENTORY_FEFO' | 'FINANCE'
   >('ALL')
   const [isSaving, setIsSaving] = useState(false)
-  const [feedback, setFeedback] = useState<{
-    type: 'success' | 'error'
-    text: string
-  } | null>(null)
 
   useEffect(() => {
     let active = true
@@ -63,8 +60,7 @@ export function RbacPage() {
   }, [])
 
   const showFeedback = (type: 'success' | 'error', text: string) => {
-    setFeedback({ type, text })
-    setTimeout(() => setFeedback(null), 4000)
+    toast[type](text)
   }
 
   const getRoleByCode = (code: RoleCode): RbacRole | undefined =>
@@ -194,25 +190,6 @@ export function RbacPage() {
           </button>
         </div>
       </div>
-
-      {feedback && (
-        <div
-          className={`rounded-2xl border px-4 py-3 text-xs font-semibold flex items-center justify-between ${
-            feedback.type === 'success'
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-              : 'bg-red-50 border-red-200 text-red-800'
-          }`}
-        >
-          <span>{feedback.text}</span>
-          <button
-            type="button"
-            onClick={() => setFeedback(null)}
-            className="text-[11px] underline ml-4"
-          >
-            Đóng
-          </button>
-        </div>
-      )}
 
       {/* 4 KPI Cards */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -15,11 +15,10 @@ import {
 } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ApiClientError } from '../../lib/api-client'
 import { promotionsService } from '../../services/promotions.service'
 import type { CustomerTierCode, LoyaltyConfigData } from '../../types/api'
 import { formatNumber } from '../../utils/format'
-import { toast } from '../../components/ui'
+import { NumberInput, toast } from '../../components/ui'
 import { getErrorMessage } from '../../utils/error'
 
 /** Trạng thái rỗng trong lúc chờ tải cấu hình từ API. */
@@ -42,7 +41,6 @@ export function LoyaltyPage() {
   })
 
   const [isSaving, setIsSaving] = useState(false)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
@@ -61,7 +59,6 @@ export function LoyaltyPage() {
   }, [])
 
   const openEditConfig = (tierCode?: CustomerTierCode) => {
-    setErrorMsg(null)
     setFocusedTier(tierCode || null)
     setAmountPerPointInput(String(config.amountPerPoint || 10000))
     const silver =
@@ -84,7 +81,6 @@ export function LoyaltyPage() {
 
   const handleSaveConfig = async (e: FormEvent) => {
     e.preventDefault()
-    setErrorMsg(null)
     setIsSaving(true)
 
     try {
@@ -128,11 +124,6 @@ export function LoyaltyPage() {
       )
     } catch (err) {
       toast.error(getErrorMessage(err, 'Không thể lưu cấu hình hạng thẻ'))
-      if (err instanceof ApiClientError) {
-        setErrorMsg(`${err.message}`)
-      } else {
-        setErrorMsg('Không thể lưu cấu hình hạng thẻ')
-      }
     } finally {
       setIsSaving(false)
     }
@@ -471,17 +462,11 @@ export function LoyaltyPage() {
             </div>
 
             <form onSubmit={handleSaveConfig} className="p-6 space-y-4">
-              {errorMsg && (
-                <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-xs font-semibold text-red-800">
-                  {errorMsg}
-                </div>
-              )}
-
               <div>
                 <label className="block text-xs font-bold text-[#221712]">
                   Số tiền quy đổi thành 1 điểm (amountPerPoint - VNĐ) *
                 </label>
-                <input
+                <NumberInput
                   type="number"
                   min={1}
                   step={1000}
@@ -505,7 +490,7 @@ export function LoyaltyPage() {
                     <label className="block font-bold text-[#5e473b]">
                       1. Hạng ĐỒNG (BRONZE)
                     </label>
-                    <input
+                    <NumberInput
                       type="number"
                       value={0}
                       disabled
@@ -517,7 +502,7 @@ export function LoyaltyPage() {
                     <label className="block font-bold text-[#221712]">
                       2. Hạng BẠC (SILVER) *
                     </label>
-                    <input
+                    <NumberInput
                       type="number"
                       min={1}
                       step={500000}
@@ -532,7 +517,7 @@ export function LoyaltyPage() {
                     <label className="block font-bold text-[#221712]">
                       3. Hạng VÀNG (GOLD) *
                     </label>
-                    <input
+                    <NumberInput
                       type="number"
                       min={1}
                       step={1000000}
@@ -547,7 +532,7 @@ export function LoyaltyPage() {
                     <label className="block font-bold text-[#221712]">
                       4. Hạng KIM CƯƠNG (DIAMOND) *
                     </label>
-                    <input
+                    <NumberInput
                       type="number"
                       min={1}
                       step={1000000}
@@ -570,7 +555,7 @@ export function LoyaltyPage() {
                       <label htmlFor={`discount-${code}`} className="block font-bold text-[#221712]">
                         % giảm {label}
                       </label>
-                      <input
+                      <NumberInput
                         id={`discount-${code}`}
                         type="number"
                         min={0}

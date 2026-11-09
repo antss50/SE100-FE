@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Send } from 'lucide-react'
 import { useState } from 'react'
-import { Button, ConfirmDialog, toast } from '../../components/ui'
+import { Button, ConfirmDialog, NumberInput, toast } from '../../components/ui'
 import { queryKeys } from '../../lib/query-keys'
 import { inventoryChecksService } from '../../services/inventory-checks.service'
 import type { InventoryCheckDetail } from '../../types/inventory'
@@ -106,7 +106,7 @@ export function CheckCountingForm({ check }: { check: InventoryCheckDetail }) {
                   <td className="px-4 py-2">{formatDate(l.expDate)}</td>
                   <td className="px-4 py-2 text-right">{formatNumber(l.snapshotQty)}</td>
                   <td className="w-32 px-4 py-2">
-                    <input
+                    <NumberInput
                       type="number"
                       min={0}
                       inputMode="numeric"
