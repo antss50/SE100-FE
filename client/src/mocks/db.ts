@@ -2,7 +2,6 @@ import type { DisposalDetail, InventoryCheckDetail } from '../types/inventory'
 import type { Batch, PurchaseOrderDetail, StockMovement } from '../types/stock'
 import type { Supplier } from '../types/suppliers'
 import type {
-  AuditLogItem,
   BrandItem,
   CategoryItem,
   CustomerItem,
@@ -11,7 +10,8 @@ import type {
 } from '../types/api'
 import type { CashierShift, OrderRecord, ReturnOrderRecord } from '../types/pos'
 import type { PromotionRecord } from '../types/promotions'
-import { SEED_AUDIT_LOGS } from './seed/audit-logs'
+import type { AuditLogRecord } from '../types/reports'
+import { seedAuditLogs } from './seed/audit-logs'
 import { SEED_BRANDS, SEED_CATEGORIES, SEED_PRODUCTS } from './seed/catalog'
 import { SEED_CUSTOMERS } from './seed/customers'
 import { SEED_LOYALTY_CONFIG } from './seed/loyalty'
@@ -47,7 +47,7 @@ export interface MockTables {
   sessions: MockSession[]
   permissions: MockPermission[]
   roles: MockRole[]
-  auditLogs: AuditLogItem[]
+  auditLogs: AuditLogRecord[]
   shifts: CashierShift[]
   customers: CustomerItem[]
   categories: CategoryItem[]
@@ -107,7 +107,7 @@ export function buildSeed(now: Date = new Date()): MockTables {
     sessions: [],
     permissions,
     roles: seedRoles(permissions),
-    auditLogs: clone(SEED_AUDIT_LOGS),
+    auditLogs: seedAuditLogs(today, SEED_USERS),
     shifts: [],
     customers: clone(SEED_CUSTOMERS),
     categories: clone(SEED_CATEGORIES),

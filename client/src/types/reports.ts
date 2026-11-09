@@ -368,10 +368,19 @@ export interface AuditDetails {
 export interface GetAuditLogsParams {
   userId?: number
   action?: string
-  module?: AuditModule | 'ALL'
+  module?: string
   fromDate?: string
   toDate?: string
   keyword?: string
   page?: number
   pageSize?: number
+}
+
+export interface AuditLogsData {
+  items: AuditLogRecord[]
+  page: number
+  pageSize: number
+  totalItems: number
+  /** Giá trị có thật trong nhật ký, để dựng ô lọc. */
+  facets: { users: { id: number; name: string }[]; actions: string[] }
 }

@@ -1,8 +1,8 @@
+import { Link } from 'react-router-dom'
 import {
   Ban,
   Check,
   CheckCircle2,
-  Download,
   FileSearch,
   KeyRound,
   Lock,
@@ -18,7 +18,6 @@ import { PERMISSION_MODULE_TITLES } from '../../domain/permissions'
 import { ApiClientError } from '../../lib/api-client'
 import { rbacService } from '../../services/rbac.service'
 import type {
-  AuditLogItem,
   RbacPermissionItem,
   RbacPermissionsGrouped,
   RbacRole,
@@ -35,7 +34,6 @@ export function RbacPage() {
   const [roles, setRoles] = useState<RbacRole[]>([])
   const [permissionsGrouped, setPermissionsGrouped] =
     useState<RbacPermissionsGrouped>({})
-  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([])
   const [selectedRoleCode, setSelectedRoleCode] = useState<RoleCode | 'ALL'>(
     'ADMIN'
   )
@@ -43,8 +41,6 @@ export function RbacPage() {
   const [categoryTab, setCategoryTab] = useState<
     'ALL' | 'INVENTORY_FEFO' | 'FINANCE'
   >('ALL')
-  const [auditRoleFilter, setAuditRoleFilter] = useState<string>('ALL')
-  const [auditRangeTab, setAuditRangeTab] = useState<string>('TODAY')
   const [isSaving, setIsSaving] = useState(false)
   const [feedback, setFeedback] = useState<{
     type: 'success' | 'error'
@@ -58,7 +54,6 @@ export function RbacPage() {
         if (active) {
           setRoles(rolesRes.data)
           setPermissionsGrouped(permsRes.data)
-          rbacService.getAuditLogs().then(setAuditLogs).catch(() => setAuditLogs([]))
         }
       }
     )
@@ -132,7 +127,6 @@ export function RbacPage() {
           permissionIds: role.permissionIds || [],
         })
       }
-      setAuditLogs(await rbacService.getAuditLogs())
       showFeedback(
         'success',
         'Cập nhật quyền hạn cho vai trò thành công (PUT /api/v1/rbac/roles/:roleId/permissions)'
@@ -151,7 +145,6 @@ export function RbacPage() {
   const handleResetDefault = async () => {
     try {
       setRoles(await rbacService.resetDefaultMatrix())
-      setAuditLogs(await rbacService.getAuditLogs())
       showFeedback('success', 'Đã khôi phục ma trận phân quyền về mặc định chuẩn')
     } catch (err) {
       showFeedback('error', err instanceof ApiClientError ? err.message : 'Không thể khôi phục ma trận phân quyền')
@@ -159,11 +152,6 @@ export function RbacPage() {
   }
 
   const totalPermissionsCount = Object.values(permissionsGrouped).flat().length || 24
-
-  const filteredAuditLogs = auditLogs.filter((item) => {
-    if (auditRoleFilter === 'ALL') return true
-    return item.roleCode === auditRoleFilter
-  })
 
   return (
     <div className="space-y-6">
@@ -273,25 +261,18 @@ export function RbacPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white border border-[#ead9ce] p-5 shadow-2xs flex items-center justify-between">
+        <Link
+          to="/audit-logs"
+          className="rounded-2xl bg-white border border-[#ead9ce] p-5 shadow-2xs flex items-center justify-between hover:bg-[#fbf5f0]"
+        >
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#8c7265]">
-              BẢN GHI VẾT (AUDIT LOGS)
-            </p>
-            <div className="mt-1.5 flex items-baseline gap-1.5">
-              <span className="text-2xl font-extrabold text-[#221712]">
-                1,492
-              </span>
-              <span className="text-xs text-[#8a7062]">today</span>
-            </div>
-            <span className="mt-1 inline-block px-2 py-0.5 rounded bg-[#7b5836] text-amber-50 text-[10px] font-bold">
-              Sync Realtime
-            </span>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#8c7265]">NHẬT KÝ HỆ THỐNG</p>
+            <p className="mt-1.5 text-sm font-semibold text-[#221712]">Xem lịch sử thao tác và đổi quyền</p>
           </div>
           <div className="size-10 rounded-xl bg-[#f6ece4] text-[#7b5836] grid place-items-center">
             <FileSearch className="size-5" />
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Main Split Grid: 4 Standard Roles (Left) + Matrix Table (Right) */}
@@ -639,126 +620,6 @@ export function RbacPage() {
               Đã lưu lần cuối: Hôm nay lúc 11:42 bởi Mai Trần
             </p>
           </div>
-        </div>
-      </div>
-
-      {/* Bottom Section: Nhật Ký Thao Tác Hệ Thống (Audit Log Truy Vết) */}
-      <div className="rounded-3xl bg-white border border-[#ead9ce] p-6 shadow-2xs space-y-5">
-        <div className="flex items-start gap-3.5">
-          <div className="size-10 rounded-2xl bg-[#fbeae2] text-[#b4533c] grid place-items-center shrink-0">
-            <FileSearch className="size-5" />
-          </div>
-          <div>
-            <h2 className="text-base font-extrabold text-[#221712]">
-              Nhật Ký Thao Tác Hệ Thống (Audit Log Truy Vết)
-            </h2>
-            <p className="text-xs text-[#7d6457]">
-              Hệ thống lưu trữ bất biến (Append-Only Ledger) ghi nhận mọi hành
-              động nhạy cảm của nhân viên theo chuẩn kiểm toán bán lẻ mỹ phẩm.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={auditRoleFilter}
-              onChange={(e) => setAuditRoleFilter(e.target.value)}
-              className="rounded-xl bg-[#fcf7f4] border border-[#e7d6cb] px-3.5 py-2 text-xs font-semibold text-[#473329] outline-none"
-            >
-              <option value="ALL">▽ Tất cả vai trò</option>
-              <option value="ADMIN">ADMIN</option>
-              <option value="STORE_MANAGER">STORE_MANAGER</option>
-              <option value="INVENTORY_STAFF">INVENTORY_STAFF</option>
-              <option value="CASHIER">CASHIER</option>
-            </select>
-
-            <div className="inline-flex rounded-xl bg-[#faf3ee] p-1 border border-[#ead9ce]">
-              {[
-                { key: 'TODAY', label: 'Hôm nay' },
-                { key: '7DAYS', label: '7 ngày qua' },
-                { key: 'MONTH', label: 'Tháng này' },
-                { key: 'CUSTOM', label: 'Tùy chỉnh 📅' },
-              ].map((t) => (
-                <button
-                  key={t.key}
-                  type="button"
-                  onClick={() => setAuditRangeTab(t.key)}
-                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                    auditRangeTab === t.key
-                      ? 'bg-white text-[#9f432b] shadow-2xs'
-                      : 'text-[#7c6356]'
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() =>
-              showFeedback(
-                'success',
-                'Đã xuất Nhật ký thao tác hệ thống (Audit Log CSV/Excel)'
-              )
-            }
-            className="inline-flex items-center gap-2 rounded-xl border border-[#e2d0c5] hover:bg-[#faf3ee] px-4 py-2 text-xs font-bold text-[#3f2c23] cursor-pointer"
-          >
-            <Download className="size-3.5" />
-            <span>Xuất Log PDF/Excel</span>
-          </button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-[#faf3ee] border-y border-[#ebd9ce] text-[10px] font-extrabold uppercase tracking-wider text-[#7e6457]">
-                <th className="py-3 px-4">THỜI GIAN</th>
-                <th className="py-3 px-4">NHÂN SỰ THỰC HIỆN</th>
-                <th className="py-3 px-4">VAI TRÒ HỆ THỐNG</th>
-                <th className="py-3 px-4">CHI TIẾT HÀNH ĐỘNG NGHIỆP VỤ</th>
-                <th className="py-3 px-4">TRẠNG THÁI RỦI RO</th>
-                <th className="py-3 px-4 text-right">ĐỊA CHỈ IP / TERMINAL</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#f3e7df] text-xs">
-              {filteredAuditLogs.map((log) => (
-                <tr key={log.id} className="hover:bg-[#fdfaf8]">
-                  <td className="py-4 px-4 font-mono text-[11px] text-[#3a281f]">
-                    <div className="font-bold">{log.timestamp}</div>
-                    <div className="text-[#8d7467]">{log.date}</div>
-                  </td>
-                  <td className="py-4 px-4 font-bold text-[#221712]">
-                    {log.actorName}
-                  </td>
-                  <td className="py-4 px-4">
-                    <span className="px-2.5 py-1 rounded-md bg-[#fbe5d4] text-[#9e4724] font-mono text-[10px] font-bold">
-                      {log.roleCode}
-                    </span>
-                  </td>
-                  <td className="py-4 px-4">
-                    <p className="font-bold text-[#221712]">{log.actionTitle}</p>
-                    <span className="mt-1 inline-block px-2 py-0.5 rounded bg-[#fbeae2] text-[#9f432b] font-mono text-[11px] font-bold">
-                      {log.referenceCode}
-                    </span>
-                    <p className="mt-1 text-[11px] text-[#7a6154]">
-                      {log.detailNote}
-                    </p>
-                  </td>
-                  <td className="py-4 px-4">
-                    <span className="inline-block px-3 py-1 rounded-full bg-[#f4eae3] text-[#6d5448] text-[11px] font-semibold">
-                      {log.riskStatus}
-                    </span>
-                  </td>
-                  <td className="py-4 px-4 text-right font-mono text-[11px] text-[#7a6154]">
-                    {log.ipAndTerminal}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
     </div>

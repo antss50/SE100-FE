@@ -43,6 +43,8 @@ const OrderDetailPage = lazyNamed(() => import('../features/orders/OrderDetailPa
 const ReturnsListPage = lazyNamed(() => import('../features/returns/ReturnsListPage'), 'ReturnsListPage')
 const ReturnCreatePage = lazyNamed(() => import('../features/returns/ReturnCreatePage'), 'ReturnCreatePage')
 const ReturnDetailPage = lazyNamed(() => import('../features/returns/ReturnDetailPage'), 'ReturnDetailPage')
+const PromotionEffectPage = lazyNamed(() => import('../features/reports/PromotionEffectPage'), 'PromotionEffectPage')
+const AuditLogsPage = lazyNamed(() => import('../features/audit/AuditLogsPage'), 'AuditLogsPage')
 const ReportsPage = lazyNamed(() => import('../features/reports/ReportsPage'), 'ReportsPage')
 const SettingsPage = lazyNamed(() => import('../features/settings/SettingsPage'), 'SettingsPage')
 const ComingSoonPage = lazy(async () => ({ default: (await import('../features/common/ComingSoonPage')).ComingSoonPage }))
@@ -65,6 +67,7 @@ const PAGES: Record<string, ComponentType> = {
   '/orders': OrdersListPage,
   '/returns': ReturnsListPage,
   '/reports': ReportsPage,
+  '/audit-logs': AuditLogsPage,
   '/settings': SettingsPage,
 }
 
@@ -85,6 +88,7 @@ const SUB_ROUTES: { path: string; permission: PermissionRequirement; element: Re
   { path: 'returns/:id', permission: 'POS_VIEW', element: <ReturnDetailPage /> },
   { path: 'orders/:id', permission: 'POS_VIEW', element: <OrderDetailPage /> },
   { path: 'shifts/:id', permission: 'POS_VIEW', element: <ShiftDetailPage /> },
+  { path: 'promotions/:promotionId/report', permission: 'PROMOTION_REPORT', element: <PromotionEffectPage /> },
   { path: 'users/:userId', permission: 'USER_MANAGE', element: <UserDetailPage /> },
 ]
 

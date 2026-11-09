@@ -111,9 +111,11 @@ type PaginatedData<T> = { items: T[]; page: number; pageSize: number; totalItems
 - **Quyền:** `ROLE_MANAGE` · **Request:** `{}` · **Response 200:** `RbacRole[]` (ma trận về mặc định của `domain/permissions.ts`). Ghi audit log.
 
 ### `GET /audit-logs` — AUTH-06
-- **Quyền:** `AUDIT_LOG_VIEW`
-- **Query:** `roleCode`, `page`, `pageSize` (mặc định 50) · **Response 200:** `PaginatedData<AuditLogItem>`
-- **Ghi chú:** cấu trúc `AuditLogItem` hiện theo màn RBAC cũ; GĐ6 đổi theo bảng AUDIT_LOGS.
+- **Quyền:** `AUDIT_LOG_VIEW` (Admin)
+- **Query:** `userId`, `action`, `module` (`AUTH`/`USER`/`ROLE`/`SETTING`/`PRODUCT`/`SUPPLIER`/`STOCK`/`POS`/`CUSTOMER`/`PROMOTION`), `fromDate`, `toDate` (`YYYY-MM-DD`), `keyword` (đối tượng/người), `page`, `pageSize` (mặc định 20)
+- **Response 200:** `{ items: AuditLogRecord[], page, pageSize, totalItems, facets: { users: {id,name}[], actions: string[] } }`; `AuditLogRecord = { id, userId, userName, roleCode, action, module, entityType, entityId, details: {before?, after?, note?} | null, ipAddress, createdAt }`, mới nhất trước
+- **Lỗi:** `422 REP_INVALID_RANGE` khi `fromDate > toDate`
+- **Ghi chú:** chỉ đọc. Mock ghi audit tự động trong router (`mocks/audit.ts`, bảng `AUDIT_RULES`) cho mọi request ghi thành công; thao tác cần trước/sau (UPDATE_SETTING, TIER_UPGRADE, OVERRIDE_FEFO, đổi quyền, chốt ca, bàn giao ca) gọi `writeAudit` trực tiếp. Body bị lược mật khẩu/token.
 
 ## PRODUCT
 
@@ -235,7 +237,10 @@ Kiểu: `PromotionView` = bản ghi PROMOTIONS (DATABASE.md mục 24, camelCase:
 - `DRAFT → ACTIVE`, `ACTIVE ↔ PAUSED`.
 - **Lỗi:** `404 PROM_NOT_FOUND`, `409 PROM_STATUS_INVALID`
 
-> `GET /promotions/{code}/report` (PROM-04) sẽ viết lại ở GĐ3 (tính từ đơn hàng thật).
+### `GET /promotions/{id}/effect` — PROM-04
+- **Quyền:** `PROMOTION_REPORT` (Admin, Quản lý) · **Query:** `fromDate`, `toDate` (mặc định 30 ngày)
+- **Response 200:** `PromotionEffect = { promotionId, promotionName, range, usageCount, totalDiscount, revenue, customerCount, averageOrderValue, topCustomers[], byDay[] }`; tính từ đơn COMPLETED trong kỳ có `orderPromotionId` hoặc `linePromotionId` = id; tiền giảm = `orderDiscountAmount` (KM đơn) + Σ `lineDiscount` (KM dòng)
+- **Lỗi:** `404 PROMOTION_NOT_FOUND`, `422 REP_INVALID_RANGE`
 
 ## POS · Ca bán hàng (POS-01, POS-05)
 

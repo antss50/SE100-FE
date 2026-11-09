@@ -2,7 +2,7 @@ import { z } from 'zod'
 import type { SettingItem, SettingKey, SettingsData, StoreInfo } from '../../types/settings'
 import { MockHttpError, ok, parseBody } from '../http'
 import type { MockRoute } from '../router'
-import { appendAuditLog } from './rbac'
+import { writeAudit } from '../audit'
 
 const SETTING_META: Record<SettingKey, { description: string; kind: 'number' | 'text' }> = {
   EXPIRY_WARNING_DAYS: { description: 'Số ngày cảnh báo cận hạn', kind: 'number' },
@@ -52,6 +52,8 @@ export const settingsRoutes: MockRoute[] = [
       const input = parseBody(updateSchema, body)
       const stored = db.read('systemSettings')
       const changed: string[] = []
+      const changedBefore: Record<string, unknown> = {}
+      const changedAfter: Record<string, unknown> = {}
       for (const [key, raw] of Object.entries(input.settings)) {
         if (!KEYS.includes(key as SettingKey)) {
           throw new MockHttpError(422, 'SET_KEY_UNKNOWN', `Không có tham số cấu hình ${key}`)
@@ -70,7 +72,11 @@ export const settingsRoutes: MockRoute[] = [
         } else if (!value) {
           throw new MockHttpError(422, 'SET_VALUE_INVALID', `${meta.description}: không được để trống`)
         }
-        if (stored[key] !== value) changed.push(`${key}=${value}`)
+        if (stored[key] !== value) {
+          changed.push(`${key}=${value}`)
+          changedBefore[key] = stored[key] ?? null
+          changedAfter[key] = value
+        }
         stored[key] = value
       }
       db.touch('systemSettings')
@@ -79,15 +85,18 @@ export const settingsRoutes: MockRoute[] = [
         const policy = policies.find((p) => p.isDefault) ?? policies[0]
         if (policy && policy.maxReturnDays !== input.maxReturnDays) {
           changed.push(`max_return_days=${input.maxReturnDays}`)
+          changedBefore.max_return_days = policy.maxReturnDays
+          changedAfter.max_return_days = input.maxReturnDays
           policy.maxReturnDays = input.maxReturnDays
           db.touch('returnPolicies')
         }
       }
       if (changed.length > 0) {
-        appendAuditLog(db, user, now, {
-          actionTitle: 'Cập nhật cấu hình hệ thống',
-          referenceCode: 'SYSTEM_SETTINGS',
-          detailNote: `(${changed.join(', ')})`,
+        writeAudit(db, user, now, {
+          action: 'UPDATE_SETTING',
+          module: 'SETTING',
+          entityType: 'SYSTEM_SETTINGS',
+          details: { before: changedBefore, after: changedAfter },
         })
       }
       const policy = db.read('returnPolicies').find((p) => p.isDefault) ?? db.read('returnPolicies')[0]

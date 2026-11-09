@@ -19,7 +19,7 @@
 | AUTH-03 | Đổi mật khẩu | 3 | Xong | Bắt đổi MK lần đầu: hộp không đóng được, mock chặn API (luật 47) |
 | AUTH-04 | Quản lý tài khoản nhân viên | 3 | Xong | USERS chỉ ACTIVE/LOCKED; không tự khóa mình; mã NV tự sinh NV0007 khi bỏ trống |
 | AUTH-05 | Vai trò & phân quyền | 3 | Xong | Role hệ thống không xóa; ADMIN giữ quyền quản trị; quyền không thêm/xóa trên giao diện |
-| AUTH-06 | Nhật ký hệ thống | 6 | Chưa làm | |
+| AUTH-06 | Nhật ký hệ thống | 6 | Đang test | `/audit-logs`; audit tự động qua router (D47) |
 | AUTH-07 | Cấu hình hệ thống | 3 | Xong | Màn /settings + API; nguồn duy nhất cho tham số điểm |
 | PROD-01 | Sản phẩm / SKU | 3 | Xong | Status ACTIVE/DISCONTINUED, bỏ nút đặt tồn = 0 |
 | PROD-02 | Danh mục | 3 | Xong | CATEGORIES ACTIVE/INACTIVE; số SP tính từ dữ liệu |
@@ -42,7 +42,7 @@
 | PROM-01 | Tra cứu KM | 3 | Xong | 7 loại, phase theo ngày |
 | PROM-02 | Quản lý KM | 3 | Xong | 7 loại, khóa sửa khi có đơn |
 | PROM-03 | Áp voucher khi bán | 4 | Xong | Voucher qua domain pricing |
-| PROM-04 | Hiệu quả KM | 6 | Chưa làm | |
+| PROM-04 | Hiệu quả KM | 6 | Đang test | `/promotions/:id/report`, nút Xem hiệu quả (D48) |
 | POS-01 | Mở ca | 4 | Xong | Mở ca qua modal, mỗi thu ngân 1 ca |
 | POS-02 | Lập đơn FEFO | 4 | Xong | POS FEFO viết lại, phím tắt F1-F9, đơn nháp |
 | POS-03 | Thanh toán & hóa đơn | 4 | Xong | Thanh toán 1 giao dịch mock, lịch sử + chi tiết đơn, in hóa đơn |

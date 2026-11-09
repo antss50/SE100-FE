@@ -144,7 +144,6 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: FileClock,
         permission: 'AUDIT_LOG_VIEW',
         uc: 'AUTH-06',
-        plannedPhase: 6,
       },
       {
         to: '/settings',
