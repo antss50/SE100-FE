@@ -171,6 +171,7 @@ export function CheckGroup({ title, options, selected, onChange, disabled }: Che
           <label key={o.id} className="inline-flex items-center gap-1.5 rounded-lg bg-card px-2.5 py-1.5 text-sm">
             <input
               type="checkbox"
+              className="size-6 accent-accent"
               checked={selected.includes(o.id)}
               onChange={(e) => onChange(e.target.checked ? [...selected, o.id] : selected.filter((id) => id !== o.id))}
             />
@@ -203,6 +204,7 @@ export function WeekdaysPicker({
             <label key={label} className="inline-flex items-center gap-1.5 rounded-lg bg-card px-2.5 py-1.5 text-sm">
               <input
                 type="checkbox"
+                className="size-6 accent-accent"
                 checked={value.includes(day)}
                 onChange={(e) => onChange(e.target.checked ? [...value, day] : value.filter((d) => d !== day))}
               />

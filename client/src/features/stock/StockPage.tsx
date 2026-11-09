@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
-import { Boxes, Clock, Layers, ShieldAlert, Plus, PackageMinus } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Boxes, Clock, Layers, ShieldAlert, Plus, PackageMinus, ClipboardCheck, Beaker, TriangleAlert, Lightbulb, RotateCcw } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useCan } from '../../app/usePermission'
@@ -10,11 +10,13 @@ import {
   Pagination,
   StatCard,
   cn,
+  toast,
   type Column,
 } from '../../components/ui'
 import { queryKeys } from '../../lib/query-keys'
 import { productsService } from '../../services/products.service'
 import { stockService } from '../../services/stock.service'
+import { inventoryChecksService } from '../../services/inventory-checks.service'
 import type { StockBatchItem, StockExpiryFilter } from '../../types/stock'
 import { getErrorMessage } from '../../utils/error'
 import { formatCurrency, formatDate, formatNumber } from '../../utils/format'
@@ -27,6 +29,7 @@ const PAGE_SIZE = 10
 /** STK-02 (tồn theo lô) và STK-03 (cận hạn / hết hạn). Thu ngân chỉ thấy tồn khả dụng. */
 export function StockPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   const canFull = useCan(['STOCK_VIEW', 'STOCK_EXPIRY_VIEW'])
   const canExpiry = useCan('STOCK_EXPIRY_VIEW')
@@ -75,7 +78,15 @@ export function StockPage() {
     setSelected([])
   }
   const toggle = (id: number) => setSelected((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]))
-  const needsAction = (b: StockBatchItem) => b.expiryStatus !== 'OK' && (b.onHandQty ?? 0) > 0
+  const startCheck = useMutation({
+    mutationFn: (batchIds: number[]) => inventoryChecksService.create({ batchIds }),
+    onSuccess: (res) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.inventoryChecks.all })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.stock.all })
+      navigate(`/inventory-checks/${res.data.id}`)
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
+  })
 
   const columns: Column<StockBatchItem>[] = [
     ...(canFull && (canCheck || canDispose)
@@ -90,6 +101,7 @@ export function StockPage() {
                 checked={selected.includes(b.id)}
                 onChange={() => toggle(b.id)}
                 onClick={(e) => e.stopPropagation()}
+                className="size-6 cursor-pointer accent-accent"
               />
             ),
           },
@@ -165,16 +177,17 @@ export function StockPage() {
             align: 'right',
             render: (b) => (
               <div className="flex items-center justify-end gap-2">
-                {canDispose && needsAction(b) && (
+                {canCheck && (
                   <Button
                     size="sm"
                     variant="secondary"
+                    loading={startCheck.isPending}
                     onClick={(e) => {
                       e.stopPropagation()
-                      navigate('/disposals/new', { state: { batchIds: [b.id], issueType: 'DESTROY' } })
+                      startCheck.mutate([b.id])
                     }}
                   >
-                    Lập đề nghị xuất hủy
+                    Kiểm kê
                   </Button>
                 )}
                 <Link to={`/stock/${b.id}`} className="text-xs font-semibold text-accent hover:underline" onClick={(e) => e.stopPropagation()}>
@@ -226,8 +239,8 @@ export function StockPage() {
             icon={Clock}
           />
           <StatCard
-            label="Đang cách ly"
-            value={`${formatNumber(s?.quarantinedUnits)} SP`}
+            label="Đang cách ly (Sản phẩm)"
+            value={`${formatNumber(s?.quarantinedUnits)}`}
             hint={`Vốn: ${formatCurrency(s?.quarantinedValue)}`}
             icon={ShieldAlert}
           />
@@ -304,14 +317,16 @@ export function StockPage() {
             </label>
           )}
           {canFull && (
-            <label className="flex items-center gap-2 text-sm text-ink-soft">
+            <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl px-2 text-sm font-medium text-ink-soft transition hover:bg-card">
               <input
                 type="checkbox"
+                className="size-6 accent-accent"
                 checked={inStockOnly}
                 onChange={(e) => {
                   setInStockOnly(e.target.checked)
                   setPage(1)
                 }}
+                className="size-6 cursor-pointer accent-accent"
               />
               Chỉ lô còn hàng
             </label>
@@ -329,26 +344,42 @@ export function StockPage() {
           onRowClick={canFull ? (b) => navigate(`/stock/${b.id}`) : undefined}
         />
         {batches.data && (
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line p-4">
-            <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
-              <span>Đã chọn {selected.length} lô</span>
+          <div className="overflow-x-auto border-t border-line p-4">
+            <div className="flex w-max min-w-full flex-nowrap items-center justify-between gap-3">
+              <div className="flex w-max shrink-0 flex-nowrap items-center gap-2">
+              {selected.length > 0 ? (
+                <span aria-live="polite" className="mr-1 rounded-full bg-accent-soft px-3 py-2 text-sm font-semibold text-accent-strong">
+                  Đã chọn {selected.length} lô
+                </span>
+              ) : (
+                <span className="mr-1 flex items-center gap-2 text-sm text-muted">
+                  <Lightbulb className="size-4 shrink-0" aria-hidden="true" />
+                  Tích chọn lô phía trên để thực hiện thao tác hàng loạt.
+                </span>
+              )}
               {canCheck && (
-                <Button size="sm" variant="secondary" disabled={selected.length === 0} onClick={() => navigate('/inventory-checks/new', { state: { batchIds: selected } })}>
+                <Button size="md" variant="secondary" icon={<ClipboardCheck className="size-4" aria-hidden="true" />} disabled={selected.length === 0 || startCheck.isPending} loading={startCheck.isPending} onClick={() => startCheck.mutate(selected)}>
                   Kiểm kê các lô đã chọn
                 </Button>
               )}
               {canDispose && (
                 <>
-                  <Button size="sm" variant="secondary" disabled={selected.length === 0} onClick={() => navigate('/disposals/new', { state: { batchIds: selected, issueType: 'TESTER' } })}>
+                  <Button size="md" variant="secondary" icon={<Beaker className="size-4" aria-hidden="true" />} disabled={selected.length === 0} onClick={() => navigate('/disposals/new', { state: { batchIds: selected, issueType: 'TESTER' } })}>
                     Xuất tester
                   </Button>
-                  <Button size="sm" variant="secondary" disabled={selected.length === 0} onClick={() => navigate('/disposals/new', { state: { batchIds: selected, issueType: 'DESTROY' } })}>
+                  <Button size="md" variant="secondary" icon={<TriangleAlert className="size-4" aria-hidden="true" />} className="border-danger/25 bg-danger-soft text-danger hover:bg-danger/10" disabled={selected.length === 0} onClick={() => navigate('/disposals/new', { state: { batchIds: selected, issueType: 'DESTROY' } })}>
                     Đề xuất hủy
+                  </Button>
+                  <Button size="md" variant="secondary" icon={<RotateCcw className="size-4" aria-hidden="true" />} disabled={selected.length === 0} onClick={() => navigate('/disposals/new', { state: { batchIds: selected, issueType: 'RETURN_TO_SUPPLIER' } })}>
+                    Trả NCC
                   </Button>
                 </>
               )}
+              </div>
+              <div className="shrink-0">
+                <Pagination page={batches.data.data.page} pageSize={batches.data.data.pageSize} totalItems={batches.data.data.totalItems} onPageChange={setPage} unit="lô" />
+              </div>
             </div>
-            <Pagination page={batches.data.data.page} pageSize={batches.data.data.pageSize} totalItems={batches.data.data.totalItems} onPageChange={setPage} unit="lô" />
           </div>
         )}
       </div>

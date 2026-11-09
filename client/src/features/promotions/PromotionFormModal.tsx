@@ -234,7 +234,7 @@ export function PromotionFormModal({ open, promotion, onClose }: PromotionFormMo
           <>
             <Input label="Số món cần mua" type="number" min={1} disabled={locked} {...register('buyQuantity')} />
             <label className="flex items-center gap-2 self-end pb-2 text-sm">
-              <input type="checkbox" disabled={locked} {...register('isRepeatable')} />
+              <input type="checkbox" className="size-6 accent-accent" disabled={locked} {...register('isRepeatable')} />
               Lặp theo bội số (mua 4 tặng 2)
             </label>
           </>

@@ -12,18 +12,22 @@ interface FieldShellProps {
   error?: string
   hint?: string
   required?: boolean
+  labelAction?: ReactNode
   children: ReactNode
   className?: string
 }
 
 /** Khung chung: `<label>` gắn với ô nhập, thông báo lỗi có `role="alert"`. */
-export function FieldShell({ id, label, error, hint, required, children, className }: FieldShellProps) {
+export function FieldShell({ id, label, error, hint, required, labelAction, children, className }: FieldShellProps) {
   return (
     <div className={cn('space-y-1.5', className)}>
-      <label htmlFor={id} className="block text-xs font-semibold text-ink-soft">
-        {label}
-        {required && <span className="ml-0.5 text-danger">*</span>}
-      </label>
+      <div className="flex items-center justify-between">
+        <label htmlFor={id} className="block text-xs font-semibold text-ink-soft">
+          {label}
+          {required && <span className="ml-0.5 text-danger">*</span>}
+        </label>
+        {labelAction}
+      </div>
       {children}
       {error ? (
         <p id={`${id}-error`} role="alert" className="text-xs text-danger">
@@ -75,6 +79,7 @@ export interface SelectOption {
 
 export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label: string
+  labelAction?: ReactNode
   options: SelectOption[]
   error?: string
   hint?: string
@@ -83,13 +88,13 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
-  { label, options, error, hint, placeholder, id, required, className, containerClassName, ...rest },
+  { label, labelAction, options, error, hint, placeholder, id, required, className, containerClassName, ...rest },
   ref
 ) {
   const autoId = useId()
   const fieldId = id ?? autoId
   return (
-    <FieldShell id={fieldId} label={label} error={error} hint={hint} required={required} className={containerClassName}>
+    <FieldShell id={fieldId} label={label} error={error} hint={hint} required={required} labelAction={labelAction} className={containerClassName}>
       <select
         ref={ref}
         id={fieldId}

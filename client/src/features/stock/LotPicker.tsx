@@ -57,6 +57,7 @@ export function LotPicker({ initialIds = [], onChange, disabledReason, filter }:
         return (
           <input
             type="checkbox"
+            className="size-6 accent-accent"
             aria-label={`Chọn lô ${b.lotCode}`}
             checked={selectedIds.includes(b.id)}
             disabled={reason !== null}

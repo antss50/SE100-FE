@@ -24,18 +24,29 @@ export function PurchaseOrderLinesEditor({ fields, products, register, errors, l
   const err = (index: number, name: keyof PurchaseOrderFormValues['lines'][number]) => errors.lines?.[index]?.[name]?.message
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[960px] border-collapse text-sm">
+      <table className="w-full min-w-[1080px] table-fixed border-collapse text-sm">
+        <colgroup>
+          <col className="w-5" />
+          <col className="w-[280px]" />
+          <col className="w-[120px]" />
+          <col className="w-[140px]" />
+          <col className="w-[140px]" />
+          <col className="w-20" />
+          <col className="w-[130px]" />
+          <col className="w-[110px]" />
+          <col className="w-11" />
+        </colgroup>
         <thead>
           <tr className="bg-accent-soft/60 text-left text-xs font-semibold text-muted">
-            <th className="px-3 py-2">#</th>
-            <th className="px-3 py-2">Sản phẩm & SKU</th>
-            <th className="px-3 py-2">Mã lô nhập</th>
-            <th className="px-3 py-2">NSX</th>
-            <th className="px-3 py-2">HSD</th>
-            <th className="px-3 py-2 text-right">SL</th>
-            <th className="px-3 py-2 text-right">Giá nhập</th>
-            <th className="px-3 py-2 text-right">Thành tiền</th>
-            <th className="px-3 py-2">
+            <th className="px-1 py-1.5">#</th>
+            <th className="px-1 py-1.5">Sản phẩm & SKU</th>
+            <th className="px-1 py-1.5">Mã lô nhập</th>
+            <th className="px-1 py-1.5">NSX</th>
+            <th className="px-1 py-1.5">HSD</th>
+            <th className="px-1 py-1.5 text-right">SL</th>
+            <th className="px-1 py-1.5 text-right">Giá nhập</th>
+            <th className="px-1 py-1.5 text-right">Thành tiền</th>
+            <th className="px-1 py-1.5">
               <span className="sr-only">Xóa dòng</span>
             </th>
           </tr>
@@ -43,8 +54,8 @@ export function PurchaseOrderLinesEditor({ fields, products, register, errors, l
         <tbody>
           {fields.map((field, index) => (
             <tr key={field.id} className="border-t border-line align-top">
-              <td className="px-3 py-2 text-muted">{index + 1}</td>
-              <td className="min-w-64 px-3 py-2">
+              <td className="px-1 py-1.5 text-muted">{index + 1}</td>
+              <td className="min-w-64 px-1 py-1.5">
                 <select
                   aria-label={`Sản phẩm dòng ${index + 1}`}
                   className={cn(CELL, err(index, 'productId') ? 'border-danger' : 'border-line')}
@@ -60,7 +71,7 @@ export function PurchaseOrderLinesEditor({ fields, products, register, errors, l
                 </select>
                 {err(index, 'productId') && <p className="mt-1 text-xs text-danger">{err(index, 'productId')}</p>}
               </td>
-              <td className="px-3 py-2">
+              <td className="px-1 py-1.5">
                 <input
                   aria-label={`Mã lô dòng ${index + 1}`}
                   className={cn(CELL, 'font-mono', err(index, 'lotCode') ? 'border-danger' : 'border-line')}
@@ -69,10 +80,10 @@ export function PurchaseOrderLinesEditor({ fields, products, register, errors, l
                 {existingLots[index] && <p className="mt-1 text-xs text-info">Lô đã có trong kho</p>}
                 {err(index, 'lotCode') && <p className="mt-1 text-xs text-danger">{err(index, 'lotCode')}</p>}
               </td>
-              <td className="px-3 py-2">
+              <td className="px-1 py-1.5">
                 <input type="date" aria-label={`Ngày sản xuất dòng ${index + 1}`} className={cn(CELL, 'border-line')} {...register(`lines.${index}.mfgDate`)} />
               </td>
-              <td className="px-3 py-2">
+              <td className="px-1 py-1.5">
                 <input
                   type="date"
                   aria-label={`Hạn dùng dòng ${index + 1}`}
@@ -81,7 +92,7 @@ export function PurchaseOrderLinesEditor({ fields, products, register, errors, l
                 />
                 {err(index, 'expDate') && <p className="mt-1 text-xs text-danger">{err(index, 'expDate')}</p>}
               </td>
-              <td className="w-24 px-3 py-2">
+              <td className="w-20 px-1 py-1.5">
                 <input
                   type="number"
                   min={1}
@@ -91,7 +102,7 @@ export function PurchaseOrderLinesEditor({ fields, products, register, errors, l
                 />
                 {err(index, 'quantity') && <p className="mt-1 text-xs text-danger">{err(index, 'quantity')}</p>}
               </td>
-              <td className="w-36 px-3 py-2">
+              <td className="w-36 px-1 py-1.5">
                 <input
                   type="number"
                   min={0}
@@ -101,8 +112,8 @@ export function PurchaseOrderLinesEditor({ fields, products, register, errors, l
                 />
                 {err(index, 'unitCost') && <p className="mt-1 text-xs text-danger">{err(index, 'unitCost')}</p>}
               </td>
-              <td className="whitespace-nowrap px-3 py-2 text-right font-semibold">{formatCurrency(lineTotals[index] ?? 0)}</td>
-              <td className="px-3 py-2">
+              <td className="whitespace-nowrap px-1 py-1.5 text-right font-semibold">{formatCurrency(lineTotals[index] ?? 0)}</td>
+              <td className="px-1 py-1.5">
                 <button
                   type="button"
                   aria-label={`Xóa dòng ${index + 1}`}

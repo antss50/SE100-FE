@@ -216,7 +216,7 @@ export function CreateUserModal({
                       type="checkbox"
                       checked={checked}
                       onChange={() => toggleRoleId(role.id)}
-                      className="accent-[#9f432b]"
+                      className="size-6 accent-[#9f432b]"
                     />
                     <span>{role.label}</span>
                   </label>

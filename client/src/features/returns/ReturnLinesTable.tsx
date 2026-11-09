@@ -43,6 +43,7 @@ export function ReturnLinesTable({ lines, selection, onChange, changeOfMind }: R
                 <td className="px-3 py-2.5">
                   <input
                     type="checkbox"
+                    className="size-6 accent-accent"
                     aria-label={`Chọn ${l.productName}`}
                     disabled={disabled}
                     checked={sel.selected}

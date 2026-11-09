@@ -445,7 +445,7 @@ export function CreateCustomerPage() {
                         type="checkbox"
                         checked={checked}
                         onChange={() => toggleSkinConcern(concern)}
-                        className="accent-[#8f422a]"
+                        className="size-6 accent-[#8f422a]"
                       />
                       <span>{concern}</span>
                     </label>

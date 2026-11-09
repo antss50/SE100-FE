@@ -523,7 +523,7 @@ export function CreateProductModal({
                       onClick={onOpenCreateBrand}
                       className="text-[11px] font-bold text-[#9a462d] hover:underline cursor-pointer"
                     >
-                      + Tạo mới
+                      + Thêm thương hiệu mới
                     </button>
                   </div>
                   <select
