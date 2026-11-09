@@ -43,11 +43,11 @@
 | PROM-02 | Quản lý KM | 3 | Đang test | 7 loại, khóa sửa khi có đơn |
 | PROM-03 | Áp voucher khi bán | 4 | Chưa làm | |
 | PROM-04 | Hiệu quả KM | 6 | Chưa làm | |
-| POS-01 | Mở ca | 4 | Chưa làm | Có modal cũ |
+| POS-01 | Mở ca | 4 | Đang test | Mở ca qua modal, mỗi thu ngân 1 ca |
 | POS-02 | Lập đơn FEFO | 4 | Chưa làm | Đường găng, viết lại |
 | POS-03 | Thanh toán & hóa đơn | 4 | Chưa làm | Đường găng |
 | POS-04 | Đổi trả & hoàn tiền | 5 | Chưa làm | Đường găng |
-| POS-05 | Kiểm đếm & chốt ca | 5 | Chưa làm | |
+| POS-05 | Kiểm đếm & chốt ca | 5 | Đang test | Kiểm đếm, chốt ca, lịch sử, bàn giao |
 | REP-01 | Dashboard | 6 | Chưa làm | Có code cũ |
 | REP-02 | Doanh thu & lợi nhuận gộp | 6 | Chưa làm | |
 | REP-03 | Bán hàng | 6 | Chưa làm | |

@@ -110,7 +110,7 @@ export const NAV_GROUPS: NavGroup[] = [
         uc: 'POS-04',
         plannedPhase: 5,
       },
-      { to: '/shifts', label: 'Quản lý ca', icon: Clock, permission: 'POS_VIEW', uc: 'POS-01, POS-05', plannedPhase: 5 },
+      { to: '/shifts', label: 'Quản lý ca', icon: Clock, permission: 'POS_VIEW', uc: 'POS-01, POS-05' },
     ],
   },
   {

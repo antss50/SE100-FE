@@ -1,207 +1,125 @@
-import { Banknote, Clock, X } from 'lucide-react'
-import { useQueryClient } from '@tanstack/react-query'
-import { type FormEvent, useEffect, useState } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useForm } from 'react-hook-form'
+import { useNavigate } from 'react-router-dom'
+import { z } from 'zod'
 import { useUiStore } from '../../app/store'
-import { ApiClientError } from '../../lib/api-client'
+import { useCan } from '../../app/usePermission'
+import { Button, Input, Modal, toast } from '../../components/ui'
 import { queryKeys } from '../../lib/query-keys'
 import { shiftsService } from '../../services/shifts.service'
-import type { ShiftInfo } from '../../types/api'
-import { formatCurrency } from '../../utils/format'
+import { getErrorMessage } from '../../utils/error'
+import { formatCurrency, formatDateTime } from '../../utils/format'
 
+const schema = z.object({
+  openingCash: z
+    .number({ error: 'Nhập số tiền đầu ca' })
+    .int('Số tiền phải là số nguyên')
+    .min(0, 'Số tiền đầu ca không được âm'),
+})
+type FormValues = z.infer<typeof schema>
+
+/** POS-01: mở ca. Khi đã có ca mở thì dẫn sang màn Quản lý ca để kiểm đếm và chốt ca (POS-05). */
 export function ShiftModal() {
-  const isOpen = useUiStore((s) => s.isShiftModalOpen)
-  const closeShiftModal = useUiStore((s) => s.closeShiftModal)
+  const open = useUiStore((s) => s.isShiftModalOpen)
+  const close = useUiStore((s) => s.closeShiftModal)
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const canOpen = useCan('POS_SHIFT_OPEN')
 
-  const [currentShift, setCurrentShift] = useState<ShiftInfo | null>(null)
-  const [openingCash, setOpeningCash] = useState('2000000')
-  const [isLoading, setIsLoading] = useState(false)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const [statusMsg, setStatusMsg] = useState<string | null>(null)
+  const { data } = useQuery({
+    queryKey: queryKeys.shifts.current,
+    queryFn: () => shiftsService.getCurrentShift(),
+    enabled: open,
+  })
+  const shift = data?.data.shift ?? null
 
-  useEffect(() => {
-    if (!isOpen) return
-    let active = true
-    shiftsService
-      .getCurrentShift()
-      .then((res) => {
-        if (active) {
-          setCurrentShift(res.data.shift)
-        }
-      })
-      .catch(() => {
-        // ignore
-      })
-    return () => {
-      active = false
-    }
-  }, [isOpen])
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { openingCash: 2000000 } })
 
-  if (!isOpen) return null
-
-  const handleOpenShift = async (e: FormEvent) => {
-    e.preventDefault()
-    setErrorMsg(null)
-    setStatusMsg(null)
-    setIsLoading(true)
-
-    try {
-      const cashNum = Number(openingCash)
-      const res = await shiftsService.openShift(cashNum)
-      setCurrentShift(res.data)
-      queryClient.invalidateQueries({ queryKey: queryKeys.shifts.current })
-      setStatusMsg(res.message || 'Mở ca làm việc thành công')
-    } catch (err) {
-      if (err instanceof ApiClientError) {
-        setErrorMsg(`${err.message} (${err.errorCode})`)
-      } else {
-        setErrorMsg('Không thể mở ca làm việc')
-      }
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleCloseShift = async () => {
-    if (!currentShift) return
-    setErrorMsg(null)
-    try {
-      await shiftsService.closeShift(currentShift.shiftId)
-      setCurrentShift(null)
-      queryClient.invalidateQueries({ queryKey: queryKeys.shifts.current })
-      setStatusMsg('Đã chốt bàn giao ca hiện tại. Bạn có thể mở ca mới.')
-    } catch (err) {
-      setErrorMsg(err instanceof ApiClientError ? `${err.message} (${err.errorCode})` : 'Không thể chốt ca')
-    }
-  }
+  const mutation = useMutation({
+    mutationFn: (v: FormValues) => shiftsService.openShift(v.openingCash),
+    onSuccess: (res) => {
+      toast.success(res.message ?? 'Mở ca làm việc thành công')
+      void queryClient.invalidateQueries({ queryKey: queryKeys.shifts.all })
+      close()
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  })
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-md w-full p-6 border border-[#ead8ce] shadow-2xl">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="size-10 rounded-2xl bg-[#fbeae2] text-[#9f432b] grid place-items-center">
-              <Clock className="size-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-[#2b1d16]">
-                Quản lý Ca làm việc POS (G12)
-              </h3>
-              <p className="text-xs text-[#7c6356]">
-                Kiểm tra & khai báo tiền mặt đầu ca thu ngân
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={closeShiftModal}
-            className="rounded-lg p-1.5 text-[#8c7365] hover:bg-[#f6ede7]"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
-
-        {errorMsg && (
-          <div className="mt-4 rounded-xl bg-red-50 border border-red-200 p-3 text-xs text-red-800">
-            {errorMsg}
-          </div>
-        )}
-
-        {statusMsg && (
-          <div className="mt-4 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-800">
-            {statusMsg}
-          </div>
-        )}
-
-        {currentShift ? (
-          <div className="mt-5 space-y-4">
-            <div className="rounded-2xl bg-[#faf4f0] border border-[#e7d6cb] p-4 space-y-2.5 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-[#785e51]">Mã phiên ca (shiftId):</span>
-                <span className="font-mono font-bold text-[#2b1d16]">
-                  #SHIFT-0{currentShift.shiftId}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[#785e51]">Trạng thái:</span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">
-                  <span className="size-1.5 rounded-full bg-emerald-600" />
-                  Đang mở ({currentShift.status})
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[#785e51]">Tiền mặt đầu ca (openingCash):</span>
-                <span className="font-bold text-[#9f432b]">
-                  {formatCurrency(currentShift.openingCash)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[#785e51]">Thời điểm mở ca:</span>
-                <span className="font-mono text-[#3d2b22]">
-                  {new Date(currentShift.openedAt).toLocaleString('vi-VN')}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2.5">
-              <button
-                type="button"
-                onClick={closeShiftModal}
-                className="px-4 py-2 rounded-xl border border-[#e3d2c7] text-xs font-semibold text-[#5e473c]"
-              >
-                Đóng
-              </button>
-              <button
-                type="button"
-                onClick={handleCloseShift}
-                className="px-4 py-2 rounded-xl bg-[#9f432b] text-white text-xs font-semibold hover:bg-[#863520] cursor-pointer"
-              >
-                Chốt & Đóng ca hiện tại
-              </button>
-            </div>
-          </div>
+    <Modal
+      open={open}
+      onClose={close}
+      busy={mutation.isPending}
+      size="sm"
+      title={shift ? 'Ca làm việc đang mở' : 'Mở ca làm việc'}
+      description={
+        shift
+          ? 'Mỗi thu ngân chỉ có một ca đang mở. Chốt ca để kiểm đếm tiền trong két.'
+          : 'Nhập tiền mặt có sẵn trong két đầu ca. Chưa mở ca thì không lập được đơn hàng.'
+      }
+      footer={
+        shift ? (
+          <>
+            <Button variant="secondary" onClick={close}>
+              Đóng
+            </Button>
+            <Button
+              onClick={() => {
+                close()
+                navigate('/shifts', { state: { closeShift: true } })
+              }}
+            >
+              Chốt ca và kiểm đếm
+            </Button>
+          </>
         ) : (
-          <form onSubmit={handleOpenShift} className="mt-5 space-y-4">
-            <div className="rounded-xl bg-amber-50/80 border border-amber-200 px-3.5 py-2.5 text-xs text-amber-900">
-              Hiện chưa có ca làm việc nào đang mở. Vui lòng nhập số tiền mặt đầu ca
-              để bắt đầu bán hàng.
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#543e34]">
-                Số tiền mặt đầu ca (openingCash - VNĐ) *
-              </label>
-              <div className="mt-1.5 relative">
-                <Banknote className="size-4 text-[#9a7d6f] absolute left-3.5 top-3" />
-                <input
-                  type="number"
-                  min={0}
-                  step={50000}
-                  value={openingCash}
-                  onChange={(e) => setOpeningCash(e.target.value)}
-                  className="w-full rounded-xl bg-[#fcf7f4] border border-[#e6d5ca] pl-10 pr-3.5 py-2.5 text-sm font-mono font-semibold text-[#2b1d16] outline-none focus:border-[#b4533c]"
-                  required
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-2.5 pt-2">
-              <button
-                type="button"
-                onClick={closeShiftModal}
-                className="px-4 py-2 rounded-xl border border-[#e3d2c7] text-xs font-semibold text-[#5e473c]"
-              >
-                Hủy
-              </button>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="px-5 py-2 rounded-xl bg-[#9f432b] text-white text-xs font-semibold hover:bg-[#863520] cursor-pointer"
-              >
-                {isLoading ? 'Đang mở ca...' : 'Xác nhận Mở ca POS'}
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
-    </div>
+          <>
+            <Button variant="secondary" onClick={close} disabled={mutation.isPending}>
+              Hủy
+            </Button>
+            {canOpen && (
+              <Button type="submit" form="open-shift-form" loading={mutation.isPending}>
+                Mở ca
+              </Button>
+            )}
+          </>
+        )
+      }
+    >
+      {shift ? (
+        <dl className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <dt className="text-muted">Mã ca</dt>
+            <dd className="font-mono font-semibold">{shift.shiftCode}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-muted">Mở lúc</dt>
+            <dd>{formatDateTime(shift.openedAt)}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-muted">Tiền đầu ca</dt>
+            <dd className="font-semibold">{formatCurrency(shift.openingCash)}</dd>
+          </div>
+        </dl>
+      ) : canOpen ? (
+        <form id="open-shift-form" onSubmit={handleSubmit((v) => mutation.mutate(v))} noValidate>
+          <Input
+            label="Tiền mặt đầu ca (đ)"
+            type="number"
+            min={0}
+            required
+            error={errors.openingCash?.message}
+            {...register('openingCash', { valueAsNumber: true })}
+          />
+        </form>
+      ) : (
+        <p className="text-sm text-muted">Tài khoản của bạn không có quyền mở ca.</p>
+      )}
+    </Modal>
   )
 }

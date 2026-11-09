@@ -1,3 +1,5 @@
+import type { CashierShift } from './pos'
+
 export interface ApiSuccessResponse<T> {
   success: true
   message?: string
@@ -274,7 +276,7 @@ export interface ShiftInfo {
 
 export interface CurrentShiftResponseData {
   hasOpenShift: boolean
-  shift: ShiftInfo | null
+  shift: CashierShift | null
 }
 
 // 6. MODULE PRODUCTS, CATEGORIES & BRANDS (UC-PROD-01 .. UC-PROD-20)
