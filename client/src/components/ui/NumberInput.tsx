@@ -18,9 +18,10 @@ function groupDigits(value: unknown): string {
   return `${negative}${grouped}${fraction.length ? `.${fraction.join('')}` : ''}`
 }
 
-export interface NumberInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'value'> {
+export interface NumberInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'value' | 'defaultValue'> {
   type?: 'number' | 'text'
   value?: string | number
+  defaultValue?: string | number
   valueAsNumber?: boolean
   setValueAs?: (value: unknown) => unknown
 }

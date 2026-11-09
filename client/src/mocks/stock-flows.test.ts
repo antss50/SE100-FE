@@ -59,6 +59,18 @@ describe('Bất biến sau seed', () => {
 })
 
 describe('STK-01 nhập kho', () => {
+  it('chặn HSD vượt quá hạn sử dụng tối đa tính từ NSX, nhưng bỏ qua khi không có NSX', async () => {
+    await loginAs('admin')
+    await expectFail(
+      '/purchase-orders',
+      post({ supplierId: 1, lines: [{ ...line(5, 'MAX-SHELF', '2029-01-02', 1, 1), mfgDate: '2027-01-01' }] }),
+      422,
+      'STK_EXP_DATE_EXCEEDS_SHELF_LIFE'
+    )
+    const order = await createPo([{ ...line(5, 'NO-MFG', '2029-01-02', 1, 1), mfgDate: '' }])
+    expect(order.status).toBe('DRAFT')
+  })
+
   it('xác nhận phiếu tạo lô mới, ghi thẻ kho PURCHASE; xác nhận lần 2 cùng khóa không cộng hai lần (luật 30)', async () => {
     await loginAs('admin')
     const po = await createPo([line(5, 'LOT-TEST-NEW', '2029-01-01', 20, 90000)])

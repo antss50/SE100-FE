@@ -18,7 +18,6 @@ import {
 import { ApiClientError } from '../../lib/api-client'
 import {
   normalizeProductImages,
-  parsePackagingSpec,
   productsService,
 } from '../../services/products.service'
 import type {
@@ -94,8 +93,13 @@ export function CreateProductModal({
   const [volumeUnit, setVolumeUnit] = useState(() => editingProduct?.volume?.match(/[a-z]+$/i)?.[0]?.toLowerCase() || getVolumeUnit(editingProduct?.unit || 'Chai'))
   const [skinTypes, setSkinTypes] = useState<ProductSkinType[]>(() => parseSkinTypes(editingProduct?.skinType))
   const [shelfLifeMonths, setShelfLifeMonths] = useState(() =>
-    String(editingProduct?.shelfLifeMonths ?? 36)
+    editingProduct?.shelfLifeValue != null
+      ? String(editingProduct.shelfLifeValue)
+      : editingProduct?.shelfLifeMonths == null ? '' : String(editingProduct.shelfLifeMonths)
   )
+  const [shelfLifeUnit, setShelfLifeUnit] = useState<'days' | 'months' | 'years'>(() => editingProduct?.shelfLifeUnit ?? 'months')
+  const [expiryWarningDays, setExpiryWarningDays] = useState(() => String(editingProduct?.expiryWarningValue ?? editingProduct?.expiryWarningDays ?? 60))
+  const [expiryWarningUnit, setExpiryWarningUnit] = useState<'days' | 'months' | 'years'>(() => editingProduct?.expiryWarningUnit ?? 'days')
   const [retailPriceDisplay, setRetailPriceDisplay] = useState(() =>
     editingProduct
       ? editingProduct.retailPrice.toLocaleString('vi-VN')
@@ -150,6 +154,10 @@ export function CreateProductModal({
         setRetailPriceDisplay(d.retailPrice.toLocaleString('vi-VN'))
         setTaxRatePercent(`${Math.round((d.taxRate || 0.1) * 100)}%`)
         setMinStockAlert(String(d.minStockAlert ?? 5))
+        setShelfLifeMonths(d.shelfLifeValue != null ? String(d.shelfLifeValue) : d.shelfLifeMonths == null ? '' : String(d.shelfLifeMonths))
+        setShelfLifeUnit(d.shelfLifeUnit ?? 'months')
+        setExpiryWarningDays(String(d.expiryWarningValue ?? d.expiryWarningDays ?? 60))
+        setExpiryWarningUnit(d.expiryWarningUnit ?? 'days')
         setCurrentStock(d.currentStock ?? 0)
         setDescription(d.description || '')
         setImages(normalizeProductImages(d.images, d.imageUrl))
@@ -165,17 +173,6 @@ export function CreateProductModal({
   }, [isOpen, editingProduct?.sku])
 
   if (!isOpen) return null
-
-  const handleSpecChange = (val: string) => {
-    setSpecInput(val)
-    const parsed = parsePackagingSpec(val)
-    if (parsed.unit) setUnit(parsed.unit)
-    if (parsed.volume) {
-      setVolume(parsed.volume.replace(/[a-z]+$/i, ''))
-      const match = parsed.volume.match(/[a-z]+$/i)
-      if (match) setVolumeUnit(match[0].toLowerCase())
-    }
-  }
 
   const handleUnitChange = (nextUnit: string) => {
     setUnit(nextUnit)
@@ -278,7 +275,7 @@ export function CreateProductModal({
     if (editingProduct) {
       setIsUploadingImage(true)
       try {
-        const res = await productsService.deleteProductImage(
+        await productsService.deleteProductImage(
           editingProduct.sku,
           img.imageId
         )
@@ -344,6 +341,15 @@ export function CreateProductModal({
     const numericPrice = Number(retailPriceDisplay.replace(/\D/g, ''))
     const numericTax =
       parseFloat(taxRatePercent.replace('%', '').trim()) / 100 || 0.1
+    const shelfLifeValue = Number(shelfLifeMonths)
+    const shelfLifeInMonths = shelfLifeUnit === 'years'
+      ? shelfLifeValue * 12
+      : shelfLifeUnit === 'days' ? Math.ceil(shelfLifeValue / 30) : shelfLifeValue
+    const expiryWarningValue = Number(expiryWarningDays)
+    const expiryWarningDaysLegacy = Math.min(
+      3650,
+      expiryWarningValue * (expiryWarningUnit === 'years' ? 365 : expiryWarningUnit === 'months' ? 30 : 1),
+    )
 
     try {
       if (editingProduct) {
@@ -356,7 +362,12 @@ export function CreateProductModal({
           volume: volume ? `${volume.replace(/[a-z]+$/i, '')}${volumeUnit}` : '',
           packagingDetail: specInput.trim(),
           skinType: skinTypes.length === 1 ? skinTypes[0] : skinTypes,
-          shelfLifeMonths: Number(shelfLifeMonths) || 36,
+          shelfLifeMonths: shelfLifeMonths === '' ? null : shelfLifeInMonths,
+          shelfLifeValue: shelfLifeMonths === '' ? null : shelfLifeValue,
+          shelfLifeUnit: shelfLifeMonths === '' ? null : shelfLifeUnit,
+          expiryWarningDays: expiryWarningDaysLegacy,
+          expiryWarningValue,
+          expiryWarningUnit,
           retailPrice: numericPrice,
           taxRate: numericTax,
           minStockAlert: Number(minStockAlert) || 5,
@@ -381,7 +392,12 @@ export function CreateProductModal({
           barcode,
           images: images.map((img) => img.url),
           packagingDetail: specInput,
-          shelfLifeMonths: Number(shelfLifeMonths) || 36,
+          shelfLifeMonths: shelfLifeMonths === '' ? null : shelfLifeInMonths,
+          shelfLifeValue: shelfLifeMonths === '' ? null : shelfLifeValue,
+          shelfLifeUnit: shelfLifeMonths === '' ? null : shelfLifeUnit,
+          expiryWarningDays: expiryWarningDaysLegacy,
+          expiryWarningValue,
+          expiryWarningUnit,
           description,
         })
 
@@ -628,17 +644,17 @@ export function CreateProductModal({
                   <label className="block text-xs font-bold text-[#221712]">
                     HẠN SỬ DỤNG TỐI ĐA
                   </label>
-                  <div className="mt-1.5 relative">
+                  <div className="mt-1.5 flex w-full overflow-hidden rounded-xl border border-transparent bg-[#fceddf]/70 focus-within:border-[#d57252] focus-within:bg-white">
                     <NumberInput
                       type="number"
                       min={1}
+                      step={1}
+                      placeholder="Không giới hạn"
                       value={shelfLifeMonths}
                       onChange={(e) => setShelfLifeMonths(e.target.value)}
-                      className="w-full rounded-xl bg-[#fceddf]/70 border border-transparent focus:border-[#d57252] focus:bg-white pl-4 pr-16 py-2.5 text-xs font-semibold text-[#5a5a5a] outline-none transition"
+                      className="min-w-0 flex-1 bg-transparent px-4 py-2.5 text-xs font-semibold text-[#5a5a5a] outline-none"
                     />
-                    <span className="absolute right-4 top-2.5 text-xs font-bold text-[#6b5a50]">
-                      THÁNG
-                    </span>
+                    <select value={shelfLifeUnit} onChange={(e) => setShelfLifeUnit(e.target.value as typeof shelfLifeUnit)} aria-label="Maximum shelf life unit" className="w-20 shrink-0 border-l border-[#e5d2c5]/60 bg-transparent px-2 py-2.5 text-xs font-semibold text-[#221712] outline-none cursor-pointer"><option value="days">{"Ng\u00e0y"}</option><option value="months">{"Th\u00e1ng"}</option><option value="years">{"N\u0103m"}</option></select>
                   </div>
                 </div>
               </div>
@@ -721,12 +737,12 @@ export function CreateProductModal({
                 </div>
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-4 items-end">
+              <div className="grid sm:grid-cols-2 gap-x-6 gap-y-4">
                 <div>
                   <label className="block text-xs font-bold text-[#221712]">
                     Định mức tồn an toàn (Min stock)
                   </label>
-                  <div className="mt-1.5 relative max-w-[240px]">
+                  <div className="mt-1.5 relative">
                     <NumberInput
                       type="number"
                       min={0}
@@ -737,6 +753,21 @@ export function CreateProductModal({
                     <span className="absolute right-4 top-3 text-xs text-[#695246]">
                       Đơn vị
                     </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#221712]">NGƯỠNG CẢNH BÁO CẬN HẠN</label>
+                  <div className="mt-1.5 flex w-full overflow-hidden rounded-xl border border-transparent bg-[#fceddf]/70 focus-within:border-[#d57252] focus-within:bg-white">
+                    <NumberInput
+                      type="number"
+                      min={0}
+                      step={1}
+                      value={expiryWarningDays}
+                      onChange={(e) => setExpiryWarningDays(e.target.value)}
+                      className="min-w-0 flex-1 bg-transparent px-4 py-3 font-mono text-sm font-bold text-[#221712] outline-none"
+                    />
+                    <select value={expiryWarningUnit} onChange={(e) => setExpiryWarningUnit(e.target.value as typeof expiryWarningUnit)} aria-label="Expiry warning unit" className="w-28 shrink-0 border-l border-[#e5d2c5]/60 bg-transparent px-3 py-2.5 text-xs font-semibold text-[#221712] outline-none cursor-pointer"><option value="days">{"Ng\u00e0y"}</option><option value="months">{"Th\u00e1ng"}</option><option value="years">{"N\u0103m"}</option></select>
                   </div>
                 </div>
 

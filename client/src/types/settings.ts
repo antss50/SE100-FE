@@ -1,7 +1,6 @@
 /** Cấu hình hệ thống (SYSTEM_SETTINGS) và chính sách đổi trả (RETURN_POLICIES.max_return_days). */
 
 export type SettingKey =
-  | 'EXPIRY_WARNING_DAYS'
   | 'POINT_EARN_AMOUNT'
   | 'POINT_REDEEM_VALUE'
   | 'POINT_MAX_REDEEM_PERCENT'

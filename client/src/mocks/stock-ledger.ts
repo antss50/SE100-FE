@@ -12,12 +12,6 @@ import { toDateOnly, toIsoLocal } from './time'
 /** Ngày thuần `YYYY-MM-DD` của thời điểm hiện tại. */
 export const todayOf = (now: Date): string => toDateOnly(now)
 
-/** `EXPIRY_WARNING_DAYS` từ SYSTEM_SETTINGS (mặc định 60). */
-export function expiryWarningDays(db: MockTransaction): number {
-  const value = Number(db.read('systemSettings').EXPIRY_WARNING_DAYS)
-  return Number.isFinite(value) && value >= 0 ? value : 60
-}
-
 /** Sinh id tăng dần cho bảng không đi qua `nextSeq` ở lần seed đầu. */
 export function nextTableId(db: MockTransaction, counter: string, existingMax: number): number {
   return db.nextSeq(counter, existingMax + 1)

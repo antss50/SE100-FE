@@ -160,7 +160,6 @@ export interface StockSummary {
   expiredLots: number
   quarantinedUnits: number
   quarantinedValue: number
-  expiryWarningDays: number
 }
 
 export interface StockMovementItem extends StockMovement {

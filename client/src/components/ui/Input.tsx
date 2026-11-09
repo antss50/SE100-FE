@@ -55,7 +55,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { label, error, hint, id, required, className, containerClassName, formatThousands, onChange, type, inputMode, ...rest },
+  { label, error, hint, id, required, className, containerClassName, formatThousands, onChange, type, inputMode, value, defaultValue, ...rest },
   ref
 ) {
   const autoId = useId()
@@ -73,6 +73,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           className={cn(FIELD_CLASS, error ? 'border-danger' : 'border-line', className)}
           onChange={onChange}
           type={type === 'number' ? 'number' : 'text'}
+          value={typeof value === 'string' || typeof value === 'number' ? value : undefined}
+          defaultValue={typeof defaultValue === 'string' || typeof defaultValue === 'number' ? defaultValue : undefined}
           inputMode={inputMode}
           {...rest}
         />

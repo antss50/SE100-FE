@@ -45,6 +45,11 @@ function productBody(payload: UpdateProductRequest) {
     barcode: payload.barcode?.trim() || undefined,
     packagingDetail: payload.packagingDetail,
     shelfLifeMonths: payload.shelfLifeMonths,
+    shelfLifeValue: payload.shelfLifeValue,
+    shelfLifeUnit: payload.shelfLifeUnit,
+    expiryWarningDays: payload.expiryWarningDays,
+    expiryWarningValue: payload.expiryWarningValue,
+    expiryWarningUnit: payload.expiryWarningUnit,
     description: payload.description,
   }
 }

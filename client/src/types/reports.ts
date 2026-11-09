@@ -153,7 +153,6 @@ export interface StockReportDisposalRow {
 
 export interface StockReport {
   range: ReportRange
-  expiryWarningDays: number
   summary: {
     skuCount: number
     lotCount: number
@@ -277,7 +276,6 @@ export interface DashboardSalesWidget {
 }
 
 export interface DashboardStockWidget {
-  expiryWarningDays: number
   nearExpiry: DashboardAlertLot[]
   expired: DashboardAlertLot[]
   lowStock: DashboardLowStock[]

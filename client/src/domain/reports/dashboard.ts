@@ -3,7 +3,7 @@ import type { DashboardAlertLot, DashboardData, DashboardLowStock, DashboardSale
 import type { InventoryCheck, Disposal } from '../../types/inventory'
 import type { CashierShift } from '../../types/pos'
 import type { Batch } from '../../types/stock'
-import { daysUntilExpiry } from '../stock/batch'
+import { daysUntilExpiry, expiryStatusForProduct } from '../stock/batch'
 import { addDaysTo, periodLabel } from './period'
 import { computeRevenueFigures, type RevenueSource } from './revenue'
 
@@ -15,6 +15,9 @@ export interface DashboardSource extends RevenueSource {
     sku: string
     productName: string
     minStockAlert?: number
+    expiryWarningDays?: number
+    expiryWarningValue?: number
+    expiryWarningUnit?: 'days' | 'months' | 'years'
     isSellable?: boolean
     status: 'ACTIVE' | 'DISCONTINUED'
   }[]
@@ -40,7 +43,7 @@ export function buildSalesWidget(src: DashboardSource, today: string): Dashboard
   }
 }
 
-export function buildStockWidget(src: DashboardSource, today: string, warningDays: number): DashboardStockWidget {
+export function buildStockWidget(src: DashboardSource, today: string): DashboardStockWidget {
   const productById = new Map(src.products.filter((p) => p.id !== undefined).map((p) => [p.id as number, p]))
   const inStock = src.batches.filter((b) => b.onHandQty > 0)
   const alertOf = (b: Batch): DashboardAlertLot => ({
@@ -64,9 +67,8 @@ export function buildStockWidget(src: DashboardSource, today: string, warningDay
   }
 
   return {
-    expiryWarningDays: warningDays,
     nearExpiry: inStock
-      .filter((b) => b.expDate >= today && daysUntilExpiry(b.expDate, today) <= warningDays)
+      .filter((b) => expiryStatusForProduct(b.expDate, today, productById.get(b.productId)) === 'NEAR_EXPIRY')
       .map(alertOf)
       .sort(byExpiry),
     expired: inStock
@@ -81,14 +83,13 @@ export function buildStockWidget(src: DashboardSource, today: string, warningDay
 export function buildDashboard(
   src: DashboardSource,
   today: string,
-  warningDays: number,
   generatedAt: string,
   canSeeSales: boolean
 ): DashboardData {
   return {
     generatedAt,
     sales: canSeeSales ? buildSalesWidget(src, today) : null,
-    stock: buildStockWidget(src, today, warningDays),
+    stock: buildStockWidget(src, today),
     pending: {
       waitingChecks: src.inventoryChecks.filter((c) => c.status === 'WAITING_APPROVAL').length,
       waitingDisposals: src.disposals.filter((d) => d.status === 'WAITING_APPROVAL').length,

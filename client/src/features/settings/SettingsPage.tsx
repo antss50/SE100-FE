@@ -18,7 +18,6 @@ const wholeNumber = (min: number, max?: number) =>
     .refine((v) => max === undefined || Number(v) <= max, `Không được vượt quá ${max}`)
 
 const schema = z.object({
-  EXPIRY_WARNING_DAYS: wholeNumber(0, 3650),
   POINT_EARN_AMOUNT: wholeNumber(1),
   POINT_REDEEM_VALUE: wholeNumber(1),
   POINT_MAX_REDEEM_PERCENT: wholeNumber(1, 100),
@@ -33,7 +32,6 @@ const valueOf = (data: SettingsData, key: SettingKey) => data.settings.find((s) 
 
 function toForm(data: SettingsData): FormValues {
   return {
-    EXPIRY_WARNING_DAYS: valueOf(data, 'EXPIRY_WARNING_DAYS'),
     POINT_EARN_AMOUNT: valueOf(data, 'POINT_EARN_AMOUNT'),
     POINT_REDEEM_VALUE: valueOf(data, 'POINT_REDEEM_VALUE'),
     POINT_MAX_REDEEM_PERCENT: valueOf(data, 'POINT_MAX_REDEEM_PERCENT'),
@@ -74,7 +72,6 @@ export function SettingsPage() {
       settingsService.update({
         maxReturnDays: Number(v.maxReturnDays),
         settings: {
-          EXPIRY_WARNING_DAYS: v.EXPIRY_WARNING_DAYS,
           POINT_EARN_AMOUNT: v.POINT_EARN_AMOUNT,
           POINT_REDEEM_VALUE: v.POINT_REDEEM_VALUE,
           POINT_MAX_REDEEM_PERCENT: v.POINT_MAX_REDEEM_PERCENT,
@@ -106,9 +103,6 @@ export function SettingsPage() {
           </Button>
         }
       />
-      <Section title="Kho và hạn dùng" description="Cảnh báo cận hạn trên màn tồn kho và POS.">
-        <Input label="Số ngày cảnh báo cận hạn" inputMode="numeric" hint="Lô còn ít hơn số ngày này là cận hạn" error={errors.EXPIRY_WARNING_DAYS?.message} {...register('EXPIRY_WARNING_DAYS')} />
-      </Section>
       <Section title="Điểm thưởng" description="Tích điểm chạy ngay khi hoàn tất đơn; điểm dùng trừ trên phần tiền còn lại sau 3 tầng khuyến mãi.">
         <Input label="Số tiền để được 1 điểm (đ)" type="text" inputMode="numeric" formatThousands error={errors.POINT_EARN_AMOUNT?.message} {...register('POINT_EARN_AMOUNT')} />
         <Input label="Giá trị 1 điểm khi đổi (đ)" type="text" inputMode="numeric" formatThousands error={errors.POINT_REDEEM_VALUE?.message} {...register('POINT_REDEEM_VALUE')} />

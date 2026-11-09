@@ -260,7 +260,7 @@ describe('REP-04/05/06 khớp dữ liệu nguồn', () => {
 describe('AUTH-06 nhật ký hệ thống', () => {
   it('hành động chính để lại bản ghi, không lộ mật khẩu/token, chỉ Admin xem', async () => {
     await loginAs('admin')
-    await send('/settings', put({ settings: { EXPIRY_WARNING_DAYS: '45' } }))
+    await send('/settings', put({ settings: { POINT_EARN_AMOUNT: '11000' } }))
     await loginAs('cashier01')
     await openShift()
     await sell([{ productId: 3, quantity: 1, batchId: 16 }])

@@ -1,4 +1,4 @@
-import { daysUntilExpiry, expiryStatus, type BatchLike } from './batch'
+import { daysUntilExpiry, expiryStatusForProduct, type BatchLike, type ExpiryWarningProduct } from './batch'
 
 export interface PurchaseLineForWarning {
   productId: number
@@ -29,14 +29,14 @@ const fmt = (d: string) => `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}`
 /**
  * Cảnh báo cho các dòng phiếu nhập (không chặn):
  * - xoay kệ khi lô mới hạn sớm hơn một lô còn tồn của cùng sản phẩm (luật 31);
- * - cận hạn / quá hạn theo ngưỡng `warningDays` (`EXPIRY_WARNING_DAYS`);
+ * - cận hạn / quá hạn theo ngưỡng riêng của từng sản phẩm;
  * - nhập thêm vào lô đã có thì giá vốn được tính bình quân (luật 29).
  */
 export function collectPurchaseWarnings(
   lines: readonly PurchaseLineForWarning[],
   batches: readonly ExistingBatchForWarning[],
-  today: string,
-  warningDays: number
+  products: readonly ({ id?: number } & ExpiryWarningProduct)[],
+  today: string
 ): PurchaseWarningResult[] {
   const result: PurchaseWarningResult[] = []
   lines.forEach((line, lineIndex) => {
@@ -52,7 +52,8 @@ export function collectPurchaseWarnings(
         message: `Lô ${line.lotCode} (HSD ${fmt(line.expDate)}) có hạn sớm hơn lô ${later.lotCode} đang tồn (HSD ${fmt(later.expDate)}). Cần xoay kệ: xếp lô mới ra trước.`,
       })
     }
-    const status = expiryStatus(line.expDate, today, warningDays)
+    const product = products.find((p) => p.id === line.productId)
+    const status = expiryStatusForProduct(line.expDate, today, product)
     if (status === 'EXPIRED') {
       result.push({ ...base, type: 'EXPIRED', message: `Lô ${line.lotCode} đã quá hạn dùng (HSD ${fmt(line.expDate)}).` })
     } else if (status === 'NEAR_EXPIRY') {

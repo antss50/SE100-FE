@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { daysUntilExpiry, sellableQty } from '../../domain/stock/batch'
+import { expiryStatusForProduct, sellableQty } from '../../domain/stock/batch'
 import type { CartInput, OrderRecord, PosLot, PosProduct } from '../../types/pos'
 import type { MockTransaction } from '../db'
 import { MockHttpError, keywordOf, notFound, ok, paginate, parseBody } from '../http'
@@ -8,7 +8,7 @@ import type { MockUser } from '../seed/users'
 import { currentShiftOf, completeSale, exchangeCreditOf, nextOrderCode } from '../sales-complete'
 import { isPosSellable, priceCart, sellableBatches, sellableTotal } from '../sales-engine'
 import { amountDueOf, toOrderListItem, toReturnListItem } from '../sales-views'
-import { expiryWarningDays, todayOf } from '../stock-ledger'
+import { todayOf } from '../stock-ledger'
 import { toIsoLocal } from '../time'
 
 const cartSchema = z.object({
@@ -63,7 +63,7 @@ function toPosProduct(db: MockTransaction, productId: number, now: Date): PosPro
     sellableQty: total,
     firstLotCode: lots[0]?.lotCode ?? null,
     firstLotExpDate: lots[0]?.expDate ?? null,
-    nearExpiry: lots[0] ? daysUntilExpiry(lots[0].expDate, today) <= expiryWarningDays(db) : false,
+    nearExpiry: lots[0] ? expiryStatusForProduct(lots[0].expDate, today, p) === 'NEAR_EXPIRY' : false,
   }
 }
 
@@ -162,13 +162,13 @@ export const orderRoutes: MockRoute[] = [
     handler: ({ db, params, now }) => {
       const productId = Number(params.id)
       const today = todayOf(now)
-      const warning = expiryWarningDays(db)
+      const product = db.read('products').find((p) => p.id === productId)
       const lots: PosLot[] = sellableBatches(db, productId, now).map((b) => ({
         batchId: b.id,
         lotCode: b.lotCode,
         expDate: b.expDate,
         sellableQty: sellableQty(b, today),
-        nearExpiry: daysUntilExpiry(b.expDate, today) <= warning,
+        nearExpiry: expiryStatusForProduct(b.expDate, today, product) === 'NEAR_EXPIRY',
       }))
       return ok(lots, 'Lấy danh sách lô bán được thành công')
     },

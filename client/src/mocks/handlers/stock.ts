@@ -1,4 +1,4 @@
-import { compareFefo, daysUntilExpiry, expiryStatus, sellableQty } from '../../domain/stock/batch'
+import { compareFefo, daysUntilExpiry, expiryStatusForProduct, sellableQty } from '../../domain/stock/batch'
 import { hasPermission } from '../../domain/permissions'
 import type {
   Batch,
@@ -11,14 +11,13 @@ import type {
 import type { MockTransaction } from '../db'
 import { MockHttpError, keywordOf, notFound, ok, paginate } from '../http'
 import type { MockRoute } from '../router'
-import { expiryWarningDays, findBatchById, referenceCodeOf, todayOf } from '../stock-ledger'
+import { findBatchById, referenceCodeOf, todayOf } from '../stock-ledger'
 
 /** Người có STOCK_VIEW hoặc STOCK_EXPIRY_VIEW thấy đủ tồn, cách ly, giá vốn; người chỉ có STOCK_VIEW_AVAILABLE chỉ thấy tồn khả dụng. */
 const FULL_VIEW = ['STOCK_VIEW', 'STOCK_EXPIRY_VIEW'] as const
 
 function buildItems(db: MockTransaction, now: Date, full: boolean): StockBatchItem[] {
   const today = todayOf(now)
-  const warningDays = expiryWarningDays(db)
   const products = db.read('products')
   const rank = new Map<number, number>()
   const sellable = db
@@ -48,7 +47,7 @@ function buildItems(db: MockTransaction, now: Date, full: boolean): StockBatchIt
       mfgDate: b.mfgDate ?? null,
       expDate: b.expDate,
       daysToExpiry: daysUntilExpiry(b.expDate, today),
-      expiryStatus: expiryStatus(b.expDate, today, warningDays),
+      expiryStatus: expiryStatusForProduct(b.expDate, today, product),
       availableQty: isSellable ? sellableQty(b, today) : 0,
       fefoRank: rank.get(b.id) ?? null,
     }
@@ -118,7 +117,6 @@ export const stockRoutes: MockRoute[] = [
         expiredLots: items.filter((i) => i.expiryStatus === 'EXPIRED').length,
         quarantinedUnits: items.reduce((n, i) => n + (i.blockedQty ?? 0), 0),
         quarantinedValue: items.reduce((n, i) => n + (i.blockedQty ?? 0) * (i.costPrice ?? 0), 0),
-        expiryWarningDays: expiryWarningDays(db),
       }
       return ok(summary, 'Lấy tổng quan tồn kho thành công')
     },

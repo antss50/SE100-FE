@@ -138,7 +138,7 @@ type PaginatedData<T> = { items: T[]; page: number; pageSize: number; totalItems
 
 ### `POST /products` — PROD-01
 - **Quyền:** `PRODUCT_MANAGE`
-- **Request:** `{ sku, productName, categoryCode, brandCode, unit, volume?, skinType?, retailPrice (>0), taxRate (≥0), minStockAlert?, barcode?, images?: string[], packagingDetail?, shelfLifeMonths?, description? }`
+- **Request:** `{ sku, productName, categoryCode, brandCode, unit, volume?, skinType?, retailPrice (>0), taxRate (≥0), minStockAlert?, barcode?, images?: string[], packagingDetail?, shelfLifeMonths?, shelfLifeValue?, shelfLifeUnit?, expiryWarningDays?, expiryWarningValue?, expiryWarningUnit?, description? }`. Mỗi cấu hình mới lưu riêng cặp giá trị/đơn vị (`days`/`months`/`years`): `shelfLifeValue` + `shelfLifeUnit` là HSD tối đa tính từ NSX; `expiryWarningValue` + `expiryWarningUnit` là ngưỡng cận hạn. Hai trường cũ `shelfLifeMonths`/`expiryWarningDays` vẫn được đọc cho dữ liệu/API cũ; khi thiếu cấu hình cận hạn thì mặc định 60 ngày.
 - **Response 201:** `ProductItem`
 - **Lỗi:** `409 PROD_SKU_DUPLICATED`, `409 PROD_BARCODE_DUPLICATED`, `404 PROD_CATEGORY_NOT_FOUND`, `404 PROD_BRAND_NOT_FOUND`
 
@@ -341,11 +341,11 @@ Kiểu: `ReturnOrderRecord` (RETURN_ORDERS kèm `lines[]` RETURN_ORDER_DETAILS, 
 - **Quyền:** đã đăng nhập (in hóa đơn) · **Response 200:** `{ name, address, phone }` (`STORE_NAME`, `STORE_ADDRESS`, `STORE_PHONE`)
 
 ### `GET /settings` — AUTH-07
-- **Quyền:** `SYSTEM_SETTINGS_MANAGE` · **Response 200:** `{ settings: [{ key, value, description, kind number|text }], maxReturnDays }` — khóa: `EXPIRY_WARNING_DAYS, POINT_EARN_AMOUNT, POINT_REDEEM_VALUE, POINT_MAX_REDEEM_PERCENT, STORE_NAME, STORE_ADDRESS, STORE_PHONE`; `maxReturnDays` = `RETURN_POLICIES.max_return_days` của chính sách mặc định
+- **Quyền:** `SYSTEM_SETTINGS_MANAGE` · **Response 200:** `{ settings: [{ key, value, description, kind number|text }], maxReturnDays }` — khóa: `POINT_EARN_AMOUNT, POINT_REDEEM_VALUE, POINT_MAX_REDEEM_PERCENT, STORE_NAME, STORE_ADDRESS, STORE_PHONE`; `maxReturnDays` = `RETURN_POLICIES.max_return_days` của chính sách mặc định
 
 ### `PUT /settings` — AUTH-07
 - **Quyền:** `SYSTEM_SETTINGS_MANAGE` · **Request:** `{ settings: { [key]: string }, maxReturnDays?: number (0-365) }` · **Response 200:** như `GET`. Ghi audit khi có thay đổi.
-- **Lỗi:** `400 COMMON_VALIDATION_FAILED`, `422 SET_KEY_UNKNOWN`, `422 SET_VALUE_INVALID` (số nguyên >= 1, riêng `EXPIRY_WARNING_DAYS` >= 0; `POINT_MAX_REDEEM_PERCENT` <= 100; chuỗi không rỗng)
+- **Lỗi:** `400 COMMON_VALIDATION_FAILED`, `422 SET_KEY_UNKNOWN`, `422 SET_VALUE_INVALID` (số nguyên >= 1; `POINT_MAX_REDEEM_PERCENT` <= 100; chuỗi không rỗng)
 - **Ghi chú:** `GET/PUT /loyalty-config` đọc/ghi `POINT_EARN_AMOUNT` và `POINT_REDEEM_VALUE` ở cùng nơi này (một nguồn sự thật).
 
 ## SUPPLIER (SUPP-01..03)
@@ -395,7 +395,7 @@ Kiểu: `PurchaseOrder` (header: `id, poCode, supplierId, supplierCode, supplier
 - **Lỗi thêm:** `409 STK_PO_NOT_EDITABLE` (chỉ sửa `DRAFT`; phiếu `COMPLETED` không sửa/xóa, luật 41)
 
 ### `POST /purchase-orders/preview-warnings` — STK-01
-- **Quyền:** `STOCK_IMPORT_VIEW` · **Request:** `{ lines: [{ productId, lotCode, expDate }] }` · **Response 200:** `PurchaseWarning[]` (không ghi dữ liệu). Cảnh báo xoay kệ khi HSD lô mới sớm hơn lô còn tồn (luật 31), cận hạn/quá hạn theo `EXPIRY_WARNING_DAYS`, giá vốn bình quân khi lô đã có (luật 29).
+- **Quyền:** `STOCK_IMPORT_VIEW` · **Request:** `{ lines: [{ productId, lotCode, expDate }] }` · **Response 200:** `PurchaseWarning[]` (không ghi dữ liệu). Cảnh báo xoay kệ khi HSD lô mới sớm hơn lô còn tồn (luật 31), cận hạn theo `products.expiryWarningValue/expiryWarningUnit (fallback products.expiryWarningDays)`, giá vốn bình quân khi lô đã có (luật 29).
 
 ### `POST /purchase-orders/{id}/confirm` — STK-01
 - **Quyền:** `STOCK_IMPORT_CREATE` · **Header bắt buộc:** `Idempotency-Key` · **Response 200:** `{ order: PurchaseOrderDetail, warnings: PurchaseWarning[] }`
@@ -409,13 +409,13 @@ Kiểu: `PurchaseOrder` (header: `id, poCode, supplierId, supplierCode, supplier
 ## STOCK · Tồn kho theo lô, cận hạn (STK-02, STK-03)
 
 `StockBatchItem`: `id, productId, sku, productName, barcode, brandName, categoryName, unit, isSellable, lotCode, mfgDate, expDate, daysToExpiry, expiryStatus (OK|NEAR_EXPIRY|EXPIRED), availableQty, fefoRank` và, **chỉ khi người gọi có `STOCK_VIEW` hoặc `STOCK_EXPIRY_VIEW`**, thêm `onHandQty, blockedQty, costPrice, lockedByCheckId, createdAt`. Người chỉ có `STOCK_VIEW_AVAILABLE` (thu ngân) chỉ nhận lô bán được (`availableQty > 0`) và không có các trường tồn thực, cách ly, giá vốn.
-`availableQty = onHandQty − blockedQty`, bằng 0 nếu lô hết hạn (`expDate < hôm nay`), đang khóa kiểm kho hoặc SKU `isSellable = false` (luật 24, 26). `expiryStatus` theo `EXPIRY_WARNING_DAYS`. `fefoRank`: thứ tự trong sản phẩm (1 = xuất trước), null nếu không bán được.
+`availableQty = onHandQty − blockedQty`, bằng 0 nếu lô hết hạn (`expDate < hôm nay`), đang khóa kiểm kho hoặc SKU `isSellable = false` (luật 24, 26). `expiryStatus` theo `products.expiryWarningValue/expiryWarningUnit (fallback products.expiryWarningDays)`; cận hạn khi còn từ 1 ngày đến ngưỡng riêng của sản phẩm. `fefoRank`: thứ tự trong sản phẩm (1 = xuất trước), null nếu không bán được.
 
 ### `GET /stock/batches` — STK-02, STK-03
 - **Quyền:** `STOCK_VIEW` | `STOCK_VIEW_AVAILABLE` | `STOCK_EXPIRY_VIEW` · **Query:** `keyword` (SKU, tên, mã lô, mã vạch), `expiry` (`ALL|WARNING|NEAR_EXPIRY|EXPIRED|OK`, `WARNING` = cận hạn + hết hạn), `categoryCode`, `productId`, `quarantined=true`, `inStockOnly=true`, `page`, `pageSize` (4 bộ lọc cuối chỉ có tác dụng với người xem đủ) · **Response 200:** `PaginatedData<StockBatchItem>` sắp theo FEFO (HSD sớm trước)
 
 ### `GET /stock/summary` — STK-02
-- **Quyền:** `STOCK_VIEW` | `STOCK_EXPIRY_VIEW` · **Response 200:** `{ skuCount, lotCount, nearExpiryLots, expiredLots, quarantinedUnits, quarantinedValue, expiryWarningDays }` (chỉ tính lô còn tồn thực > 0)
+- **Quyền:** `STOCK_VIEW` | `STOCK_EXPIRY_VIEW` · **Response 200:** `{ skuCount, lotCount, nearExpiryLots, expiredLots, quarantinedUnits, quarantinedValue }` (chỉ tính lô còn tồn thực > 0; cận hạn theo ngưỡng riêng của sản phẩm)
 
 ### `GET /stock/fefo?code=` — STK-02 (nút "Quét FEFO", D19)
 - **Quyền:** `STOCK_VIEW` | `STOCK_VIEW_AVAILABLE` · **Query:** `code` = barcode hoặc SKU · **Response 200:** `{ productId, sku, productName, barcode, batches: StockBatchItem[] }` (chỉ lô bán được, sắp FEFO)
@@ -498,7 +498,7 @@ Chung: query `fromDate`, `toDate` (`YYYY-MM-DD`, mặc định 30 ngày gần nh
 
 ### `GET /reports/stock` — REP-04
 - **Quyền:** `REPORT_STOCK` (Admin, Manager, NV kho) · **Query:** `fromDate`, `toDate` (chỉ áp cho hàng hủy; tồn chụp tại lúc xem).
-- **Response 200:** `StockReport = { range, expiryWarningDays, summary {skuCount, lotCount, totalQty, inventoryValue (Σ onHandQty × costPrice), blockedQty, belowMinCount, nearExpiryLots, nearExpiryValue, expiredLots, expiredValue, disposalLoss (Σ totalCost phiếu DESTROY đã duyệt trong kỳ)}, products[] (onHandQty, blockedQty, availableQty, value, minStockAlert, belowMin), belowMinProducts[], nearExpiryLots[] / expiredLots[] (batchId, sku, productName, lotCode, expDate, daysToExpiry, onHandQty, blockedQty, value, daysInStock), disposals[] {issueType, count, quantity, totalCost} }`. Ngưỡng cận hạn = `EXPIRY_WARNING_DAYS`; SKU `isSellable=false` không tính "dưới ngưỡng".
+- **Response 200:** `StockReport = { range, summary {skuCount, lotCount, totalQty, inventoryValue (Σ tồn × costPrice), blockedQty, belowMinCount, nearExpiryLots, nearExpiryValue, expiredLots, expiredValue, disposalLoss (Σ totalCost phiếu DESTROY đã duyệt trong kỳ)}, products[], belowMinProducts[], nearExpiryLots[] / expiredLots[], disposals[] }`. Ngưỡng cận hạn lấy từ từng sản phẩm; SKU `isSellable=false` không tính "dưới ngưỡng".
 
 ### `GET /reports/purchases` — REP-05
 - **Quyền:** `REPORT_PURCHASE` · **Query:** `fromDate`, `toDate`, `granularity`.
@@ -510,4 +510,4 @@ Chung: query `fromDate`, `toDate` (`YYYY-MM-DD`, mặc định 30 ngày gần nh
 
 ### `GET /reports/dashboard` — REP-01
 - **Quyền:** `REPORT_DASHBOARD` (Admin, Manager: đủ widget) hoặc `REPORT_DASHBOARD_STOCK` (NV kho: `sales = null`, chỉ widget kho). Thu ngân không có quyền (403).
-- **Response 200:** `DashboardData = { generatedAt, sales: { todayRevenue (doanh thu thuần hôm nay), todayOrders, yesterdayRevenue, openShifts, last7Days[] {date,label,netRevenue,orderCount} } | null, stock: { expiryWarningDays, nearExpiry[], expired[] (batchId, sku, productName, lotCode, expDate, daysToExpiry, onHandQty), lowStock[] {productId, sku, productName, onHandQty, minStockAlert} }, pending: { waitingChecks, waitingDisposals } }`.
+- **Response 200:** `DashboardData = { generatedAt, sales: { todayRevenue, todayOrders, yesterdayRevenue, openShifts, last7Days[] } | null, stock: { nearExpiry[], expired[] (batchId, sku, productName, lotCode, expDate, daysToExpiry, onHandQty), lowStock[] }, pending: { waitingChecks, waitingDisposals } }`. Danh sách cận hạn dùng ngưỡng riêng của từng sản phẩm.

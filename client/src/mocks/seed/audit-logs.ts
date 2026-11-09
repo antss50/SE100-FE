@@ -19,7 +19,7 @@ const EVENTS: SeedEvent[] = [
   {
     daysAgo: 12,
     hour: 8, minute: 20, username: 'admin', action: 'UPDATE_SETTING', module: 'SETTING', entityType: 'SYSTEM_SETTINGS',
-    details: { before: { EXPIRY_WARNING_DAYS: '45' }, after: { EXPIRY_WARNING_DAYS: '60' } },
+    details: { before: { POINT_EARN_AMOUNT: '9000' }, after: { POINT_EARN_AMOUNT: '10000' } },
   },
   {
     daysAgo: 11, hour: 9, minute: 10, username: 'admin', action: 'CREATE_USER', module: 'USER', entityType: 'USER', entityId: '5',

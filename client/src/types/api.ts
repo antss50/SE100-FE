@@ -358,13 +358,19 @@ export interface ProductItem {
   unit: string
   volume?: string
   packagingDetail?: string
-  skinType?: ProductSkinType
+  skinType?: ProductSkinType | ProductSkinType[]
   retailPrice: number
   taxRate: number
   minStockAlert?: number
   currentStock?: number
   barcode?: string
-  shelfLifeMonths?: number
+  shelfLifeMonths?: number | null
+  shelfLifeValue?: number | null
+  shelfLifeUnit?: 'days' | 'months' | 'years' | null
+  /** Số ngày còn lại để lô của sản phẩm bắt đầu được cảnh báo cận hạn. */
+  expiryWarningDays?: number
+  expiryWarningValue?: number
+  expiryWarningUnit?: 'days' | 'months' | 'years'
   description?: string
   imageUrl?: string | null
   images?: ProductImageItem[]
@@ -389,7 +395,12 @@ export interface CreateProductRequest {
   images?: string[]
   // Optional UI fields
   packagingDetail?: string
-  shelfLifeMonths?: number
+  shelfLifeMonths?: number | null
+  shelfLifeValue?: number | null
+  shelfLifeUnit?: 'days' | 'months' | 'years' | null
+  expiryWarningDays?: number
+  expiryWarningValue?: number
+  expiryWarningUnit?: 'days' | 'months' | 'years'
   description?: string
 }
 
@@ -406,7 +417,12 @@ export interface UpdateProductRequest {
   barcode?: string
   // Optional UI fields
   packagingDetail?: string
-  shelfLifeMonths?: number
+  shelfLifeMonths?: number | null
+  shelfLifeValue?: number | null
+  shelfLifeUnit?: 'days' | 'months' | 'years' | null
+  expiryWarningDays?: number
+  expiryWarningValue?: number
+  expiryWarningUnit?: 'days' | 'months' | 'years'
   description?: string
 }
 

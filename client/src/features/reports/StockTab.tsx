@@ -73,10 +73,10 @@ export function StockTab({ controller }: { controller: ReportRangeController }) 
             <StatCard label="Giá trị tồn kho" value={formatCurrency(report.summary.inventoryValue)} icon={Boxes} hint={`${report.summary.skuCount} SKU · ${report.summary.lotCount} lô · ${formatNumber(report.summary.totalQty)} sản phẩm`} />
             <StatCard label="Dưới ngưỡng tồn" value={formatNumber(report.summary.belowMinCount)} icon={AlertTriangle} hint="SKU đang bán có tồn ≤ ngưỡng cảnh báo" />
             <StatCard
-              label={`Cận hạn (≤ ${report.expiryWarningDays} ngày)`}
+              label="Cận hạn"
               value={formatNumber(report.summary.nearExpiryLots)}
               icon={Archive}
-              hint={`Giá trị ${formatCurrency(report.summary.nearExpiryValue)}`}
+              hint={`Theo ngưỡng từng sản phẩm · Giá trị ${formatCurrency(report.summary.nearExpiryValue)}`}
             />
             <StatCard label="Đã hết hạn còn tồn" value={formatNumber(report.summary.expiredLots)} icon={Trash2} hint={`Giá trị ${formatCurrency(report.summary.expiredValue)}`} />
           </div>

@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { weightedAverageCost } from '../../domain/stock/batch'
+import { maxExpiryDateForProduct, weightedAverageCost } from '../../domain/stock/batch'
 import { collectPurchaseWarnings } from '../../domain/stock/purchase-warnings'
 import type { PurchaseOrder, PurchaseOrderDetail, PurchaseOrderLine, PurchaseWarning } from '../../types/stock'
 import type { MockTransaction } from '../db'
@@ -9,7 +9,6 @@ import { toDateOnly, toIsoLocal } from '../time'
 import {
   applyStockChange,
   assertBatchNotLocked,
-  expiryWarningDays,
   findBatchByLot,
   nextTableId,
   todayOf,
@@ -101,6 +100,10 @@ function buildLines(db: MockTransaction, input: OrderInput, today: string): Purc
     if (line.mfgDate && line.mfgDate > line.expDate) {
       throw new MockHttpError(422, 'STK_MFG_DATE_INVALID', `Dòng ${index + 1}: ngày sản xuất phải trước hạn dùng`)
     }
+    const maxAllowedExpiry = line.mfgDate ? maxExpiryDateForProduct(line.mfgDate, product) : undefined
+    if (maxAllowedExpiry && line.expDate > maxAllowedExpiry) {
+      throw new MockHttpError(422, 'STK_EXP_DATE_EXCEEDS_SHELF_LIFE', `Dòng ${index + 1}: HSD ${line.expDate} vượt quá hạn sử dụng tối đa (${product.shelfLifeValue ?? product.shelfLifeMonths} ${product.shelfLifeUnit ?? 'months'}) kể từ NSX ${line.mfgDate}`)
+    }
     return {
       id: 0,
       productId: product.id as number,
@@ -118,7 +121,7 @@ function buildLines(db: MockTransaction, input: OrderInput, today: string): Purc
 }
 
 function warningsFor(db: MockTransaction, lines: PurchaseOrderLine[], now: Date): PurchaseWarning[] {
-  return collectPurchaseWarnings(lines, db.read('batches'), todayOf(now), expiryWarningDays(db))
+  return collectPurchaseWarnings(lines, db.read('batches'), db.read('products'), todayOf(now))
 }
 
 function applyOrderFields(
@@ -176,7 +179,7 @@ export const purchaseOrderRoutes: MockRoute[] = [
         const product = products.find((p) => p.id === l.productId)
         return { ...l, sku: product?.sku ?? '', productName: product?.productName ?? '' }
       })
-      const warnings = collectPurchaseWarnings(lines, db.read('batches'), todayOf(now), expiryWarningDays(db))
+      const warnings = collectPurchaseWarnings(lines, db.read('batches'), db.read('products'), todayOf(now))
       return ok(warnings, 'Kiểm tra cảnh báo thành công')
     },
   },

@@ -83,7 +83,7 @@ export function DashboardPage() {
 
           {!data.sales && (
             <div className="grid gap-4 sm:grid-cols-3">
-              <StatCard label="Lô cận hạn" value={formatNumber(data.stock.nearExpiry.length)} icon={AlertTriangle} hint={`Còn ≤ ${data.stock.expiryWarningDays} ngày`} />
+              <StatCard label="Lô cận hạn" value={formatNumber(data.stock.nearExpiry.length)} icon={AlertTriangle} hint="Theo ngưỡng riêng từng sản phẩm" />
               <StatCard label="Lô hết hạn còn tồn" value={formatNumber(data.stock.expired.length)} icon={PackageMinus} />
               <StatCard label="Phiếu chờ duyệt" value={formatNumber(data.pending.waitingChecks + data.pending.waitingDisposals)} icon={ClipboardCheck} hint={`${data.pending.waitingChecks} kiểm kho · ${data.pending.waitingDisposals} xuất khác`} />
             </div>
@@ -91,7 +91,7 @@ export function DashboardPage() {
 
           <div className="grid gap-5 xl:grid-cols-2">
             <Panel
-              title={`Lô cận hạn (≤ ${data.stock.expiryWarningDays} ngày)`}
+              title="Lô cận hạn"
               right={canViewStock && <Link to="/stock" className="text-xs font-semibold text-accent hover:underline">Xem tồn kho</Link>}
             >
               <DataTable columns={lotColumns} rows={data.stock.nearExpiry} rowKey={(l) => l.batchId} caption="Lô cận hạn" emptyTitle="Không có lô cận hạn" />

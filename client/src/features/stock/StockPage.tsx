@@ -233,9 +233,9 @@ export function StockPage() {
           <StatCard label="Tổng SKU có tồn" value={formatNumber(s?.skuCount)} icon={Boxes} />
           <StatCard label="Lô đang tồn kho" value={formatNumber(s?.lotCount)} icon={Layers} />
           <StatCard
-            label={`Cận hạn (≤ ${s?.expiryWarningDays ?? 60} ngày)`}
+            label="Cận hạn"
             value={formatNumber(s?.nearExpiryLots)}
-            hint={`${formatNumber(s?.expiredLots)} lô đã hết hạn`}
+            hint={`Theo ngưỡng từng sản phẩm · ${formatNumber(s?.expiredLots)} lô đã hết hạn`}
             icon={Clock}
           />
           <StatCard
@@ -320,7 +320,6 @@ export function StockPage() {
             <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl px-2 text-sm font-medium text-ink-soft transition hover:bg-card">
               <input
                 type="checkbox"
-                className="size-6 accent-accent"
                 checked={inStockOnly}
                 onChange={(e) => {
                   setInStockOnly(e.target.checked)

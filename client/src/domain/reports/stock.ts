@@ -3,7 +3,7 @@ import type { DisposalDetail } from '../../types/inventory'
 import type { ReportRange, StockReport, StockReportDisposalRow, StockReportLotRow, StockReportProductRow } from '../../types/reports'
 import type { Batch } from '../../types/stock'
 import { dateOf, diffDays, inRange } from './period'
-import { daysUntilExpiry } from '../stock/batch'
+import { daysUntilExpiry, expiryStatusForProduct } from '../stock/batch'
 
 export interface StockSource {
   batches: readonly Batch[]
@@ -13,6 +13,9 @@ export interface StockSource {
     productName: string
     categoryName?: string
     minStockAlert?: number
+    expiryWarningDays?: number
+    expiryWarningValue?: number
+    expiryWarningUnit?: 'days' | 'months' | 'years'
     isSellable?: boolean
     status: 'ACTIVE' | 'DISCONTINUED'
   }[]
@@ -21,7 +24,7 @@ export interface StockSource {
 
 const sum = <T>(items: readonly T[], pick: (item: T) => number): number => items.reduce((acc, x) => acc + pick(x), 0)
 
-export function buildStockReport(src: StockSource, range: ReportRange, today: string, warningDays: number): StockReport {
+export function buildStockReport(src: StockSource, range: ReportRange, today: string): StockReport {
   const productById = new Map(src.products.filter((p) => p.id !== undefined).map((p) => [p.id as number, p]))
   const inStock = src.batches.filter((b) => b.onHandQty > 0)
 
@@ -70,7 +73,7 @@ export function buildStockReport(src: StockSource, range: ReportRange, today: st
   products.sort((a, b) => b.value - a.value)
 
   const nearExpiry = inStock
-    .filter((b) => b.expDate >= today && daysUntilExpiry(b.expDate, today) <= warningDays)
+    .filter((b) => expiryStatusForProduct(b.expDate, today, productById.get(b.productId)) === 'NEAR_EXPIRY')
     .map(lotRow)
     .sort((a, b) => a.daysToExpiry - b.daysToExpiry)
   const expired = inStock
@@ -90,7 +93,6 @@ export function buildStockReport(src: StockSource, range: ReportRange, today: st
 
   return {
     range,
-    expiryWarningDays: warningDays,
     summary: {
       skuCount: products.filter((p) => p.onHandQty > 0).length,
       lotCount: inStock.length,

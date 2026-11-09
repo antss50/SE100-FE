@@ -9,7 +9,7 @@ import { addDaysTo, previousRange, validateRange } from '../../domain/reports/pe
 import type { ReportGranularity, ReportRange, RevenueReport } from '../../types/reports'
 import { MockHttpError, notFound, ok } from '../http'
 import type { MockRoute } from '../router'
-import { expiryWarningDays, todayOf } from '../stock-ledger'
+import { todayOf } from '../stock-ledger'
 import { toDateOnly, toIsoLocal } from '../time'
 
 /** Đọc `fromDate`/`toDate` từ query (mặc định 30 ngày gần nhất) và kiểm `fromDate ≤ toDate`. */
@@ -83,8 +83,7 @@ export const reportRoutes: MockRoute[] = [
         buildStockReport(
           { batches: db.read('batches'), products: db.read('products'), disposals: db.read('disposals') },
           rangeFromQuery(query, now),
-          todayOf(now),
-          expiryWarningDays(db)
+          todayOf(now)
         )
       ),
   },
@@ -131,7 +130,6 @@ export const reportRoutes: MockRoute[] = [
             disposals: db.read('disposals'),
           },
           todayOf(now),
-          expiryWarningDays(db),
           toIsoLocal(now),
           permissions.includes('REPORT_DASHBOARD')
         )

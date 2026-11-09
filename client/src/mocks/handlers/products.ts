@@ -23,7 +23,12 @@ const productFields = {
   minStockAlert: z.number().int().min(0).optional(),
   barcode: z.string().trim().optional(),
   packagingDetail: z.string().optional(),
-  shelfLifeMonths: z.number().int().positive().optional(),
+  shelfLifeMonths: z.number().int().positive().nullable().optional(),
+  shelfLifeValue: z.number().int().positive().nullable().optional(),
+  shelfLifeUnit: z.enum(['days', 'months', 'years']).nullable().optional(),
+  expiryWarningDays: z.number().int().min(0).max(3650).optional(),
+  expiryWarningValue: z.number().int().min(0).optional(),
+  expiryWarningUnit: z.enum(['days', 'months', 'years']).optional(),
   description: z.string().optional(),
 }
 
@@ -54,6 +59,8 @@ function withNames(db: MockTransaction, p: ProductItem): ProductItem {
   const images = normalizeProductImages(p.images, p.imageUrl)
   return {
     ...p,
+    // Dữ liệu đã có trước khi thêm trường này được đọc như cấu hình 60 ngày.
+    expiryWarningDays: p.expiryWarningDays ?? 60,
     categoryName: cat?.categoryName ?? p.categoryCode,
     brandName: brand?.brandName ?? p.brandCode,
     images,
@@ -175,6 +182,11 @@ const productRoutes: MockRoute[] = [
         imageUrl: images[0]?.url ?? null,
         packagingDetail: input.packagingDetail,
         shelfLifeMonths: input.shelfLifeMonths,
+        shelfLifeValue: input.shelfLifeValue,
+        shelfLifeUnit: input.shelfLifeUnit,
+        expiryWarningDays: input.expiryWarningDays ?? 60,
+        expiryWarningValue: input.expiryWarningValue,
+        expiryWarningUnit: input.expiryWarningUnit,
         description: input.description,
         status: 'ACTIVE',
       }
@@ -198,7 +210,20 @@ const productRoutes: MockRoute[] = [
         skinType: input.skinType ?? target.skinType,
         minStockAlert: input.minStockAlert ?? target.minStockAlert,
         packagingDetail: input.packagingDetail ?? target.packagingDetail,
-        shelfLifeMonths: input.shelfLifeMonths ?? target.shelfLifeMonths,
+        shelfLifeMonths: input.shelfLifeMonths,
+        shelfLifeValue: input.shelfLifeValue === undefined
+          ? input.shelfLifeMonths !== undefined ? null : target.shelfLifeValue
+          : input.shelfLifeValue,
+        shelfLifeUnit: input.shelfLifeUnit === undefined
+          ? input.shelfLifeMonths !== undefined ? null : target.shelfLifeUnit
+          : input.shelfLifeUnit,
+        expiryWarningDays: input.expiryWarningDays ?? target.expiryWarningDays ?? 60,
+        expiryWarningValue: input.expiryWarningValue === undefined
+          ? input.expiryWarningDays !== undefined ? undefined : target.expiryWarningValue
+          : input.expiryWarningValue,
+        expiryWarningUnit: input.expiryWarningUnit === undefined
+          ? input.expiryWarningDays !== undefined ? undefined : target.expiryWarningUnit
+          : input.expiryWarningUnit,
         description: input.description ?? target.description,
       })
       db.touch('products')

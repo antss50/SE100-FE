@@ -5,7 +5,6 @@ import type { MockRoute } from '../router'
 import { writeAudit } from '../audit'
 
 const SETTING_META: Record<SettingKey, { description: string; kind: 'number' | 'text' }> = {
-  EXPIRY_WARNING_DAYS: { description: 'Số ngày cảnh báo cận hạn', kind: 'number' },
   POINT_EARN_AMOUNT: { description: 'Số tiền (đ) khách trả để được 1 điểm', kind: 'number' },
   POINT_REDEEM_VALUE: { description: 'Giá trị 1 điểm khi đổi (đ)', kind: 'number' },
   POINT_MAX_REDEEM_PERCENT: { description: 'Tối đa % giá trị đơn được trừ bằng điểm', kind: 'number' },
@@ -62,7 +61,7 @@ export const settingsRoutes: MockRoute[] = [
         const meta = SETTING_META[key as SettingKey]
         if (meta.kind === 'number') {
           const n = Number(value)
-          const min = key === 'EXPIRY_WARNING_DAYS' ? 0 : 1
+          const min = 1
           if (!Number.isInteger(n) || n < min) {
             throw new MockHttpError(422, 'SET_VALUE_INVALID', `${meta.description}: phải là số nguyên từ ${min} trở lên`)
           }
