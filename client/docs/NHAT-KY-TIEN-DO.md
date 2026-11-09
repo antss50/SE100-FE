@@ -94,3 +94,5 @@ Không xóa hay sửa dòng cũ; ghi sai thì thêm dòng mới đính chính.
 | 2026-11-09 13:51 | fe-tester | 3 | Chạy | lint 0 lỗi, build qua, vitest 324 pass/0 fail/1 skip (reports-flows 18 pass + 1 skip B4), e2e 87 pass (t2: 5 test) |
 | 2026-11-09 13:51 | fe-tester | 3 | Lỗi | B4 (Medium) REP-04: tester isSellable=false có tồn bán được 3 ở báo cáo |
 | 2026-11-09 13:51 | fe-tester | 3 | Xong | REP-01..06, AUTH-06, PROM-04 -> Xong (không còn Critical/High) |
+| 2026-11-09 13:56 | fe-tester | 3 | Chạy | e2e lần 2: 86 pass/1 fail chập chờn (auth/login-session cashier01; chạy riêng 3 lần đều pass, chưa tái hiện, nghi quá tải máy khi chạy cả bộ, chưa ghi lỗi) |
+| 2026-11-09 13:56 | fe-tester | 3 | Kết thúc | Đợt test 2 xong; commit test: 59f949e |
