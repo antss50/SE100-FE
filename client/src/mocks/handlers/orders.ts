@@ -4,6 +4,7 @@ import type { CartInput, OrderRecord, PosLot, PosProduct } from '../../types/pos
 import type { MockTransaction } from '../db'
 import { MockHttpError, keywordOf, notFound, ok, paginate, parseBody } from '../http'
 import type { MockRoute } from '../router'
+import type { MockUser } from '../seed/users'
 import { currentShiftOf, completeSale, exchangeCreditOf, nextOrderCode } from '../sales-complete'
 import { isPosSellable, priceCart, sellableBatches, sellableTotal } from '../sales-engine'
 import { amountDueOf, toOrderListItem, toReturnListItem } from '../sales-views'
@@ -70,6 +71,69 @@ function findOrder(db: MockTransaction, id: string): OrderRecord {
   const order = db.read('orders').find((o) => String(o.id) === id)
   if (!order) throw notFound('POS_ORDER_NOT_FOUND', 'Không tìm thấy đơn hàng')
   return order
+}
+
+/** Lưu hoặc cập nhật đơn nháp của thu ngân (dùng cả cho seed đơn mẫu). */
+export function saveDraft(
+  db: MockTransaction,
+  input: CartInput & { draftId?: number | null },
+  user: MockUser,
+  now: Date
+): { record: OrderRecord; existed: boolean } {
+  const shift = currentShiftOf(db, user.id)
+  if (input.items.length === 0) throw new MockHttpError(422, 'POS_CART_EMPTY', 'Giỏ hàng chưa có sản phẩm để lưu nháp')
+  const credit = exchangeCreditOf(db, input.exchangeReturnId)
+  const { quote, customer } = priceCart(db, input, now, { exchangeCreditAmount: credit })
+  const orders = db.read('orders')
+  const existing = input.draftId ? orders.find((o) => o.id === input.draftId && o.status === 'DRAFT') : undefined
+  if (input.draftId && !existing) {
+    throw new MockHttpError(409, 'POS_DRAFT_NOT_FOUND', 'Đơn nháp không còn tồn tại hoặc đã được xử lý')
+  }
+  const cart: CartInput = {
+    items: input.items.map((i) => ({ productId: i.productId, quantity: i.quantity, batchId: i.batchId ?? null })),
+    customerId: input.customerId,
+    voucherCode: input.voucherCode,
+    pointsRequested: input.pointsRequested,
+    exchangeReturnId: input.exchangeReturnId ?? null,
+  }
+  const record: OrderRecord = {
+    id: existing?.id ?? db.nextSeq('order', orders.reduce((m, o) => Math.max(m, o.id), 0) + 1),
+    orderCode: existing?.orderCode ?? nextOrderCode(db, now),
+    shiftId: shift.shiftId,
+    cashierId: user.id ?? 0,
+    cashierName: user.fullName,
+    customerId: customer?.id ?? null,
+    customerName: customer?.fullName ?? null,
+    customerPhone: customer?.phoneNumber ?? null,
+    policyId: db.read('returnPolicies')[0]?.id ?? 1,
+    orderPromotionId: quote.orderPromotionId,
+    orderPromotionName: quote.orderPromotionName,
+    voucherCode: input.voucherCode,
+    subtotalAmount: quote.subtotalAmount,
+    lineDiscountAmount: quote.lineDiscountAmount,
+    tierDiscountAmount: quote.tierDiscountAmount,
+    orderDiscountAmount: quote.orderDiscountAmount,
+    pointsUsed: quote.pointsUsed,
+    pointsDiscountAmount: quote.pointsDiscountAmount,
+    discountAmount: quote.discountAmount,
+    taxAmount: quote.taxAmount,
+    totalAmount: quote.totalAmount,
+    exchangeReturnId: cart.exchangeReturnId ?? null,
+    exchangeCreditAmount: credit,
+    paymentMethod: null,
+    amountReceived: null,
+    changeDue: null,
+    status: 'DRAFT',
+    createdAt: existing?.createdAt ?? toIsoLocal(now),
+    completedAt: null,
+    pointsEarned: 0,
+    lines: [],
+    draftCart: cart,
+  }
+  if (existing) Object.assign(existing, record)
+  else orders.push(record)
+  db.touch('orders')
+  return { record, existed: Boolean(existing) }
 }
 
 export const orderRoutes: MockRoute[] = [
@@ -152,60 +216,9 @@ export const orderRoutes: MockRoute[] = [
     handler: ({ db, body, user, now, permissions }) => {
       const input = parseBody(cartSchema.extend({ draftId: z.number().int().nullish() }), body)
       assertCartPermissions(input, permissions)
-      const shift = currentShiftOf(db, user?.id)
-      if (input.items.length === 0) throw new MockHttpError(422, 'POS_CART_EMPTY', 'Giỏ hàng chưa có sản phẩm để lưu nháp')
-      const credit = exchangeCreditOf(db, input.exchangeReturnId)
-      const { quote, customer } = priceCart(db, input, now, { exchangeCreditAmount: credit })
-      const orders = db.read('orders')
-      const existing = input.draftId ? orders.find((o) => o.id === input.draftId && o.status === 'DRAFT') : undefined
-      if (input.draftId && !existing) {
-        throw new MockHttpError(409, 'POS_DRAFT_NOT_FOUND', 'Đơn nháp không còn tồn tại hoặc đã được xử lý')
-      }
-      const cart: CartInput = {
-        items: input.items.map((i) => ({ productId: i.productId, quantity: i.quantity, batchId: i.batchId ?? null })),
-        customerId: input.customerId,
-        voucherCode: input.voucherCode,
-        pointsRequested: input.pointsRequested,
-        exchangeReturnId: input.exchangeReturnId ?? null,
-      }
-      const record: OrderRecord = {
-        id: existing?.id ?? db.nextSeq('order', orders.reduce((m, o) => Math.max(m, o.id), 0) + 1),
-        orderCode: existing?.orderCode ?? nextOrderCode(db, now),
-        shiftId: shift.shiftId,
-        cashierId: user?.id ?? 0,
-        cashierName: user?.fullName ?? '',
-        customerId: customer?.id ?? null,
-        customerName: customer?.fullName ?? null,
-        customerPhone: customer?.phoneNumber ?? null,
-        policyId: db.read('returnPolicies')[0]?.id ?? 1,
-        orderPromotionId: quote.orderPromotionId,
-        orderPromotionName: quote.orderPromotionName,
-        voucherCode: input.voucherCode,
-        subtotalAmount: quote.subtotalAmount,
-        lineDiscountAmount: quote.lineDiscountAmount,
-        tierDiscountAmount: quote.tierDiscountAmount,
-        orderDiscountAmount: quote.orderDiscountAmount,
-        pointsUsed: quote.pointsUsed,
-        pointsDiscountAmount: quote.pointsDiscountAmount,
-        discountAmount: quote.discountAmount,
-        taxAmount: quote.taxAmount,
-        totalAmount: quote.totalAmount,
-        exchangeReturnId: cart.exchangeReturnId ?? null,
-        exchangeCreditAmount: credit,
-        paymentMethod: null,
-        amountReceived: null,
-        changeDue: null,
-        status: 'DRAFT',
-        createdAt: existing?.createdAt ?? toIsoLocal(now),
-        completedAt: null,
-        pointsEarned: 0,
-        lines: [],
-        draftCart: cart,
-      }
-      if (existing) Object.assign(existing, record)
-      else orders.push(record)
-      db.touch('orders')
-      return ok(record, 'Đã lưu đơn nháp', existing ? 200 : 201)
+      if (!user) throw new MockHttpError(401, 'AUTH_UNAUTHORIZED', 'Phiên đăng nhập không hợp lệ')
+      const { record, existed } = saveDraft(db, input, user, now)
+      return ok(record, 'Đã lưu đơn nháp', existed ? 200 : 201)
     },
   },
   {

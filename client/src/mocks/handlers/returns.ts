@@ -31,7 +31,7 @@ const createSchema = quoteSchema.extend({
 
 const canSeeAll = (permissions: string[]) => permissions.includes('POS_SHIFT_HANDOVER_CONFIRM')
 
-function createReturn(db: MockTransaction, input: z.infer<typeof createSchema>, user: MockUser, now: Date): ReturnOrderRecord {
+export function createReturn(db: MockTransaction, input: z.infer<typeof createSchema>, user: MockUser, now: Date): ReturnOrderRecord {
   const shift = currentShiftOf(db, user.id)
   const { order, quote, refundMethod } = evaluateReturn(db, input, shift, now)
   const returns = db.read('returns')

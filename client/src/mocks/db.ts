@@ -16,6 +16,7 @@ import { SEED_BRANDS, SEED_CATEGORIES, SEED_PRODUCTS } from './seed/catalog'
 import { SEED_CUSTOMERS } from './seed/customers'
 import { SEED_LOYALTY_CONFIG } from './seed/loyalty'
 import { seedPromotions } from './seed/promotions'
+import { seedSales } from './seed/sales'
 import { SEED_SYSTEM_SETTINGS, seedStock } from './seed/stock'
 import { seedSuppliers } from './seed/suppliers'
 import { seedPermissions, seedRoles, type MockPermission, type MockRole } from './seed/rbac'
@@ -78,7 +79,7 @@ export type TableName = keyof MockTables
  * Phiên bản cấu trúc seed. Đổi cấu trúc bảng hoặc dữ liệu seed thì tăng số này
  * (CLAUDE.md mục 5.2) để trình duyệt bỏ dữ liệu cũ.
  */
-export const MOCK_DB_VERSION = 7
+export const MOCK_DB_VERSION = 8
 const KEY_PREFIX = 'se100_mock_'
 const keyOf = (table: string) => `${KEY_PREFIX}${table}_v${MOCK_DB_VERSION}`
 const META_KEY = keyOf('meta')
@@ -96,7 +97,7 @@ export function buildSeed(today: Date = new Date()): MockTables {
     isSellable: p.isSellable ?? true,
     currentStock: stockByProduct.get(p.id as number) ?? 0,
   }))
-  return {
+  const tables: MockTables = {
     users: clone(SEED_USERS),
     passwords: Object.fromEntries(SEED_USERS.map((u) => [String(u.id), SEED_PASSWORD])),
     sessions: [],
@@ -123,6 +124,8 @@ export function buildSeed(today: Date = new Date()): MockTables {
     idempotencyKeys: {},
     counters: {},
   }
+  seedSales(new MockTransaction(tables), today)
+  return tables
 }
 
 function readRaw<T>(key: string): T | undefined {
@@ -162,12 +165,17 @@ export class MockTransaction {
   private readonly cache = new Map<TableName, unknown>()
   private readonly dirty = new Set<TableName>()
 
-  constructor() {
-    ensureSeeded()
+  /** `memory` có giá trị thì chạy hoàn toàn trên bộ nhớ (dùng khi dựng seed), không chạm localStorage. */
+  private readonly memory?: MockTables
+
+  constructor(memory?: MockTables) {
+    this.memory = memory
+    if (!memory) ensureSeeded()
   }
 
   /** Bản sao có thể sửa trực tiếp; sửa xong gọi `write` hoặc `touch`. */
   read<K extends TableName>(table: K): MockTables[K] {
+    if (this.memory) return this.memory[table]
     if (!this.cache.has(table)) {
       const stored = readRaw<MockTables[K]>(keyOf(table))
       this.cache.set(table, stored ?? buildSeed()[table])
@@ -176,12 +184,17 @@ export class MockTransaction {
   }
 
   write<K extends TableName>(table: K, value: MockTables[K]): void {
+    if (this.memory) {
+      this.memory[table] = value
+      return
+    }
     this.cache.set(table, value)
     this.dirty.add(table)
   }
 
   /** Đánh dấu bảng đã sửa tại chỗ (qua tham chiếu từ `read`). */
   touch(table: TableName): void {
+    if (this.memory) return
     this.read(table)
     this.dirty.add(table)
   }
