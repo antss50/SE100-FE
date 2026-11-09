@@ -75,3 +75,5 @@ Agent ghi câu hỏi ở đây thay vì tự đoán. Chủ dự án trả lời 
 | Mã | GĐ | Câu hỏi | Phương án đề xuất | Trả lời |
 |---|---|---|---|---|
 | Q1 | 0 | Nút "Quét FEFO" trên header (thiết kế LUMINA) làm gì? Tài liệu không mô tả. | Mở màn tra cứu tồn theo lô (STK-02) với ô quét barcode được focus sẵn. GĐ0 tạm cho nút chuyển tới `/stock`, chỉ hiện với người có quyền xem tồn. | |
+| Q2 | 1 | Kiểm kho (STK-04): ô giải trình chênh lệch từng lô có bắt buộc khi `differenceQty ≠ 0` không? Tài liệu chỉ ghi `note` là "Giải trình chênh lệch", không nói bắt buộc. | Hiện để tùy chọn (giao diện chỉ gợi ý). Nếu bắt buộc: thêm kiểm tra ở `submit` (422 `STK_CHECK_NOTE_REQUIRED`) và đánh dấu * ở cột giải trình. | |
+| Q3 | 1 | Phiếu xuất khác loại trả NCC (STK-06): thiết kế có nhà cung cấp, người nhận hàng trả, tham chiếu phiếu nhập, nhưng bảng DISPOSAL_REQUESTS không có cột nào cho các thông tin này. Có thêm cột (vd. `supplier_id`, `po_id`) không? | Giữ theo DATABASE.md (không có), nhập thông tin NCC vào ô diễn giải lý do. Nếu cần: thêm `supplier_id`, `ref_po_id` vào DISPOSAL_REQUESTS rồi cập nhật form. | |
