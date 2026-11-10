@@ -40,35 +40,35 @@ export function getTierBadgeStyle(tierCode?: CustomerTierCode | string): {
     case 'DIAMOND':
       return {
         label: 'Kim Cương',
-        bgClass: 'bg-amber-100/90',
-        textClass: 'text-amber-900',
+        bgClass: 'bg-gradient-to-r from-[#e0f2fe] via-[#60a5fa] to-[#1d4ed8]',
+        textClass: 'text-black',
         borderClass: 'border-amber-300',
-        icon: '💎',
+        icon: '',
       }
     case 'GOLD':
       return {
         label: 'Vàng',
-        bgClass: 'bg-orange-100/90',
+        bgClass: 'bg-gradient-to-r from-[#fef9c3] via-[#facc15] to-[#ca8a04]',
         textClass: 'text-orange-800',
         borderClass: 'border-orange-200',
-        icon: '🏅',
+        icon: '',
       }
     case 'SILVER':
       return {
         label: 'Bạc',
-        bgClass: 'bg-stone-100',
+        bgClass: 'bg-gradient-to-r from-[#f3f4f6] via-[#d1d5db] to-[#8b929e]',
         textClass: 'text-stone-700',
         borderClass: 'border-stone-300',
-        icon: '🛡️',
+        icon: '',
       }
     case 'BRONZE':
     default:
       return {
         label: 'Đồng',
-        bgClass: 'bg-[#f5ebe4]',
+        bgClass: 'bg-gradient-to-r from-[#f5efe8] via-[#ecc38e] to-[#d9821b]',
         textClass: 'text-[#8c5840]',
         borderClass: 'border-[#e5d2c5]',
-        icon: '🛡️',
+        icon: '',
       }
   }
 }

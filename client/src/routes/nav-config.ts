@@ -126,14 +126,9 @@ export const NAV_GROUPS: NavGroup[] = [
         to: '/reports',
         label: 'Báo cáo tài chính & Excel',
         icon: BarChart3,
-        permission: [
-          'REPORT_REVENUE',
-          'REPORT_SALES',
-          'REPORT_SALES_OWN_SHIFT',
-          'REPORT_STOCK',
-          'REPORT_PURCHASE',
-          'REPORT_CUSTOMER',
-        ],
+        // Chỉ ADMIN / STORE_MANAGER: không dùng REPORT_SALES_OWN_SHIFT (thu ngân) và REPORT_STOCK (NV kho)
+        // để 2 vai trò này không thấy menu và không vào được /reports.
+        permission: ['REPORT_REVENUE', 'REPORT_SALES', 'REPORT_PURCHASE', 'REPORT_CUSTOMER'],
         uc: 'REP-02..06',
       },
       { to: '/users', label: 'Tài khoản nhân viên', icon: UserCog, permission: 'USER_MANAGE', uc: 'AUTH-04' },
