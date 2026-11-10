@@ -155,9 +155,9 @@ export const NAV_ITEMS: NavItem[] = NAV_GROUPS.flatMap((g) => g.items)
 
 /** Các nhóm chỉ còn mục người dùng có quyền; nhóm rỗng bị bỏ. */
 export function visibleNavGroups(permissions: readonly string[]): NavGroup[] {
-  return NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => hasPermission(permissions, i.permission)) })).filter(
-    (g) => g.items.length > 0
-  )
+  return NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => hasPermission(permissions, i.permission)) }))
+    .filter((g) => g.items.length > 0)
+    .map((g, index) => ({ ...g, section: g.section.replace(/^\d+\./, `${index + 1}.`) }))
 }
 
 /** Ưu tiên trang chủ: dashboard, rồi màn POS (thu ngân), rồi mục đầu tiên được phép. */

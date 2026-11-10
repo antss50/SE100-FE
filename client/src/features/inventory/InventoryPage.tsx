@@ -105,6 +105,14 @@ export function InventoryPage() {
   const [pageSize, setPageSize] = useState(20)
   const [reloadTick, setReloadTick] = useState(0)
 
+  const resetProductFilters = () => {
+    setKeyword('')
+    setBrandFilter('ALL')
+    setCategoryFilter('ALL')
+    setStatusFilter('ACTIVE')
+    setPage(1)
+  }
+
   // Directory modal filter state (UC-PROD-11 & UC-PROD-16)
   const [dirKeyword, setDirKeyword] = useState('')
   const [dirStatus, setDirStatus] = useState('ALL')
@@ -522,8 +530,12 @@ export function InventoryPage() {
 
           <button
             type="button"
-            onClick={() => setReloadTick((t) => t + 1)}
-            title="Làm mới dữ liệu"
+            onClick={() => {
+              resetProductFilters()
+              setReloadTick((t) => t + 1)
+            }}
+            title="Đặt lại bộ lọc và làm mới dữ liệu"
+            aria-label="Đặt lại bộ lọc và làm mới dữ liệu"
             className="rounded-2xl bg-[#fbf3ed] border border-[#efe0d6] p-2.5 text-[#5e473b] hover:bg-[#f2e2d7] cursor-pointer"
           >
             <RefreshCw className="size-4" />

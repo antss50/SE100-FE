@@ -32,6 +32,10 @@ const completeSchema = cartSchema.extend({
   amountReceived: z.number().min(0).nullish(),
   draftId: z.number().int().nullish(),
 })
+const draftSchema = cartSchema.extend({
+  amountReceived: z.number().min(0).nullish(),
+  draftId: z.number().int().nullish(),
+})
 
 const canSeeAll = (permissions: string[]) => permissions.includes('POS_SHIFT_HANDOVER_CONFIRM')
 
@@ -76,7 +80,7 @@ function findOrder(db: MockTransaction, id: string): OrderRecord {
 /** Lưu hoặc cập nhật đơn nháp của thu ngân (dùng cả cho seed đơn mẫu). */
 export function saveDraft(
   db: MockTransaction,
-  input: CartInput & { draftId?: number | null },
+  input: CartInput & { amountReceived?: number | null; draftId?: number | null },
   user: MockUser,
   now: Date
 ): { record: OrderRecord; existed: boolean } {
@@ -89,12 +93,13 @@ export function saveDraft(
   if (input.draftId && !existing) {
     throw new MockHttpError(409, 'POS_DRAFT_NOT_FOUND', 'Đơn nháp không còn tồn tại hoặc đã được xử lý')
   }
-  const cart: CartInput = {
+  const cart: CartInput & { amountReceived?: number | null } = {
     items: input.items.map((i) => ({ productId: i.productId, quantity: i.quantity, batchId: i.batchId ?? null })),
     customerId: input.customerId,
     voucherCode: input.voucherCode,
     pointsRequested: input.pointsRequested,
     exchangeReturnId: input.exchangeReturnId ?? null,
+    amountReceived: input.amountReceived ?? null,
   }
   const record: OrderRecord = {
     id: existing?.id ?? db.nextSeq('order', orders.reduce((m, o) => Math.max(m, o.id), 0) + 1),
@@ -214,7 +219,7 @@ export const orderRoutes: MockRoute[] = [
     path: '/orders/drafts',
     permission: 'POS_CHECKOUT',
     handler: ({ db, body, user, now, permissions }) => {
-      const input = parseBody(cartSchema.extend({ draftId: z.number().int().nullish() }), body)
+      const input = parseBody(draftSchema, body)
       assertCartPermissions(input, permissions)
       if (!user) throw new MockHttpError(401, 'AUTH_UNAUTHORIZED', 'Phiên đăng nhập không hợp lệ')
       const { record, existed } = saveDraft(db, input, user, now)

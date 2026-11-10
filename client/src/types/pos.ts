@@ -94,7 +94,7 @@ export interface OrderRecord {
   pointsEarned: number
   lines: OrderLine[]
   /** Chỉ đơn nháp. */
-  draftCart: CartInput | null
+  draftCart: (CartInput & { amountReceived?: number | null }) | null
 }
 
 /** Danh sách đơn: bỏ dòng chi tiết cho nhẹ. */

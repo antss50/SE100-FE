@@ -9,6 +9,7 @@ import { ordersService } from '../../services/orders.service'
 import { returnsService } from '../../services/returns.service'
 import {
   RETURN_REASON_LABELS,
+  type ItemCondition,
   type RefundMethod,
   type ReturnItemInput,
   type ReturnReason,
@@ -36,6 +37,7 @@ export function ReturnCreatePage() {
   const [refund, setRefund] = useState<RefundMethod>('CASH')
   const [note, setNote] = useState('')
   const [selection, setSelection] = useState<Record<number, ReturnSelection>>({})
+  const requiredCondition: ItemCondition = reason === 'CHANGE_OF_MIND' ? 'INTACT' : 'DAMAGED_OR_OPENED'
 
   const orders = useQuery({
     queryKey: queryKeys.orders.list({ keyword: lookup, status: 'COMPLETED', pageSize: 5 }),
@@ -158,6 +160,7 @@ export function ReturnCreatePage() {
           <ReturnLinesTable
             lines={detail.lines}
             selection={selection}
+            requiredCondition={requiredCondition}
             changeOfMind={reason === 'CHANGE_OF_MIND'}
             onChange={(id, next) => setSelection((s) => ({ ...s, [id]: next }))}
           />
@@ -171,6 +174,10 @@ export function ReturnCreatePage() {
                   const next = e.target.value as ReturnReason
                   setReason(next)
                   setRefund(next === 'CHANGE_OF_MIND' ? 'EXCHANGE' : 'CASH')
+                  const condition: ItemCondition = next === 'CHANGE_OF_MIND' ? 'INTACT' : 'DAMAGED_OR_OPENED'
+                  setSelection((current) => Object.fromEntries(
+                    Object.entries(current).map(([id, item]) => [id, { ...item, condition }])
+                  ))
                 }}
                 className={selectClass}
               >

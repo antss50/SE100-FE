@@ -86,7 +86,10 @@ export function PosPage() {
   })
 
   const saveDraft = useMutation({
-    mutationFn: () => ordersService.saveDraft({ ...cart, draftId }),
+    mutationFn: () => {
+      const s = usePosStore.getState()
+      return ordersService.saveDraft({ ...cart, amountReceived: s.paymentMethod === 'CASH' ? Number(s.amountReceived) || 0 : null, draftId })
+    },
     onSuccess: (res) => {
       toast.success(`Đã lưu đơn nháp ${res.data.orderCode}`)
       usePosStore.getState().reset()

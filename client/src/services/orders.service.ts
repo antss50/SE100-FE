@@ -45,7 +45,7 @@ export const ordersService = {
     return post<OrderRecord>('/orders/complete', payload)
   },
   /** POS-02: POST /orders/drafts (lưu hoặc cập nhật đơn nháp) */
-  saveDraft(payload: CartInput & { draftId?: number | null }): Promise<ApiSuccessResponse<OrderRecord>> {
+  saveDraft(payload: CartInput & { amountReceived?: number | null; draftId?: number | null }): Promise<ApiSuccessResponse<OrderRecord>> {
     return post<OrderRecord>('/orders/drafts', payload)
   },
   /** POS-02: GET /orders/drafts */

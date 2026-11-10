@@ -22,7 +22,7 @@ interface PosState {
   setPoints: (points: number) => void
   setPayment: (method: PaymentMethod) => void
   setReceived: (value: string) => void
-  loadDraft: (cart: CartInput, draftId: number, names: Record<number, string>) => void
+  loadDraft: (cart: CartInput & { amountReceived?: number | null }, draftId: number, names: Record<number, string>) => void
   setDraftId: (id: number | null) => void
   startExchange: (returnId: number) => void
   reset: () => void
@@ -72,6 +72,7 @@ export const usePosStore = create<PosState>((set) => ({
       voucherCode: cart.voucherCode ?? '',
       pointsRequested: cart.pointsRequested,
       exchangeReturnId: cart.exchangeReturnId ?? null,
+      amountReceived: cart.amountReceived == null ? '' : String(cart.amountReceived),
       draftId,
     }),
   setDraftId: (draftId) => set({ draftId }),

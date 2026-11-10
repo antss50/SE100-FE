@@ -12,12 +12,13 @@ interface ReturnLinesTableProps {
   lines: ReturnableLine[]
   selection: Record<number, ReturnSelection>
   onChange: (lineId: number, next: ReturnSelection) => void
+  requiredCondition: ItemCondition
   /** Khách đổi ý: không có lựa chọn "đã mở seal" (sẽ bị từ chối). */
   changeOfMind: boolean
 }
 
 /** Chọn dòng hàng, số lượng và tình trạng (còn seal / đã mở hoặc hỏng) của hàng trả. */
-export function ReturnLinesTable({ lines, selection, onChange, changeOfMind }: ReturnLinesTableProps) {
+export function ReturnLinesTable({ lines, selection, onChange, requiredCondition, changeOfMind }: ReturnLinesTableProps) {
   return (
     <div className="overflow-x-auto rounded-2xl border border-line bg-white">
       <table className="w-full text-sm">
@@ -37,7 +38,7 @@ export function ReturnLinesTable({ lines, selection, onChange, changeOfMind }: R
         </thead>
         <tbody>
           {lines.map((l) => {
-            const sel = selection[l.id] ?? { selected: false, quantity: 1, condition: 'INTACT' as ItemCondition }
+            const sel = selection[l.id] ?? { selected: false, quantity: 1, condition: requiredCondition }
             const disabled = l.returnableQuantity <= 0
             return (
               <tr key={l.id} className={`border-t border-line ${disabled ? 'opacity-50' : ''}`}>
@@ -81,10 +82,9 @@ export function ReturnLinesTable({ lines, selection, onChange, changeOfMind }: R
                 <td className="px-2 py-2.5">
                   <select
                     aria-label={`Tình trạng ${l.productName}`}
-                    disabled={disabled || !sel.selected}
-                    value={sel.condition}
-                    onChange={(e) => onChange(l.id, { ...sel, condition: e.target.value as ItemCondition })}
-                    className="rounded-lg border border-line bg-white px-2 py-1 text-sm disabled:bg-neutral-soft"
+                    disabled
+                    value={requiredCondition}
+                    className="appearance-none rounded-lg border border-line bg-white px-2 py-1 text-sm disabled:bg-neutral-soft"
                   >
                     <option value="INTACT">Còn nguyên seal</option>
                     <option value="DAMAGED_OR_OPENED">{changeOfMind ? 'Đã mở seal (bị từ chối)' : 'Đã mở / hư hỏng'}</option>

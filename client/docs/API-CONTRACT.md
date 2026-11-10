@@ -300,7 +300,7 @@ Giá luôn do máy chủ tính bằng đúng thuật toán 4 tầng ở KHUYEN_M
 - **Lỗi:** `409 POS_SHIFT_NOT_OPEN`, `409 POS_DRAFT_NOT_FOUND`, `422 POS_CART_EMPTY`, `422 POS_INSUFFICIENT_STOCK`, `422 PROM_VOUCHER_INVALID`, `422 POS_POINTS_EXCEED_LIMIT`, `422 POS_CASH_INSUFFICIENT` (tiền mặt thiếu, luật 39), `422 RET_EXCHANGE_BELOW_CREDIT` (hàng mới < hàng cũ), `409 RET_EXCHANGE_ALREADY_USED`, `404 RET_NOT_FOUND`, `422 RET_NOT_EXCHANGE`, `409 STK_BATCH_LOCKED`, `422 STK_INSUFFICIENT_STOCK`, và các lỗi của `quote`
 
 ### `GET /orders/drafts`, `POST /orders/drafts`, `POST /orders/{id}/cancel` — POS-02 (đơn nháp)
-- **Quyền:** `POS_CHECKOUT`. `GET` trả `OrderListItem[]` đơn nháp của người đăng nhập. `POST /orders/drafts` nhận `CartInput + { draftId? }` (có `draftId` = cập nhật), cần ca đang mở, trả `OrderRecord` `DRAFT` (có `draftCart`, chưa trừ tồn). `POST /orders/{id}/cancel` chỉ cho đơn nháp của chính mình (`CANCELLED`).
+- **Quyền:** `POS_CHECKOUT`. `GET` trả `OrderListItem[]` đơn nháp của người đăng nhập. `POST /orders/drafts` nhận `CartInput + { amountReceived?, draftId? }` (có `draftId` = cập nhật); `amountReceived` là tiền mặt khách đưa đã nhập và được lưu trong `draftCart` để khôi phục khi mở lại. Cần ca đang mở, trả `OrderRecord` `DRAFT` (chưa trừ tồn). `POST /orders/{id}/cancel` chỉ cho đơn nháp của chính mình (`CANCELLED`).
 - **Lỗi:** `409 POS_SHIFT_NOT_OPEN`, `422 POS_CART_EMPTY`, `409 POS_DRAFT_NOT_FOUND`, `409 POS_ORDER_NOT_DRAFT` (chứng từ hoàn tất không hủy, luật 41), `403 AUTH_FORBIDDEN`, `404 POS_ORDER_NOT_FOUND`
 
 ### `GET /orders` — POS-03 (lịch sử đơn)
