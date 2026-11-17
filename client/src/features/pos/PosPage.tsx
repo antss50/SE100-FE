@@ -10,7 +10,7 @@ import { ordersService } from '../../services/orders.service'
 import { shiftsService } from '../../services/shifts.service'
 import type { CartInput, OrderRecord, PosProduct } from '../../types/pos'
 import { getErrorMessage } from '../../utils/error'
-import { formatDateTime } from '../../utils/format'
+import { formatDateTime, roundVnd1000 } from '../../utils/format'
 import { CartPanel } from './components/CartPanel'
 import { CustomerPanel } from './components/CustomerPanel'
 import { DraftsModal } from './components/DraftsModal'
@@ -110,7 +110,10 @@ export function PosPage() {
   completeRef.current = () => {
     if (!canComplete || complete.isPending) return
     const s = usePosStore.getState()
-    if (s.paymentMethod === 'CASH' && (Number(s.amountReceived) || 0) < (quote?.amountDue ?? 0)) {
+    const hasDiscount = Boolean(voucherCode.trim() || (quote?.orderDiscountAmount ?? 0) > 0 || (quote?.discountAmount ?? 0) > 0)
+    const rawDue = quote?.amountDue ?? 0
+    const effectiveDue = hasDiscount ? roundVnd1000(rawDue) : rawDue
+    if (s.paymentMethod === 'CASH' && (Number(s.amountReceived) || 0) < effectiveDue) {
       toast.error('Khách đưa thiếu tiền, chưa thể hoàn tất')
       return
     }
@@ -173,7 +176,7 @@ export function PosPage() {
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_24rem]">
         <ProductSearchPanel searchRef={searchRef} scanRef={scanRef} disabled={noShift} onAdd={onAdd} />
-        <div className="space-y-4">
+        <div className="space-y-4 lg:sticky lg:top-4 self-start">
           <CustomerPanel phoneRef={phoneRef} quote={quote} disabled={noShift} />
           <CartPanel quote={quote} disabled={noShift} />
           <PaymentPanel

@@ -13,6 +13,9 @@ interface PosState {
   exchangeReturnId: number | null
   paymentMethod: PaymentMethod
   amountReceived: string
+  /** Id sản phẩm đang được chọn/focus (ở cả danh sách và giỏ hàng). */
+  selectedProductId: number | null
+  setSelectedProductId: (productId: number | null) => void
   addProduct: (productId: number, name: string, quantity?: number) => void
   setQuantity: (productId: number, quantity: number) => void
   setBatch: (productId: number, batchId: number | null) => void
@@ -38,18 +41,23 @@ const INITIAL = {
   exchangeReturnId: null as number | null,
   paymentMethod: 'CASH' as PaymentMethod,
   amountReceived: '',
+  selectedProductId: null as number | null,
 }
 
 export const usePosStore = create<PosState>((set) => ({
   ...INITIAL,
+  setSelectedProductId: (selectedProductId) => set({ selectedProductId }),
   addProduct: (productId, name, quantity = 1) =>
     set((s) => {
       const existing = s.items.find((i) => i.productId === productId)
+      const updatedItem = existing
+        ? { ...existing, quantity: existing.quantity + quantity }
+        : { productId, quantity, batchId: null }
+      const remaining = s.items.filter((i) => i.productId !== productId)
       return {
+        selectedProductId: productId,
         names: { ...s.names, [productId]: name },
-        items: existing
-          ? s.items.map((i) => (i.productId === productId ? { ...i, quantity: i.quantity + quantity } : i))
-          : [...s.items, { productId, quantity, batchId: null }],
+        items: [updatedItem, ...remaining],
       }
     }),
   setQuantity: (productId, quantity) =>
@@ -57,7 +65,11 @@ export const usePosStore = create<PosState>((set) => ({
       items: quantity <= 0 ? s.items.filter((i) => i.productId !== productId) : s.items.map((i) => (i.productId === productId ? { ...i, quantity } : i)),
     })),
   setBatch: (productId, batchId) => set((s) => ({ items: s.items.map((i) => (i.productId === productId ? { ...i, batchId } : i)) })),
-  removeProduct: (productId) => set((s) => ({ items: s.items.filter((i) => i.productId !== productId) })),
+  removeProduct: (productId) =>
+    set((s) => ({
+      items: s.items.filter((i) => i.productId !== productId),
+      selectedProductId: s.selectedProductId === productId ? null : s.selectedProductId,
+    })),
   setCustomer: (customerId) => set({ customerId, pointsRequested: 0, voucherCode: '' }),
   setVoucher: (voucherCode) => set({ voucherCode }),
   setPoints: (pointsRequested) => set({ pointsRequested }),

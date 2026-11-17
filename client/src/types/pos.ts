@@ -176,13 +176,28 @@ export interface GetOrdersParams {
   pageSize?: number
 }
 
+export type PriceSortOrder = 'asc' | 'desc' | ''
+
+export interface PosProductsParams {
+  keyword?: string
+  code?: string
+  categoryCode?: string
+  brandCode?: string
+  nearExpiry?: boolean
+  priceSort?: PriceSortOrder
+  page?: number
+  pageSize?: number
+}
+
 /** Sản phẩm bán được trên POS (tồn bán được, không lộ onHand/blocked/giá vốn). */
 export interface PosProduct {
   id: number
   sku: string
   barcode: string | null
   productName: string
+  brandCode?: string | null
   brandName: string | null
+  categoryCode?: string | null
   categoryName: string | null
   retailPrice: number
   sellableQty: number

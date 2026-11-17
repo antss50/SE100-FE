@@ -1,6 +1,7 @@
 // Đợt test 1 (GĐ2 bán hàng): ca, POS, thanh toán, đổi trả qua apiRequest + mock.
 // Viết từ luật: QUY_TAC_NGHIEP_VU 9-23, 34-41, 47; KHUYEN_MAI.md; API-CONTRACT mục POS.
 import { beforeEach, describe, expect, it } from 'vitest'
+import type { PosProduct } from '../types/pos'
 import { expectFail, fails, freshDb, get, loginAs, peek, post, put, send, type Page } from '../test/api-helpers'
 
 interface Alloc {
@@ -162,6 +163,41 @@ describe('POS-02 FEFO', () => {
       expect(p).not.toHaveProperty('onHandQty')
       expect(p).not.toHaveProperty('costPrice')
       expect(p).not.toHaveProperty('blockedQty')
+    }
+  })
+
+  it('POS lọc theo danh mục, brand, HSD cận hạn và sắp xếp giá', async () => {
+    // Lọc theo danh mục
+    const catList = await get<Page<PosProduct>>('/pos/products?categoryCode=CAT_SKINCARE')
+    expect(catList.items.length).toBeGreaterThan(0)
+    for (const p of catList.items) {
+      expect(p.categoryCode === 'CAT_SKINCARE' || p.categoryName?.includes('Serum')).toBe(true)
+    }
+
+    // Lọc theo brand
+    const brandList = await get<Page<PosProduct>>('/pos/products?brandCode=EL')
+    expect(brandList.items.length).toBeGreaterThan(0)
+    for (const p of brandList.items) {
+      expect(p.brandCode === 'EL' || p.brandName === 'Estée Lauder').toBe(true)
+    }
+
+    // Lọc cận hạn
+    const nearExpiryList = await get<Page<PosProduct>>('/pos/products?nearExpiry=true')
+    expect(nearExpiryList.items.length).toBeGreaterThan(0)
+    for (const p of nearExpiryList.items) {
+      expect(p.nearExpiry).toBe(true)
+    }
+
+    // Sắp xếp giá tăng dần
+    const ascList = await get<Page<PosProduct>>('/pos/products?priceSort=asc&pageSize=50')
+    for (let i = 1; i < ascList.items.length; i++) {
+      expect(ascList.items[i].retailPrice).toBeGreaterThanOrEqual(ascList.items[i - 1].retailPrice)
+    }
+
+    // Sắp xếp giá giảm dần
+    const descList = await get<Page<PosProduct>>('/pos/products?priceSort=desc&pageSize=50')
+    for (let i = 1; i < descList.items.length; i++) {
+      expect(descList.items[i].retailPrice).toBeLessThanOrEqual(descList.items[i - 1].retailPrice)
     }
   })
 

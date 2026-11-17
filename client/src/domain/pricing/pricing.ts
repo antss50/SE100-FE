@@ -252,7 +252,10 @@ export function calculateOrder(input: PricingInput): PricingResult {
     if (!v || !isUsable(v, input.customer, input.now)) messages.push(`Mã ${input.voucherCode} không hợp lệ hoặc đã hết lượt.`);
     else if (afterT2 < v.minOrderValue) messages.push(`Mã ${input.voucherCode} cần đơn từ ${v.minOrderValue}đ.`);
     else {
-      const d = discountOf(afterT2, v.discountType, v.discountValue, v.maxDiscountAmount);
+      let d = discountOf(afterT2, v.discountType, v.discountValue, v.maxDiscountAmount);
+      // Làm tròn số tiền khi áp các mã giảm giá: >= 500đ => 1000đ, < 500đ => 0đ
+      const rem = d % 1000;
+      d = rem >= 500 ? d - rem + 1000 : d - rem;
       if (d > orderDiscount) { orderDiscount = d; orderPromotionId = v.id; }  // bằng nhau: giữ bậc thang
       else messages.push(`Mã ${input.voucherCode} không được áp dụng vì ưu đãi hiện tại có lợi hơn (mã không bị trừ lượt).`);
     }

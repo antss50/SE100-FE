@@ -9,6 +9,7 @@ import type {
   OrderRecord,
   PosLot,
   PosProduct,
+  PosProductsParams,
   ReturnListItem,
 } from '../types/pos'
 import { toQueryString } from './query'
@@ -29,7 +30,7 @@ const post = <T>(url: string, body: unknown) => apiRequest<T>(url, { method: 'PO
 
 export const ordersService = {
   /** POS-02: GET /pos/products (chỉ SKU bán được, còn tồn bán được). `code` = khớp đúng barcode/SKU. */
-  posProducts(params: { keyword?: string; code?: string; page?: number; pageSize?: number } = {}): Promise<ApiSuccessResponse<PaginatedData<PosProduct>>> {
+  posProducts(params: PosProductsParams = {}): Promise<ApiSuccessResponse<PaginatedData<PosProduct>>> {
     return apiRequest<PaginatedData<PosProduct>>(`/pos/products${toQueryString(params)}`, { method: 'GET' })
   },
   /** POS-02: GET /pos/products/{id}/lots (lô còn hạn, FEFO) để đổi lô thủ công. */

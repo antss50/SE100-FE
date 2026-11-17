@@ -219,6 +219,12 @@ export function priceCart(
   const credit = options.exchangeCreditAmount ?? 0
   const afterOrderLevel = pricing.totalAmount + pricing.pointsDiscountAmount
   const maxByPercent = Math.floor(((afterOrderLevel * settings.maxRedeemPercent) / 100) / settings.redeemValue)
+  const rawDue = pricing.totalAmount - credit
+  const amountDue =
+    cart.voucherCode && pricing.orderDiscountAmount > 0
+      ? Math.max(0, rawDue % 1000 >= 500 ? Math.ceil(rawDue / 1000) * 1000 : Math.floor(rawDue / 1000) * 1000)
+      : rawDue
+
   const quote: OrderQuote = {
     lines,
     subtotalAmount: pricing.subtotalAmount,
@@ -233,10 +239,10 @@ export function priceCart(
     taxAmount: pricing.taxAmount,
     totalAmount: pricing.totalAmount,
     exchangeCreditAmount: credit,
-    amountDue: pricing.totalAmount - credit,
+    amountDue,
     messages,
     issues,
-    pointsToEarn: customer ? Math.floor(Math.max(0, pricing.totalAmount - credit) / settings.earnAmount) : 0,
+    pointsToEarn: customer ? Math.floor(Math.max(0, amountDue) / settings.earnAmount) : 0,
     maxRedeemablePoints: customer ? Math.max(0, Math.min(customer.rewardPoints, maxByPercent)) : 0,
   }
   return { quote, pricing, allocations, customer, overrides }

@@ -20,6 +20,9 @@ export const queryKeys = {
     detail: (id: number | string) => ['promotions', 'detail', String(id)] as const,
   },
   catalog: {
+    all: ['catalog'] as const,
+    categories: (params?: object) => ['catalog', 'categories', params ?? {}] as const,
+    brands: (params?: object) => ['catalog', 'brands', params ?? {}] as const,
     forPromotions: ['catalog', 'for-promotions'] as const,
   },
   pos: {

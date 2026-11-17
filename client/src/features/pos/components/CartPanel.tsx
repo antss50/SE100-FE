@@ -1,5 +1,5 @@
 import { Gift, Minus, Plus, Trash2 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { usePosStore } from '../pos-store'
 import type { OrderQuote, QuoteLine } from '../../../types/pos'
 import { formatCurrency } from '../../../utils/format'
@@ -18,7 +18,19 @@ export function CartPanel({ quote, disabled }: CartPanelProps) {
   const setQuantity = usePosStore((s) => s.setQuantity)
   const removeProduct = usePosStore((s) => s.removeProduct)
   const reset = usePosStore((s) => s.reset)
+  const selectedProductId = usePosStore((s) => s.selectedProductId)
+  const setSelectedProductId = usePosStore((s) => s.setSelectedProductId)
   const [pickLot, setPickLot] = useState<{ productId: number; name: string } | null>(null)
+  const cartListRef = useRef<HTMLUListElement | null>(null)
+
+  // Tự động cuộn đến sản phẩm đang được chọn trong giỏ hàng
+  useEffect(() => {
+    if (selectedProductId === null || !cartListRef.current) return
+    const el = cartListRef.current.querySelector<HTMLElement>(`[data-pos-cart-item-id="${selectedProductId}"]`)
+    if (el) {
+      el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    }
+  }, [selectedProductId])
 
   const byProduct = useMemo(() => {
     const map = new Map<number, QuoteLine[]>()
@@ -40,7 +52,7 @@ export function CartPanel({ quote, disabled }: CartPanelProps) {
           </button>
         )}
       </div>
-      <ul className="max-h-72 divide-y divide-line overflow-y-auto">
+      <ul ref={cartListRef} className="max-h-72 divide-y divide-line overflow-y-auto">
         {items.length === 0 && <li className="px-4 py-8 text-center text-sm text-muted">Chưa có sản phẩm. Quét mã hoặc chọn từ danh sách.</li>}
         {items.map((item) => {
           const lines = (byProduct.get(item.productId) ?? []).filter((l) => l.lineType === 'NORMAL')
@@ -54,15 +66,31 @@ export function CartPanel({ quote, disabled }: CartPanelProps) {
             const prev = lots.get(a.lotCode)
             lots.set(a.lotCode, { qty: (prev?.qty ?? 0) + a.quantity, exp: a.expDate, overridden: a.overridden })
           }
+          const isSelected = item.productId === selectedProductId
           return (
-            <li key={item.productId} className="px-4 py-3">
+            <li
+              key={item.productId}
+              data-pos-cart-item-id={item.productId}
+              tabIndex={0}
+              aria-selected={isSelected}
+              onClick={() => setSelectedProductId(item.productId)}
+              onFocus={() => setSelectedProductId(item.productId)}
+              className={`px-4 py-3 cursor-pointer transition-all ${
+                isSelected
+                  ? 'bg-accent-soft/70 border-l-4 border-l-accent ring-1 ring-accent/30 shadow-2xs'
+                  : 'hover:bg-neutral-soft/30'
+              }`}
+            >
               <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-semibold text-ink">{name}</p>
+                <p className={`text-sm font-semibold ${isSelected ? 'text-accent font-bold' : 'text-ink'}`}>{name}</p>
                 <button
                   type="button"
                   aria-label={`Bỏ ${name} khỏi giỏ`}
                   disabled={disabled}
-                  onClick={() => removeProduct(item.productId)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    removeProduct(item.productId)
+                  }}
                   className="rounded-lg p-1 text-muted hover:bg-danger-soft hover:text-danger"
                 >
                   <Trash2 className="size-4" aria-hidden="true" />
@@ -80,14 +108,17 @@ export function CartPanel({ quote, disabled }: CartPanelProps) {
                 {!disabled && (
                   <button
                     type="button"
-                    onClick={() => setPickLot({ productId: item.productId, name })}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setPickLot({ productId: item.productId, name })
+                    }}
                     className="font-semibold text-accent hover:underline"
                   >
                     Đổi lô
                   </button>
                 )}
               </p>
-              <div className="mt-2 flex items-center justify-between">
+              <div className="mt-2 flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
                 <div className="inline-flex items-center rounded-xl border border-line">
                   <button
                     type="button"

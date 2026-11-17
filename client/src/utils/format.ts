@@ -167,3 +167,15 @@ export function formatAnyDateTime(value?: string | null): string {
   if (!value) return '—'
   return /^\d{4}-\d{2}-\d{2}T/.test(value) ? formatDateTime(value) : value
 }
+
+/**
+ * Làm tròn tiền VND theo quy tắc bán lẻ:
+ * Phần dư so với 1.000đ >= 500đ thì làm tròn lên 1.000đ, < 500đ thì làm tròn xuống 0đ.
+ */
+export function roundVnd1000(amount: number): number {
+  const abs = Math.abs(amount)
+  const remainder = abs % 1000
+  const base = Math.floor(abs / 1000) * 1000
+  const rounded = remainder >= 500 ? base + 1000 : base
+  return amount < 0 ? -rounded : rounded
+}

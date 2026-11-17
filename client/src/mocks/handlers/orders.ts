@@ -56,13 +56,17 @@ function toPosProduct(db: MockTransaction, productId: number, now: Date): PosPro
   const total = sellableTotal(db, p.id, now)
   if (total <= 0) return null
   const today = todayOf(now)
+  const cat = db.read('categories').find((c) => c.categoryCode === p.categoryCode)
+  const brand = db.read('brands').find((b) => b.brandCode === p.brandCode)
   return {
     id: p.id,
     sku: p.sku,
     barcode: p.barcode ?? null,
     productName: p.productName,
-    brandName: p.brandName ?? null,
-    categoryName: p.categoryName ?? null,
+    brandCode: p.brandCode ?? null,
+    brandName: p.brandName ?? brand?.brandName ?? null,
+    categoryCode: p.categoryCode ?? null,
+    categoryName: p.categoryName ?? cat?.categoryName ?? null,
     retailPrice: p.retailPrice,
     sellableQty: total,
     firstLotCode: lots[0]?.lotCode ?? null,
@@ -149,14 +153,39 @@ export const orderRoutes: MockRoute[] = [
     handler: ({ db, query, now }) => {
       const kw = keywordOf(query)
       const code = (query.get('code') ?? '').trim().toLowerCase()
-      const items = db
+      const categoryCode = (query.get('categoryCode') ?? query.get('category') ?? '').trim()
+      const brandCode = (query.get('brandCode') ?? query.get('brand') ?? '').trim()
+      const nearExpiryParam = query.get('nearExpiry')
+      const nearExpiryOnly = nearExpiryParam === 'true' || nearExpiryParam === '1'
+      const priceSort = (query.get('priceSort') ?? query.get('sortPrice') ?? '').trim().toLowerCase()
+
+      let items = db
         .read('products')
         .filter((p) => {
           if (code) return (p.barcode ?? '').toLowerCase() === code || p.sku.toLowerCase() === code
+          if (categoryCode && categoryCode !== 'ALL') {
+            const cat = db.read('categories').find((c) => c.categoryCode === p.categoryCode)
+            if (p.categoryCode !== categoryCode && cat?.categoryName !== categoryCode) return false
+          }
+          if (brandCode && brandCode !== 'ALL') {
+            const b = db.read('brands').find((x) => x.brandCode === p.brandCode)
+            if (p.brandCode !== brandCode && b?.brandName !== brandCode) return false
+          }
           return !kw || p.sku.toLowerCase().includes(kw) || p.productName.toLowerCase().includes(kw) || (p.barcode ?? '').includes(kw)
         })
         .map((p) => (p.id === undefined ? null : toPosProduct(db, p.id, now)))
         .filter((p): p is PosProduct => p !== null)
+
+      if (nearExpiryOnly) {
+        items = items.filter((p) => p.nearExpiry)
+      }
+
+      if (priceSort === 'asc') {
+        items.sort((a, b) => a.retailPrice - b.retailPrice)
+      } else if (priceSort === 'desc') {
+        items.sort((a, b) => b.retailPrice - a.retailPrice)
+      }
+
       return ok(paginate(items, query, 24), 'Lấy sản phẩm bán hàng thành công')
     },
   },

@@ -93,7 +93,7 @@ export function LoginPage() {
             </div>
 
             <p className="mt-5 text-sm leading-relaxed text-[#5e473d]">
-              Hệ sinh thái quản trị chuỗi bán lẻ mỹ phẩm cao cấp & tối ưu hóa vận
+              Cửa hàng bán lẻ mỹ phẩm cao cấp & tối ưu hóa vận
               hành điểm bán.
             </p>
 
@@ -278,27 +278,26 @@ export function LoginPage() {
 
             {/* Tài khoản mẫu: chỉ hiện ở chế độ mock */}
             {USE_MOCK && (
-            <div className="mt-8 pt-6 border-t border-[#f2e6de]">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#8e7467]">
-                Tài khoản thử nghiệm nhanh (Mật khẩu: Password@123)
-              </p>
-              <div className="mt-2.5 flex flex-wrap gap-2">
-                {DEMO_ACCOUNTS.map((acc) => (
-                  <button
-                    key={acc.username}
-                    type="button"
-                    onClick={() => fillDemoAccount(acc.username)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition cursor-pointer ${
-                      username === acc.username
-                        ? 'bg-[#fbeae2] border-[#d57252] text-[#9e3f22]'
-                        : 'bg-[#faf6f3] border-[#eaddd4] text-[#654d42] hover:bg-[#f4eae3]'
-                    }`}
-                  >
-                    {acc.label}
-                  </button>
-                ))}
+              <div className="mt-8 pt-6 border-t border-[#f2e6de]">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#8e7467]">
+                  Tài khoản thử nghiệm nhanh (Mật khẩu: Password@123)
+                </p>
+                <div className="mt-2.5 flex flex-wrap gap-2">
+                  {DEMO_ACCOUNTS.map((acc) => (
+                    <button
+                      key={acc.username}
+                      type="button"
+                      onClick={() => fillDemoAccount(acc.username)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition cursor-pointer ${username === acc.username
+                          ? 'bg-[#fbeae2] border-[#d57252] text-[#9e3f22]'
+                          : 'bg-[#faf6f3] border-[#eaddd4] text-[#654d42] hover:bg-[#f4eae3]'
+                        }`}
+                    >
+                      {acc.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
             )}
           </div>
         </div>

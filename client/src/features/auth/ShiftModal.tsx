@@ -12,16 +12,7 @@ import { getErrorMessage } from '../../utils/error'
 import { formatCurrency, formatDateTime } from '../../utils/format'
 
 const schema = z.object({
-  openingCash: z.preprocess(
-    (value) => {
-      if (typeof value === 'string') {
-        const digits = value.replace(/\D/g, '')
-        return digits ? Number(digits) : Number.NaN
-      }
-      return value
-    },
-    z.number({ error: 'Nhập số tiền đầu ca' }).int('Số tiền phải là số nguyên').min(0, 'Số tiền đầu ca không được âm')
-  ),
+  openingCash: z.number({ error: 'Nhập số tiền đầu ca' }).int('Số tiền phải là số nguyên').min(0, 'Số tiền đầu ca không được âm'),
 })
 type FormValues = z.infer<typeof schema>
 

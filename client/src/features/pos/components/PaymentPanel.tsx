@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useCan } from '../../../app/usePermission'
 import { Button } from '../../../components/ui'
 import { PAYMENT_METHOD_LABELS, type OrderQuote, type PaymentMethod } from '../../../types/pos'
-import { formatCurrency } from '../../../utils/format'
+import { formatCurrency, roundVnd1000 } from '../../../utils/format'
 import { usePosStore } from '../pos-store'
 
 const METHOD_ICONS: Record<PaymentMethod, typeof Banknote> = { CASH: Banknote, BANK_TRANSFER: Landmark, CARD: CreditCard }
@@ -19,7 +19,12 @@ interface PaymentPanelProps {
   onReturn: () => void
 }
 
-/** POS-03: tổng tiền, voucher, phương thức thanh toán (1 phương thức/đơn, luật 38), chặn hoàn tất khi tiền mặt thiếu (luật 39). */
+/**
+ * POS-03: tổng tiền, voucher, phương thức thanh toán (1 phương thức/đơn, luật 38),
+ * chặn hoàn tất khi tiền mặt thiếu (luật 39).
+ * - Làm tròn tiền khi áp mã giảm giá (>= 500đ => 1000đ, < 500đ => 0đ)
+ * - Stick cố định "Tổng tiền phải trả", "Tiền khách đưa / thiếu / thừa" khi cuộn trang
+ */
 export function PaymentPanel({ quote, quoting, disabled, completing, savingDraft, onComplete, onSaveDraft, onReturn }: PaymentPanelProps) {
   const canVoucher = useCan('PROMOTION_APPLY_VOUCHER')
   const itemCount = usePosStore((s) => s.items.length)
@@ -32,7 +37,15 @@ export function PaymentPanel({ quote, quoting, disabled, completing, savingDraft
   const exchangeReturnId = usePosStore((s) => s.exchangeReturnId)
   const [voucherInput, setVoucherInput] = useState(voucherCode)
 
-  const due = quote?.amountDue ?? 0
+  // Làm tròn số tiền khi áp mã giảm giá: >= 500đ => 1000đ, < 500đ => 0đ
+  const hasDiscount = Boolean(voucherCode.trim() || (quote?.orderDiscountAmount ?? 0) > 0 || (quote?.discountAmount ?? 0) > 0)
+  const rawDue = quote?.amountDue ?? 0
+  const due = hasDiscount ? roundVnd1000(rawDue) : rawDue
+  const displayOrderDiscount =
+    hasDiscount && (quote?.orderDiscountAmount ?? 0) > 0
+      ? roundVnd1000(quote?.orderDiscountAmount ?? 0)
+      : (quote?.orderDiscountAmount ?? 0)
+
   const receivedNumber = Number(received) || 0
   const cashShort = method === 'CASH' && receivedNumber < due
   const hasIssues = (quote?.issues.length ?? 0) > 0
@@ -50,7 +63,8 @@ export function PaymentPanel({ quote, quoting, disabled, completing, savingDraft
   )
 
   return (
-    <section className="space-y-4 rounded-2xl border border-line bg-white p-4" aria-label="Thanh toán">
+    <section className="relative space-y-4 rounded-2xl border border-line bg-white p-4" aria-label="Thanh toán">
+      {/* Ô nhập mã giảm giá / voucher */}
       {canVoucher && (
         <form
           className="flex gap-2"
@@ -74,12 +88,19 @@ export function PaymentPanel({ quote, quoting, disabled, completing, savingDraft
           </Button>
         </form>
       )}
+
+      {/* Thông tin khuyến mãi 4 tầng */}
       <div className="rounded-xl bg-accent-soft/60 p-3 text-xs" aria-label="Khuyến mãi đang áp dụng">
         <p className="mb-1.5 font-bold text-accent">Khuyến mãi 4 tầng</p>
         <ul className="space-y-1 text-ink-soft">
           <li>T1 · {tier1.length ? tier1.join('; ') : 'Chưa có khuyến mãi dòng hàng'}</li>
           <li>T2 · Hạng thẻ: {quote && quote.tierDiscountAmount > 0 ? `−${formatCurrency(quote.tierDiscountAmount)}` : 'không có'}</li>
-          <li>T3 · {quote?.orderPromotionName ? `${quote.orderPromotionName}: −${formatCurrency(quote.orderDiscountAmount)}` : 'Chưa đạt khuyến mãi đơn hàng'}</li>
+          <li>
+            T3 ·{' '}
+            {quote?.orderPromotionName
+              ? `${quote.orderPromotionName}: −${formatCurrency(displayOrderDiscount)}`
+              : 'Chưa đạt khuyến mãi đơn hàng'}
+          </li>
           <li>T4 · Điểm: {quote && quote.pointsUsed > 0 ? `−${formatCurrency(quote.pointsDiscountAmount)}` : 'không dùng'}</li>
         </ul>
         {quote?.messages.map((m) => (
@@ -94,24 +115,18 @@ export function PaymentPanel({ quote, quoting, disabled, completing, savingDraft
         ))}
       </div>
 
+      {/* Chi tiết tính tiền */}
       <div className="space-y-1.5">
         {row('Tổng tiền hàng', quote?.subtotalAmount ?? 0)}
         {row('Giảm khuyến mãi dòng hàng', quote?.lineDiscountAmount ?? 0, 'discount')}
         {row('Giảm hạng thẻ', quote?.tierDiscountAmount ?? 0, 'discount')}
-        {row('Giảm hóa đơn', quote?.orderDiscountAmount ?? 0, 'discount')}
+        {row('Giảm hóa đơn', displayOrderDiscount, 'discount')}
         {row('Dùng điểm thành viên', quote?.pointsDiscountAmount ?? 0, 'discount')}
         {exchangeReturnId !== null && row('Trừ giá trị hàng đổi', quote?.exchangeCreditAmount ?? 0, 'discount')}
         <p className="text-xs text-muted">Đã gồm VAT {formatCurrency(quote?.taxAmount ?? 0)}</p>
       </div>
 
-      <div className="rounded-xl bg-accent-soft p-4 text-center">
-        <p className="text-xs font-semibold uppercase text-accent">Tổng tiền phải trả</p>
-        <p className="mt-1 text-3xl font-extrabold text-accent" aria-live="polite">
-          {formatCurrency(due)}
-        </p>
-        {quote && quote.pointsToEarn > 0 && <p className="mt-1 text-xs text-muted">Tích {quote.pointsToEarn} điểm khi hoàn tất</p>}
-      </div>
-
+      {/* Chọn phương thức thanh toán */}
       <div role="radiogroup" aria-label="Phương thức thanh toán" className="grid grid-cols-3 gap-2">
         {(Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[]).map((m) => {
           const Icon = METHOD_ICONS[m]
@@ -123,7 +138,9 @@ export function PaymentPanel({ quote, quoting, disabled, completing, savingDraft
               aria-checked={method === m}
               disabled={disabled}
               onClick={() => setPayment(m)}
-              className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-2.5 text-xs font-semibold ${method === m ? 'border-accent bg-accent text-white' : 'border-line bg-white text-ink-soft hover:bg-card'}`}
+              className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-2.5 text-xs font-semibold cursor-pointer transition ${
+                method === m ? 'border-accent bg-accent text-white shadow-2xs' : 'border-line bg-white text-ink-soft hover:bg-card'
+              }`}
             >
               <Icon className="size-4" aria-hidden="true" />
               {PAYMENT_METHOD_LABELS[m]}
@@ -131,44 +148,72 @@ export function PaymentPanel({ quote, quoting, disabled, completing, savingDraft
           )
         })}
       </div>
-      {method === 'CASH' && (
-        <div className="space-y-1.5">
-          <label className="block text-xs font-semibold text-ink-soft" htmlFor="pos-received">
-            Tiền khách đưa (đ)
-          </label>
-          <input
-            id="pos-received"
-            type="text"
-            inputMode="numeric"
-            value={received ? received.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''}
-            disabled={disabled}
-            onChange={(e) => setReceived(e.target.value.replace(/\D/g, ''))}
-            className="w-full rounded-xl border border-line bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
-          />
-          <p aria-live="polite" className={`text-xs font-semibold ${cashShort ? 'text-danger' : 'text-success'}`}>
-            {cashShort
-              ? `Khách đưa thiếu ${formatCurrency(due - receivedNumber)}, chưa thể hoàn tất`
-              : `Tiền thừa trả khách: ${formatCurrency(receivedNumber - due)}`}
-          </p>
-        </div>
-      )}
 
-      <Button
-        className="w-full"
-        icon={<Printer className="size-4" aria-hidden="true" />}
-        disabled={!canComplete}
-        loading={completing}
-        onClick={onComplete}
+      {/* VÙNG CỐ ĐỊNH KHI CUỘN (GÓC DƯỚI PHẢI):
+          - Tổng tiền phải trả
+          - Tiền khách đưa / Số tiền còn thiếu/thừa (đối với tiền mặt)
+          - Nút hoàn tất hóa đơn & thao tác phụ
+      */}
+      <div
+        className="sticky bottom-0 z-20 -mx-4 -mb-4 mt-2 space-y-3 rounded-b-2xl border-t border-line bg-white/98 p-4 shadow-[0_-8px_20px_rgba(0,0,0,0.08)] backdrop-blur-xs"
+        aria-label="Khu vực chốt thanh toán cố định"
       >
-        In hóa đơn và hoàn tất
-      </Button>
-      <div className="grid grid-cols-2 gap-2">
-        <Button variant="secondary" icon={<FileClock className="size-4" aria-hidden="true" />} disabled={disabled || itemCount === 0} loading={savingDraft} onClick={onSaveDraft}>
-          Lưu đơn nháp
+        <div className="rounded-xl bg-accent-soft p-3.5 text-center">
+          <p className="text-xs font-semibold uppercase tracking-wider text-accent">Tổng tiền phải trả</p>
+          <p className="mt-0.5 text-2xl sm:text-3xl font-extrabold text-accent" aria-live="polite">
+            {formatCurrency(due)}
+          </p>
+          {quote && quote.pointsToEarn > 0 && (
+            <p className="mt-0.5 text-xs text-muted">Tích {quote.pointsToEarn} điểm khi hoàn tất</p>
+          )}
+        </div>
+
+        {method === 'CASH' && (
+          <div className="space-y-1.5 rounded-xl border border-line bg-card/60 p-3">
+            <label className="block text-xs font-semibold text-ink-soft" htmlFor="pos-received">
+              Tiền khách đưa (đ)
+            </label>
+            <input
+              id="pos-received"
+              type="text"
+              inputMode="numeric"
+              value={received ? received.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''}
+              disabled={disabled}
+              onChange={(e) => setReceived(e.target.value.replace(/\D/g, ''))}
+              placeholder="0"
+              className="w-full rounded-xl border border-line bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
+            />
+            <p aria-live="polite" className={`text-xs font-semibold ${cashShort ? 'text-danger' : 'text-success'}`}>
+              {cashShort
+                ? `Khách đưa thiếu ${formatCurrency(due - receivedNumber)}, chưa thể hoàn tất`
+                : `Tiền thừa trả khách: ${formatCurrency(receivedNumber - due)}`}
+            </p>
+          </div>
+        )}
+
+        <Button
+          className="w-full"
+          icon={<Printer className="size-4" aria-hidden="true" />}
+          disabled={!canComplete}
+          loading={completing}
+          onClick={onComplete}
+        >
+          In hóa đơn và hoàn tất
         </Button>
-        <Button variant="secondary" icon={<Undo2 className="size-4" aria-hidden="true" />} onClick={onReturn}>
-          Đổi trả
-        </Button>
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            variant="secondary"
+            icon={<FileClock className="size-4" aria-hidden="true" />}
+            disabled={disabled || itemCount === 0}
+            loading={savingDraft}
+            onClick={onSaveDraft}
+          >
+            Lưu đơn nháp
+          </Button>
+          <Button variant="secondary" icon={<Undo2 className="size-4" aria-hidden="true" />} onClick={onReturn}>
+            Đổi trả
+          </Button>
+        </div>
       </div>
     </section>
   )
