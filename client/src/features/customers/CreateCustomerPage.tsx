@@ -273,98 +273,8 @@ export function CreateCustomerPage() {
                 </button>
               </div>
               <p className="text-[11px] text-red-700 leading-relaxed">
-                Số điện thoại này đã thuộc về khách hàng{' '}
-                <Link
-                  to={`/customers/${duplicateCustomer?.customerCode || 'KH0006'}`}
-                  className="font-bold underline"
-                >
-                  {duplicateCustomer?.fullName || 'Lê Minh Tâm'}
-                </Link>{' '}
-                (Mã thẻ: {duplicateCustomer?.customerCode || 'KH0006'}).
-                Vui lòng kiểm tra lại.
+                Số điện thoại này đã tồn tại.
               </p>
-            </div>
-          </div>
-
-          {/* Email */}
-          <div>
-            <label className="block text-xs font-semibold text-[#4b362c]">
-              Địa chỉ Email (Nhận ưu đãi điện tử & Hóa đơn VAT)
-            </label>
-            <div className="mt-1.5 relative">
-              <Mail className="size-4 text-[#9a7e70] absolute left-3.5 top-3" />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="lan.nguyen@example.com"
-                className="w-full rounded-xl bg-white border border-[#e5d3c8] focus:border-[#9a462d] pl-10 pr-4 py-2.5 text-xs text-[#221712] outline-none"
-              />
-            </div>
-          </div>
-
-          {/* Date of Birth & Gender */}
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <div className="flex items-center justify-between text-xs">
-                <label className="font-semibold text-[#4b362c]">Ngày sinh</label>
-                <span className="font-mono text-[10px] text-[#9a462d] font-semibold">
-                  Tặng Voucher B-Day
-                </span>
-              </div>
-              <div className="mt-1.5 relative">
-                <Calendar className="size-4 text-[#9a7e70] absolute left-3.5 top-3" />
-                <input
-                  type="date"
-                  value={dateOfBirth}
-                  onChange={(e) => setDateOfBirth(e.target.value)}
-                  className="w-full rounded-xl bg-white border border-[#e5d3c8] focus:border-[#9a462d] pl-10 pr-3.5 py-2.5 font-mono text-xs text-[#221712] outline-none"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-[#4b362c]">
-                Giới tính
-              </label>
-              <div className="mt-1.5 rounded-xl bg-[#faf2ec] border border-[#ebd8cc] px-3.5 py-2.5 flex items-center justify-between text-xs">
-                {[
-                  { code: 'FEMALE', label: 'Nữ' },
-                  { code: 'MALE', label: 'Nam' },
-                  { code: 'OTHER', label: 'Khác' },
-                ].map((g) => (
-                  <label
-                    key={g.code}
-                    className="inline-flex items-center gap-1.5 font-medium text-[#3b2920] cursor-pointer"
-                  >
-                    <input
-                      type="radio"
-                      name="gender"
-                      checked={gender === g.code}
-                      onChange={() => setGender(g.code as GenderType)}
-                      className="accent-[#9a462d]"
-                    />
-                    <span>{g.label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Address */}
-          <div>
-            <label className="block text-xs font-semibold text-[#4b362c]">
-              Địa chỉ thường trú & Giao hàng
-            </label>
-            <div className="mt-1.5 relative">
-              <MapPin className="size-4 text-[#9a7e70] absolute left-3.5 top-3" />
-              <input
-                type="text"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="Nhập số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
-                className="w-full rounded-xl bg-white border border-[#e5d3c8] focus:border-[#9a462d] pl-10 pr-4 py-2.5 text-xs text-[#221712] outline-none"
-              />
             </div>
           </div>
         </div>
@@ -372,7 +282,7 @@ export function CreateCustomerPage() {
         {/* Right Column (5 Cols): Skin Characteristics + Membership Setup */}
         <div className="lg:col-span-5 space-y-6">
           {/* Card 1: ĐẶC ĐIỂM DA & GHI CHÚ MỸ PHẨM */}
-          <div className="rounded-3xl bg-white border border-[#ead9ce] p-6 shadow-2xs space-y-5">
+          {/* <div className="rounded-3xl bg-white border border-[#ead9ce] p-6 shadow-2xs space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-[#f2e6de]">
               <div className="flex items-center gap-2">
                 <Sparkles className="size-4 text-[#9a462d]" />
@@ -383,10 +293,10 @@ export function CreateCustomerPage() {
               <span className="font-mono text-[10px] text-[#9a462d] font-semibold">
                 Dành cho tư vấn
               </span>
-            </div>
+            </div> */}
 
-            {/* Skin Type (skinType) */}
-            <div>
+          {/* Skin Type (skinType) */}
+          {/* <div>
               <label className="block text-xs font-semibold text-[#4b362c]">
                 Loại da (Phân loại chính)
               </label>
@@ -398,21 +308,20 @@ export function CreateCustomerPage() {
                       key={opt.code}
                       type="button"
                       onClick={() => setSkinType(opt.code)}
-                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
-                        active
-                          ? 'bg-[#8f422a] text-white shadow-2xs'
-                          : 'bg-[#f6ede7] text-[#5e473c] hover:bg-[#ede0d6]'
-                      }`}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${active
+                        ? 'bg-[#8f422a] text-white shadow-2xs'
+                        : 'bg-[#f6ede7] text-[#5e473c] hover:bg-[#ede0d6]'
+                        }`}
                     >
                       {active ? `✓ ${opt.label}` : opt.label}
                     </button>
                   )
                 })}
               </div>
-            </div>
+            </div> */}
 
-            {/* Skin Concerns (Multi-select serialized into note) */}
-            <div>
+          {/* Skin Concerns (Multi-select serialized into note) */}
+          {/* <div>
               <div className="flex items-center justify-between text-xs">
                 <label className="font-semibold text-[#4b362c]">
                   Tình trạng da / Mối quan tâm
@@ -427,11 +336,10 @@ export function CreateCustomerPage() {
                   return (
                     <label
                       key={concern}
-                      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs cursor-pointer transition ${
-                        checked
-                          ? 'bg-[#fdf3ee] border-[#d3957c] text-[#6d3522] font-semibold'
-                          : 'bg-[#faf6f3] border-[#e7d7cd] text-[#6e564a]'
-                      }`}
+                      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs cursor-pointer transition ${checked
+                        ? 'bg-[#fdf3ee] border-[#d3957c] text-[#6d3522] font-semibold'
+                        : 'bg-[#faf6f3] border-[#e7d7cd] text-[#6e564a]'
+                        }`}
                     >
                       <input
                         type="checkbox"
@@ -444,10 +352,10 @@ export function CreateCustomerPage() {
                   )
                 })}
               </div>
-            </div>
+            </div> */}
 
-            {/* Cosmetic Allergy Note */}
-            <div>
+          {/* Cosmetic Allergy Note */}
+          {/* <div>
               <label className="text-xs font-bold text-red-700 flex items-center gap-1.5">
                 <AlertTriangle className="size-3.5" />
                 <span>Dị ứng thành phần mỹ phẩm (Lưu ý an toàn)</span>
@@ -459,10 +367,10 @@ export function CreateCustomerPage() {
                 placeholder="VD: Dị ứng cồn khô, hương liệu nhân tạo..."
                 className="mt-1.5 w-full rounded-xl bg-[#fcf8f6] border border-[#ead9ce] px-3.5 py-2.5 text-xs text-[#3b2920] outline-none focus:border-[#9a462d]"
               />
-            </div>
+            </div> */}
 
-            {/* Staff Care Note */}
-            <div>
+          {/* Staff Care Note */}
+          {/* <div>
               <label className="block text-xs font-semibold text-[#4b362c]">
                 Ghi chú nhân viên & Thói quen chăm sóc da
               </label>
@@ -474,7 +382,7 @@ export function CreateCustomerPage() {
                 className="mt-1.5 w-full rounded-xl bg-[#fcf8f6] border border-[#ead9ce] p-3.5 text-xs text-[#3b2920] leading-relaxed outline-none focus:border-[#9a462d]"
               />
             </div>
-          </div>
+          </div> */}
 
           {/* Card 2: THIẾT LẬP HỘI VIÊN & TRẠNG THÁI */}
           <div className="rounded-3xl bg-white border border-[#ead9ce] p-6 shadow-2xs space-y-4">
@@ -510,11 +418,10 @@ export function CreateCustomerPage() {
               </label>
               <div className="mt-2 grid grid-cols-2 gap-3">
                 <label
-                  className={`rounded-2xl border p-3.5 flex items-start gap-2.5 cursor-pointer transition ${
-                    status === 'ACTIVE'
-                      ? 'bg-[#faefe7] border-[#c98468]'
-                      : 'bg-[#fcf9f7] border-[#ead9ce]'
-                  }`}
+                  className={`rounded-2xl border p-3.5 flex items-start gap-2.5 cursor-pointer transition ${status === 'ACTIVE'
+                    ? 'bg-[#faefe7] border-[#c98468]'
+                    : 'bg-[#fcf9f7] border-[#ead9ce]'
+                    }`}
                 >
                   <input
                     type="radio"
@@ -534,11 +441,10 @@ export function CreateCustomerPage() {
                 </label>
 
                 <label
-                  className={`rounded-2xl border p-3.5 flex items-start gap-2.5 cursor-pointer transition ${
-                    status === 'INACTIVE'
-                      ? 'bg-[#faefe7] border-[#c98468]'
-                      : 'bg-[#fcf9f7] border-[#ead9ce]'
-                  }`}
+                  className={`rounded-2xl border p-3.5 flex items-start gap-2.5 cursor-pointer transition ${status === 'INACTIVE'
+                    ? 'bg-[#faefe7] border-[#c98468]'
+                    : 'bg-[#fcf9f7] border-[#ead9ce]'
+                    }`}
                 >
                   <input
                     type="radio"
@@ -573,7 +479,7 @@ export function CreateCustomerPage() {
       </div>
 
       {/* Bottom Sticky Action Footer */}
-      <div className="flex items-center justify-end gap-3 pt-2">
+      <div className="flex items-center gap-3 pt-2">
         <Link
           to="/customers"
           className="px-5 py-2.5 rounded-xl bg-white border border-[#e3d2c7] hover:bg-[#faf3ee] text-xs font-semibold text-[#543e33]"

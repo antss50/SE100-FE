@@ -103,12 +103,12 @@ export function CustomerDetailPage() {
       const updated = await customersService.updateCustomer(
         customer.customerCode,
         {
-        fullName: editFullName,
-        phoneNumber: editPhone,
-        email: editEmail,
-        address: editAddress,
-        skinType: editSkinType,
-        note: nextNote,
+          fullName: editFullName,
+          phoneNumber: editPhone,
+          email: editEmail,
+          address: editAddress,
+          skinType: editSkinType,
+          note: nextNote,
         }
       )
       setCustomer(updated)
@@ -163,16 +163,14 @@ export function CustomerDetailPage() {
 
           <div className="mt-2">
             <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
-                isInactive
-                  ? 'bg-red-100 text-red-800'
-                  : 'bg-[#f4e8df] text-[#6d4b38]'
-              }`}
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${isInactive
+                ? 'bg-red-100 text-red-800'
+                : 'bg-[#f4e8df] text-[#6d4b38]'
+                }`}
             >
               <span
-                className={`size-2 rounded-full ${
-                  isInactive ? 'bg-red-600' : 'bg-[#8c5233]'
-                }`}
+                className={`size-2 rounded-full ${isInactive ? 'bg-red-600' : 'bg-[#8c5233]'
+                  }`}
               />
               {isInactive ? 'Ngừng hoạt động' : 'Đang hoạt động'}
             </span>
@@ -190,14 +188,14 @@ export function CustomerDetailPage() {
           </button>
 
           {canLock && (
-          <button
-            type="button"
-            onClick={handleToggleStatus}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-red-50 border border-red-200 hover:bg-red-100 px-4 py-2.5 text-xs font-bold text-red-700 cursor-pointer"
-          >
-            <Ban className="size-3.5" />
-            <span>{isInactive ? 'Kích hoạt lại' : 'Ngừng hoạt động'}</span>
-          </button>
+            <button
+              type="button"
+              onClick={handleToggleStatus}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-red-50 border border-red-200 hover:bg-red-100 px-4 py-2.5 text-xs font-bold text-red-700 cursor-pointer"
+            >
+              <Ban className="size-3.5" />
+              <span>{isInactive ? 'Kích hoạt lại' : 'Ngừng hoạt động'}</span>
+            </button>
           )}
 
           <button
@@ -381,9 +379,6 @@ export function CustomerDetailPage() {
               <h3 className="text-base font-extrabold text-[#221712]">
                 {customer.fullName}
               </h3>
-              <span className="px-2.5 py-0.5 rounded-md bg-[#f6ebe4] text-[#7a5d4e] font-mono text-[11px] font-semibold">
-                {customer.gender === 'MALE' ? 'Nam' : 'Nữ'} • 31 tuổi
-              </span>
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-[#6e564a] font-mono">
               <span className="inline-flex items-center gap-1">
@@ -395,36 +390,15 @@ export function CustomerDetailPage() {
                 <Mail className="size-3.5 text-[#9a7e70]" />
                 {customer.email || 'Chưa cập nhật email'}
               </span>
-              <span>•</span>
-              <span className="inline-flex items-center gap-1">
-                <Calendar className="size-3.5 text-[#9a7e70]" />
-                {customer.dateOfBirth || '24/11/1993'}
-              </span>
             </div>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#faefe7] border border-[#ebd5c6] text-[#5e3927]">
-            <Sparkles className="size-3.5 text-[#9a462d]" />
-            <span>
-              Loại da: <strong>{getSkinTypeLabel(customer.skinType)}</strong>
-            </span>
-          </span>
-
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#faefe7] border border-[#ebd5c6] text-[#5e3927]">
-            <span>☼ Tình trạng:</span>
-            <strong>
-              {parsedNote.skinConcerns.length > 0
-                ? parsedNote.skinConcerns.join(', ')
-                : 'Chống lão hóa, nhạy cảm nhẹ'}
-            </strong>
-          </span>
-
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#faefe7] border border-[#ebd5c6] text-[#5e3927]">
             <Heart className="size-3.5 text-[#9a462d]" />
             <span>
-              Brand chuộng:{' '}
+              Brand ưa chuộng:{' '}
               <strong>
                 {parsedNote.favoriteBrands ||
                   customer.favoriteBrands ||
@@ -441,11 +415,10 @@ export function CustomerDetailPage() {
           <button
             type="button"
             onClick={() => setActiveTab('ORDERS')}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition cursor-pointer ${
-              activeTab === 'ORDERS'
-                ? 'bg-[#f6e6dc] text-[#9a462d] border border-[#e5c9b8]'
-                : 'bg-white border border-transparent text-[#6e564a] hover:bg-[#faf3ee]'
-            }`}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition cursor-pointer ${activeTab === 'ORDERS'
+              ? 'bg-[#f6e6dc] text-[#9a462d] border border-[#e5c9b8]'
+              : 'bg-white border border-transparent text-[#6e564a] hover:bg-[#faf3ee]'
+              }`}
           >
             <FileText className="size-4" />
             <span>Lịch sử mua hàng</span>
@@ -457,30 +430,16 @@ export function CustomerDetailPage() {
           <button
             type="button"
             onClick={() => setActiveTab('POINTS')}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition cursor-pointer ${
-              activeTab === 'POINTS'
-                ? 'bg-[#f6e6dc] text-[#9a462d] border border-[#e5c9b8]'
-                : 'bg-white border border-transparent text-[#6e564a] hover:bg-[#faf3ee]'
-            }`}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition cursor-pointer ${activeTab === 'POINTS'
+              ? 'bg-[#f6e6dc] text-[#9a462d] border border-[#e5c9b8]'
+              : 'bg-white border border-transparent text-[#6e564a] hover:bg-[#faf3ee]'
+              }`}
           >
             <Gift className="size-4" />
             <span>Lịch sử điểm thưởng (+/-)</span>
             <span className="px-2 py-0.5 rounded-full bg-[#f0e4dc] text-[#6d5244] font-mono text-[11px]">
               {customer.pointHistories?.length || 0} giao dịch
             </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('PROFILE')}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition cursor-pointer ${
-              activeTab === 'PROFILE'
-                ? 'bg-[#f6e6dc] text-[#9a462d] border border-[#e5c9b8]'
-                : 'bg-white border border-transparent text-[#6e564a] hover:bg-[#faf3ee]'
-            }`}
-          >
-            <UserCheck className="size-4" />
-            <span>Thông tin cá nhân & Đặc điểm da</span>
           </button>
         </div>
 
@@ -631,11 +590,10 @@ export function CustomerDetailPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <span
-                          className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold ${
-                            ph.pointsChanged >= 0
-                              ? 'bg-emerald-50 text-emerald-700'
-                              : 'bg-amber-50 text-amber-800'
-                          }`}
+                          className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold ${ph.pointsChanged >= 0
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : 'bg-amber-50 text-amber-800'
+                            }`}
                         >
                           {pointActionLabel(ph.actionType)}
                         </span>
@@ -650,11 +608,10 @@ export function CustomerDetailPage() {
 
                     <div className="text-right font-mono">
                       <p
-                        className={`text-sm font-extrabold ${
-                          ph.pointsChanged >= 0
-                            ? 'text-emerald-700'
-                            : 'text-red-700'
-                        }`}
+                        className={`text-sm font-extrabold ${ph.pointsChanged >= 0
+                          ? 'text-emerald-700'
+                          : 'text-red-700'
+                          }`}
                       >
                         {ph.pointsChanged >= 0
                           ? `+${ph.pointsChanged}`
@@ -677,7 +634,7 @@ export function CustomerDetailPage() {
         )}
 
         {/* TAB 3: PERSONAL & SKIN PROFILE (Parsed from note) */}
-        {activeTab === 'PROFILE' && (
+        {/* {activeTab === 'PROFILE' && (
           <div className="rounded-3xl bg-white border border-[#ead9ce] p-6 shadow-2xs grid md:grid-cols-2 gap-6 text-xs">
             <div className="space-y-3">
               <h3 className="text-sm font-bold text-[#221712] pb-2 border-b border-[#f2e6de]">
@@ -745,7 +702,7 @@ export function CustomerDetailPage() {
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </div>
 
       {isEditModalOpen && (
@@ -777,7 +734,7 @@ export function CustomerDetailPage() {
                   className="mt-1 w-full rounded-xl border border-[#e5d4c9] px-3.5 py-2 text-xs font-mono"
                 />
               </div>
-              <div>
+              {/* <div>
                 <label className="block text-xs font-semibold text-[#543e34]">
                   Loại da
                 </label>
@@ -792,7 +749,7 @@ export function CustomerDetailPage() {
                   <option value="SENSITIVE">Da nhạy cảm</option>
                   <option value="NORMAL">Da thường</option>
                 </select>
-              </div>
+              </div> */}
             </div>
             <div>
               <label className="block text-xs font-semibold text-[#543e34]">
@@ -806,15 +763,6 @@ export function CustomerDetailPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#543e34]">
-                Địa chỉ
-              </label>
-              <input
-                type="text"
-                value={editAddress}
-                onChange={(e) => setEditAddress(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-[#e5d4c9] px-3.5 py-2 text-xs"
-              />
             </div>
             <div>
               <label className="block text-xs font-semibold text-[#543e34]">
