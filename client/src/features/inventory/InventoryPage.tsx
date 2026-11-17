@@ -274,10 +274,10 @@ export function InventoryPage() {
   const activeCategoryRatio =
     categories.length > 0
       ? Math.round(
-          (categories.filter((c) => c.status === 'ACTIVE').length /
-            categories.length) *
-            100
-        )
+        (categories.filter((c) => c.status === 'ACTIVE').length /
+          categories.length) *
+        100
+      )
       : 100
 
   return (
@@ -430,11 +430,10 @@ export function InventoryPage() {
               prev === 'LOW_STOCK' ? 'ACTIVE' : 'LOW_STOCK'
             )
           }
-          className={`rounded-3xl border p-5 shadow-2xs flex flex-col justify-between cursor-pointer transition ${
-            statusFilter === 'LOW_STOCK'
-              ? 'bg-red-50/90 border-red-300'
-              : 'bg-[#fff9f7] border-[#f3d4ca] hover:border-red-300'
-          }`}
+          className={`rounded-3xl border p-5 shadow-2xs flex flex-col justify-between cursor-pointer transition ${statusFilter === 'LOW_STOCK'
+            ? 'bg-red-50/90 border-red-300'
+            : 'bg-[#fff9f7] border-[#f3d4ca] hover:border-red-300'
+            }`}
         >
           <div className="flex items-start justify-between">
             <div>
@@ -553,9 +552,11 @@ export function InventoryPage() {
                 <th className="py-4 px-4">MÃ SKU & BARCODE EAN</th>
                 <th className="py-4 px-4">THƯƠNG HIỆU / NHÓM</th>
                 <th className="py-4 px-4">QUY CÁCH</th>
+                <th className="py-4 px-4">TỒN KHO</th>
                 <th className="py-4 px-6 text-right">
-                  GIÁ NIÊM YẾT (VAT) & THAO TÁC
+                  GIÁ NIÊM YẾT
                 </th>
+                <th className="py-4 px-4">THAO TÁC</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f3e7df] text-xs">
@@ -569,9 +570,8 @@ export function InventoryPage() {
                     key={prod.sku}
                     onClick={() => handleOpenEditProduct(prod)}
                     title="Bấm để xem chi tiết hoặc chỉnh sửa sản phẩm"
-                    className={`hover:bg-[#fdf9f6] transition cursor-pointer group ${
-                      prod.status === 'DISCONTINUED' ? 'opacity-70 bg-zinc-50/40' : ''
-                    }`}
+                    className={`hover:bg-[#fdf9f6] transition cursor-pointer group ${prod.status === 'DISCONTINUED' ? 'opacity-70 bg-zinc-50/40' : ''
+                      }`}
                   >
                     {/* Column 1: Product Thumbnail + Name + Description */}
                     <td className="py-4 px-6">
@@ -634,7 +634,14 @@ export function InventoryPage() {
                       </p>
                     </td>
 
-                    {/* Column 5: Retail Price, VAT & Quick Deactivate/Restore */}
+                    {/* Column 5: Stock */}
+                    <td className="py-4 px-4">
+                      <p className="font-bold text-[#221712]">
+                        {prod.currentStock}
+                      </p>
+                    </td>
+
+                    {/* Column 5: Retail Price, VAT */}
                     <td className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end gap-3">
                         <div>
@@ -645,44 +652,47 @@ export function InventoryPage() {
                             VAT {vatPct}%
                           </span>
                         </div>
+                      </div>
+                    </td>
 
-                        <div
-                          className="flex items-center gap-1"
-                          onClick={(e) => e.stopPropagation()}
+                    {/* Column 6: Actions */}
+                    <td className="py-4 px-6 text-right">
+                      <div
+                        className="flex items-center gap-1"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          type="button"
+                          title="Xem chi tiết & Cập nhật"
+                          onClick={() => handleOpenEditProduct(prod)}
+                          className="p-2 rounded-xl bg-[#fbf3ed] hover:bg-[#f2e2d6] text-[#6d4934] transition cursor-pointer"
                         >
+                          <Edit3 className="size-3.5" />
+                        </button>
+
+                        {prod.status === 'ACTIVE' ? (
                           <button
                             type="button"
-                            title="Xem chi tiết & Cập nhật"
-                            onClick={() => handleOpenEditProduct(prod)}
-                            className="p-2 rounded-xl bg-[#fbf3ed] hover:bg-[#f2e2d6] text-[#6d4934] transition cursor-pointer"
+                            title="Ngừng kinh doanh sản phẩm"
+                            onClick={() =>
+                              handleToggleProductStatus(prod)
+                            }
+                            className="p-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 transition cursor-pointer"
                           >
-                            <Edit3 className="size-3.5" />
+                            <Ban className="size-3.5" />
                           </button>
-
-                          {prod.status === 'ACTIVE' ? (
-                            <button
-                              type="button"
-                              title="Ngừng kinh doanh sản phẩm"
-                              onClick={() =>
-                                handleToggleProductStatus(prod)
-                              }
-                              className="p-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 transition cursor-pointer"
-                            >
-                              <Ban className="size-3.5" />
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              title="Khôi phục sản phẩm"
-                              onClick={() =>
-                                handleToggleProductStatus(prod)
-                              }
-                              className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition cursor-pointer"
-                            >
-                              <CheckCircle2 className="size-3.5" />
-                            </button>
-                          )}
-                        </div>
+                        ) : (
+                          <button
+                            type="button"
+                            title="Khôi phục sản phẩm"
+                            onClick={() =>
+                              handleToggleProductStatus(prod)
+                            }
+                            className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition cursor-pointer"
+                          >
+                            <CheckCircle2 className="size-3.5" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -743,11 +753,10 @@ export function InventoryPage() {
                 key={p}
                 type="button"
                 onClick={() => setPage(p)}
-                className={`size-8 rounded-lg text-xs font-bold transition cursor-pointer ${
-                  page === p
-                    ? 'bg-[#da7756] text-white shadow-xs'
-                    : 'bg-white border border-[#e5d2c6] text-[#4a362c] hover:bg-[#f7ebe2]'
-                }`}
+                className={`size-8 rounded-lg text-xs font-bold transition cursor-pointer ${page === p
+                  ? 'bg-[#da7756] text-white shadow-xs'
+                  : 'bg-white border border-[#e5d2c6] text-[#4a362c] hover:bg-[#f7ebe2]'
+                  }`}
               >
                 {p}
               </button>
@@ -921,11 +930,10 @@ export function InventoryPage() {
                   {categories.map((cat) => (
                     <div
                       key={cat.categoryCode}
-                      className={`rounded-2xl border p-3.5 flex items-start justify-between gap-3 transition ${
-                        cat.status === 'INACTIVE'
-                          ? 'bg-zinc-50 border-zinc-200 opacity-75'
-                          : 'bg-[#fcf7f4] border-[#ebd9ce]'
-                      }`}
+                      className={`rounded-2xl border p-3.5 flex items-start justify-between gap-3 transition ${cat.status === 'INACTIVE'
+                        ? 'bg-zinc-50 border-zinc-200 opacity-75'
+                        : 'bg-[#fcf7f4] border-[#ebd9ce]'
+                        }`}
                     >
                       <div className="space-y-1">
                         <div className="flex flex-wrap items-center gap-2">
@@ -936,11 +944,10 @@ export function InventoryPage() {
                             {cat.categoryCode}
                           </span>
                           <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              cat.status === 'ACTIVE'
-                                ? 'bg-emerald-50 text-emerald-700'
-                                : 'bg-zinc-200 text-zinc-700'
-                            }`}
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${cat.status === 'ACTIVE'
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : 'bg-zinc-200 text-zinc-700'
+                              }`}
                           >
                             {cat.status}
                           </span>
@@ -1006,11 +1013,10 @@ export function InventoryPage() {
                   {brands.map((b) => (
                     <div
                       key={b.brandCode}
-                      className={`rounded-2xl border p-3.5 flex items-start justify-between gap-3 transition ${
-                        b.status === 'INACTIVE'
-                          ? 'bg-zinc-50 border-zinc-200 opacity-75'
-                          : 'bg-[#fcf7f4] border-[#ebd9ce]'
-                      }`}
+                      className={`rounded-2xl border p-3.5 flex items-start justify-between gap-3 transition ${b.status === 'INACTIVE'
+                        ? 'bg-zinc-50 border-zinc-200 opacity-75'
+                        : 'bg-[#fcf7f4] border-[#ebd9ce]'
+                        }`}
                     >
                       <div className="space-y-1">
                         <div className="flex flex-wrap items-center gap-2">
@@ -1021,11 +1027,10 @@ export function InventoryPage() {
                             {b.brandCode}
                           </span>
                           <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              b.status === 'ACTIVE'
-                                ? 'bg-emerald-50 text-emerald-700'
-                                : 'bg-zinc-200 text-zinc-700'
-                            }`}
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${b.status === 'ACTIVE'
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : 'bg-zinc-200 text-zinc-700'
+                              }`}
                           >
                             {b.status}
                           </span>

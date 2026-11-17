@@ -8,7 +8,6 @@ import { queryKeys } from '../../lib/query-keys'
 import { ordersService } from '../../services/orders.service'
 import { returnsService } from '../../services/returns.service'
 import {
-  RETURN_REASON_LABELS,
   type ItemCondition,
   type RefundMethod,
   type ReturnItemInput,
@@ -33,11 +32,9 @@ export function ReturnCreatePage() {
   const queryClient = useQueryClient()
   const startExchange = usePosStore((s) => s.startExchange)
   const [lookup, setLookup] = useState('')
-  const [reason, setReason] = useState<ReturnReason>('DEFECTIVE')
   const [refund, setRefund] = useState<RefundMethod>('CASH')
   const [note, setNote] = useState('')
   const [selection, setSelection] = useState<Record<number, ReturnSelection>>({})
-  const requiredCondition: ItemCondition = reason === 'CHANGE_OF_MIND' ? 'INTACT' : 'DAMAGED_OR_OPENED'
 
   const orders = useQuery({
     queryKey: queryKeys.orders.list({ keyword: lookup, status: 'COMPLETED', pageSize: 5 }),
@@ -50,15 +47,25 @@ export function ReturnCreatePage() {
     enabled: orderId !== null,
   })
 
-  const items: ReturnItemInput[] = useMemo(
-    () =>
-      Object.entries(selection)
-        .filter(([, s]) => s.selected)
-        .map(([id, s]) => ({ orderDetailId: Number(id), quantity: s.quantity, condition: s.condition })),
+  const selectedRows = useMemo(
+    () => Object.entries(selection).filter(([, s]) => s.selected),
     [selection]
   )
-  const effectiveRefund: RefundMethod = reason === 'CHANGE_OF_MIND' ? 'EXCHANGE' : refund
-  const sealBroken = reason === 'CHANGE_OF_MIND' && items.some((i) => i.condition === 'DAMAGED_OR_OPENED')
+  const items: ReturnItemInput[] = useMemo(
+    () =>
+      selectedRows
+        .filter(([, s]) => s.condition !== '')
+        .map(([id, s]) => ({
+          orderDetailId: Number(id),
+          quantity: s.quantity,
+          condition: s.condition as ItemCondition,
+        })),
+    [selectedRows]
+  )
+  const allChangeOfMind = selectedRows.length > 0 && selectedRows.every(([, s]) => s.reason === 'CHANGE_OF_MIND')
+  const reason: ReturnReason = allChangeOfMind ? 'CHANGE_OF_MIND' : 'DEFECTIVE'
+  const effectiveRefund: RefundMethod = allChangeOfMind ? 'EXCHANGE' : refund
+  const sealBroken = selectedRows.some(([, s]) => s.reason === 'CHANGE_OF_MIND' && s.condition === 'DAMAGED_OR_OPENED')
   const request = { originalOrderId: orderId ?? 0, reason, items }
   const quote = useQuery({
     queryKey: queryKeys.returns.quote(request),
@@ -86,7 +93,6 @@ export function ReturnCreatePage() {
   })
 
   const detail = info.data?.data
-  const reasonOptions = Object.keys(RETURN_REASON_LABELS) as ReturnReason[]
   const selectClass = 'w-full rounded-xl border border-line bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/15'
 
   return (
@@ -160,39 +166,15 @@ export function ReturnCreatePage() {
           <ReturnLinesTable
             lines={detail.lines}
             selection={selection}
-            requiredCondition={requiredCondition}
-            changeOfMind={reason === 'CHANGE_OF_MIND'}
             onChange={(id, next) => setSelection((s) => ({ ...s, [id]: next }))}
           />
 
-          <section className="grid gap-4 rounded-2xl border border-line bg-white p-5 md:grid-cols-2">
-            <FieldShell id="return-reason" label="Lý do trả hàng" required>
-              <select
-                id="return-reason"
-                value={reason}
-                onChange={(e) => {
-                  const next = e.target.value as ReturnReason
-                  setReason(next)
-                  setRefund(next === 'CHANGE_OF_MIND' ? 'EXCHANGE' : 'CASH')
-                  const condition: ItemCondition = next === 'CHANGE_OF_MIND' ? 'INTACT' : 'DAMAGED_OR_OPENED'
-                  setSelection((current) => Object.fromEntries(
-                    Object.entries(current).map(([id, item]) => [id, { ...item, condition }])
-                  ))
-                }}
-                className={selectClass}
-              >
-                {reasonOptions.map((r) => (
-                  <option key={r} value={r}>
-                    {RETURN_REASON_LABELS[r]}
-                  </option>
-                ))}
-              </select>
-            </FieldShell>
+          <section className="grid gap-4 rounded-2xl border border-line bg-white p-5">
             <FieldShell id="return-refund" label="Hình thức xử lý" required>
               <select
                 id="return-refund"
                 value={effectiveRefund}
-                disabled={reason === 'CHANGE_OF_MIND'}
+                disabled={allChangeOfMind}
                 onChange={(e) => setRefund(e.target.value as RefundMethod)}
                 className={selectClass}
               >
@@ -203,7 +185,7 @@ export function ReturnCreatePage() {
                 ))}
               </select>
             </FieldShell>
-            <FieldShell id="return-note" label="Ghi chú tình trạng sản phẩm" className="md:col-span-2">
+            <FieldShell id="return-note" label="Ghi chú tình trạng sản phẩm">
               <textarea id="return-note" rows={2} value={note} onChange={(e) => setNote(e.target.value)} className={selectClass} />
             </FieldShell>
           </section>
