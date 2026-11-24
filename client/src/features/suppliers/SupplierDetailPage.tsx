@@ -92,7 +92,7 @@ export function SupplierDetailPage() {
     { key: 'code', header: 'Mã phiếu', render: (o) => <span className="font-mono font-semibold">{o.poCode}</span> },
     { key: 'date', header: 'Ngày tạo', render: (o) => formatDateTime(o.createdAt) },
     { key: 'invoice', header: 'Số hóa đơn NCC', render: (o) => o.supplierInvoiceNo ?? '—' },
-    { key: 'lines', header: 'Số lô', align: 'right', render: (o) => formatNumber(o.lineCount) },
+    { key: 'products', header: 'Số sản phẩm', align: 'right', render: (o) => formatNumber(o.productCount ?? o.lineCount) },
     { key: 'qty', header: 'Số lượng', align: 'right', render: (o) => formatNumber(o.totalQuantity) },
     { key: 'total', header: 'Tổng tiền', align: 'right', render: (o) => formatCurrency(o.totalAmount) },
     { key: 'status', header: 'Trạng thái', render: (o) => <PurchaseOrderStatusBadge status={o.status} /> },

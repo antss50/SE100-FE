@@ -1,9 +1,11 @@
 import { z } from 'zod'
+import { hasPermission } from '../../domain/permissions'
 import type { BrandItem, CategoryItem, ProductImageItem, ProductItem } from '../../types/api'
 import { normalizeProductImages } from '../../utils/product'
 import type { MockTransaction } from '../db'
 import { MockHttpError, keywordOf, notFound, ok, paginate, parseBody, sameText } from '../http'
 import type { MockRoute } from '../router'
+import { disposeProductStockForDeactivate } from './disposals'
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const MAX_FILES_PER_UPLOAD = 5
@@ -38,6 +40,12 @@ const createProductSchema = z.object({
   images: z.array(z.string()).optional(),
 })
 const updateProductSchema = z.object(productFields)
+const destroyForDeactivateSchema = z.object({
+  reasonCode: z.enum(['EXPIRED', 'NEAR_EXPIRY', 'DAMAGED', 'RECALL'], {
+    error: 'Vui lòng chọn mã lý do xuất hủy hợp lệ',
+  }),
+  reason: z.string().trim().min(1, 'Vui lòng nhập diễn giải lý do xuất hủy'),
+})
 
 const codeNameSchema = (codeKey: 'categoryCode' | 'brandCode', nameKey: 'categoryName' | 'brandName') => ({
   create: z.object({
@@ -234,10 +242,46 @@ const productRoutes: MockRoute[] = [
     method: 'PATCH',
     path: '/products/:sku/deactivate',
     permission: 'PRODUCT_MANAGE',
-    handler: ({ db, params }) => {
+    handler: ({ db, params, body, permissions, user, now }) => {
       const target = findProduct(db, params.sku)
       if ((target.currentStock ?? 0) > 0) {
-        throw new MockHttpError(409, 'PROD_HAS_STOCK', 'Sản phẩm còn tồn kho, không thể ngừng kinh doanh')
+        const rawDisposal =
+          body && typeof body === 'object' && 'disposal' in body
+            ? (body as { disposal?: unknown }).disposal
+            : undefined
+        if (!rawDisposal) {
+          throw new MockHttpError(409, 'PROD_HAS_STOCK', 'Sản phẩm còn tồn kho, không thể ngừng kinh doanh')
+        }
+        const disposalInput = parseBody(destroyForDeactivateSchema, rawDisposal)
+        const canApprove = hasPermission(permissions, 'STOCK_DISPOSAL_APPROVE')
+        const canCreate = hasPermission(permissions, 'STOCK_DISPOSAL_CREATE')
+        if (!canApprove && !canCreate) {
+          throw new MockHttpError(
+            403,
+            'AUTH_FORBIDDEN',
+            'Bạn không có quyền lập hoặc duyệt phiếu xuất hủy để xử lý tồn kho'
+          )
+        }
+        const disposalResult = disposeProductStockForDeactivate(db, {
+          product: target,
+          reasonCode: disposalInput.reasonCode,
+          reason: disposalInput.reason,
+          canApprove,
+          user,
+          now,
+        })
+        const message =
+          disposalResult.disposalStatus === 'APPROVED'
+            ? `Đã xuất hủy tồn kho (${disposalResult.disposalCode}) và ngừng kinh doanh sản phẩm`
+            : `Đã lập phiếu xuất hủy ${disposalResult.disposalCode} chờ Quản lý duyệt; sản phẩm sẽ tự động ngừng kinh doanh sau khi duyệt`
+        return ok(
+          {
+            sku: target.sku,
+            status: target.status,
+            ...disposalResult,
+          },
+          message
+        )
       }
       target.status = 'DISCONTINUED'
       db.touch('products')

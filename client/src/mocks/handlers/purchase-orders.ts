@@ -46,15 +46,18 @@ function findOrder(db: MockTransaction, id: string): PurchaseOrderDetail {
 }
 
 function toHeader(order: PurchaseOrderDetail): PurchaseOrder {
-  const { lines: _lines, ...header } = order
-  void _lines
-  return header
+  const { lines, ...header } = order
+  return {
+    ...header,
+    productCount: header.productCount ?? new Set(lines.map((l) => l.productId)).size,
+  }
 }
 
 /** Dòng của phiếu nháp kèm cờ lô đã có trong kho. */
 function withExistingFlags(db: MockTransaction, order: PurchaseOrderDetail): PurchaseOrderDetail {
   return {
     ...order,
+    productCount: order.productCount ?? new Set(order.lines.map((l) => l.productId)).size,
     lines: order.lines.map((l) => ({
       ...l,
       existingBatch: order.status === 'DRAFT' ? Boolean(findBatchByLot(db, l.productId, l.lotCode)) : undefined,
@@ -139,6 +142,7 @@ function applyOrderFields(
   order.note = input.note || null
   order.lines = lines.map((l) => ({ ...l, id: ++lineId }))
   order.lineCount = order.lines.length
+  order.productCount = new Set(order.lines.map((l) => l.productId)).size
   order.totalQuantity = order.lines.reduce((n, l) => n + l.quantity, 0)
   order.totalAmount = order.lines.reduce((n, l) => n + l.lineTotal, 0)
 }
@@ -210,6 +214,7 @@ export const purchaseOrderRoutes: MockRoute[] = [
         createdAt: toIsoLocal(now),
         confirmedAt: null,
         lineCount: 0,
+        productCount: 0,
         totalQuantity: 0,
         lines: [],
       }

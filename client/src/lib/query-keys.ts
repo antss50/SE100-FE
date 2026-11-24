@@ -74,6 +74,7 @@ export const queryKeys = {
   },
   inventoryChecks: {
     all: ['inventory-checks'] as const,
+    assignees: ['inventory-checks', 'assignees'] as const,
     list: (params: object) => ['inventory-checks', 'list', params] as const,
     detail: (id: number | string) => ['inventory-checks', 'detail', String(id)] as const,
   },

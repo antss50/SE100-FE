@@ -38,6 +38,7 @@ interface CreateProductModalProps {
   onSaved: (product: ProductItem) => void
   onOpenCreateCategory: () => void
   onOpenCreateBrand: () => void
+  onRequestDiscontinueWithStock?: (product: ProductItem) => void
 }
 
 const UNIT_OPTIONS = ['Chai', 'Thỏi', 'Tuýp', 'Lọ', 'Hộp', 'Bộ', 'Miếng']
@@ -64,6 +65,7 @@ export function CreateProductModal({
   onSaved,
   onOpenCreateCategory,
   onOpenCreateBrand,
+  onRequestDiscontinueWithStock,
 }: CreateProductModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -304,6 +306,15 @@ export function CreateProductModal({
   // UC-PROD-07 & UC-PROD-08: Ngừng kinh doanh / Khôi phục sản phẩm
   const handleToggleProductStatus = async () => {
     if (!editingProduct) return
+    if (status === 'ACTIVE' && currentStock > 0 && onRequestDiscontinueWithStock) {
+      onClose()
+      onRequestDiscontinueWithStock({
+        ...editingProduct,
+        currentStock,
+        status,
+      })
+      return
+    }
     setIsSubmitting(true)
 
     try {

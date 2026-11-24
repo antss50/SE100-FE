@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import type {
   InventoryCheck,
+  InventoryCheckAssignee,
   InventoryCheckDetail,
   InventoryCheckLine,
 } from '../../types/inventory'
@@ -11,6 +12,9 @@ import { toDateOnly, toIsoLocal } from '../time'
 import { applyStockChange, findBatchById, nextTableId } from '../stock-ledger'
 
 const createSchema = z.object({
+  checkType: z.enum(['WAREHOUSE', 'DISPLAY'], { error: 'Vui lòng chọn loại kiểm kê' }).default('WAREHOUSE'),
+  scheduledAt: z.string().trim().min(1, 'Vui lòng chọn thời gian dự kiến kiểm kê'),
+  assignedTo: z.number({ error: 'Vui lòng chọn nhân viên kiểm kê' }).int().positive('Vui lòng chọn nhân viên kiểm kê'),
   scopeNote: z.string().trim().max(255, 'Ghi chú phạm vi tối đa 255 ký tự').optional(),
   batchIds: z.array(z.number().int().positive()).min(1, 'Chọn ít nhất một lô để kiểm kê'),
 })
@@ -39,6 +43,12 @@ function findCheck(db: MockTransaction, id: string): InventoryCheckDetail {
 
 function assertStatus(check: InventoryCheckDetail, allowed: InventoryCheckDetail['status'][], code: string, message: string) {
   if (!allowed.includes(check.status)) throw new MockHttpError(409, code, message)
+}
+
+function assertAssignedInventoryStaff(check: InventoryCheckDetail, userId: number | undefined): void {
+  if (check.assignedTo && userId !== check.assignedTo) {
+    throw new MockHttpError(403, 'AUTH_FORBIDDEN', 'Chỉ nhân viên kho được phân công mới có quyền thực hiện kiểm kê phiếu này')
+  }
 }
 
 /** Cập nhật các số tổng hợp lưu trong header từ các dòng. */
@@ -72,6 +82,23 @@ function nextCheckCode(db: MockTransaction, now: Date): string {
 export const inventoryCheckRoutes: MockRoute[] = [
   {
     method: 'GET',
+    path: '/inventory-checks/assignees',
+    permission: ['STOCK_ADJUST_APPROVE', 'STOCK_CHECK_VIEW'],
+    handler: ({ db }) => {
+      const assignees: InventoryCheckAssignee[] = db
+        .read('users')
+        .filter((u) => u.status === 'ACTIVE' && u.roles.includes('INVENTORY_STAFF'))
+        .map((u) => ({
+          id: u.id,
+          employeeCode: u.employeeCode,
+          fullName: u.fullName,
+          username: u.username,
+        }))
+      return ok(assignees, 'Lấy danh sách nhân viên kho thành công')
+    },
+  },
+  {
+    method: 'GET',
     path: '/inventory-checks',
     permission: 'STOCK_CHECK_VIEW',
     handler: ({ db, query }) => {
@@ -81,7 +108,10 @@ export const inventoryCheckRoutes: MockRoute[] = [
         .read('inventoryChecks')
         .filter(
           (c) =>
-            (!kw || c.checkCode.toLowerCase().includes(kw) || (c.scopeNote ?? '').toLowerCase().includes(kw)) &&
+            (!kw ||
+              c.checkCode.toLowerCase().includes(kw) ||
+              (c.scopeNote ?? '').toLowerCase().includes(kw) ||
+              (c.assignedToName ?? '').toLowerCase().includes(kw)) &&
             (!status || c.status === status)
         )
         .sort((a, b) => b.snapshotAt.localeCompare(a.snapshotAt) || b.id - a.id)
@@ -96,12 +126,17 @@ export const inventoryCheckRoutes: MockRoute[] = [
     handler: ({ db, params }) => ok(findCheck(db, params.id), 'Lấy chi tiết phiếu kiểm kho thành công'),
   },
   {
-    // Bắt đầu kiểm: chụp tồn sổ sách và khóa các lô (luật 32).
+    // Manager lên lịch kiểm: chọn loại, thời gian, nhân viên kho và danh sách lô -> chụp tồn và khóa lô.
     method: 'POST',
     path: '/inventory-checks',
-    permission: 'STOCK_CHECK_CREATE',
+    permission: 'STOCK_ADJUST_APPROVE',
     handler: ({ db, body, now, user }) => {
       const input = parseBody(createSchema, body)
+      const assignee = db.read('users').find((u) => u.id === input.assignedTo)
+      if (!assignee || assignee.status !== 'ACTIVE' || !assignee.roles.includes('INVENTORY_STAFF')) {
+        throw new MockHttpError(422, 'STK_CHECK_ASSIGNEE_INVALID', 'Nhân viên được phân công phải là nhân viên kho đang hoạt động')
+      }
+
       const checks = db.read('inventoryChecks')
       const id = nextTableId(db, 'inventoryCheck', checks.reduce((m, c) => Math.max(m, c.id), 0))
       const products = db.read('products')
@@ -133,6 +168,10 @@ export const inventoryCheckRoutes: MockRoute[] = [
       const check: InventoryCheckDetail = {
         id,
         checkCode: nextCheckCode(db, now),
+        checkType: input.checkType,
+        scheduledAt: input.scheduledAt,
+        assignedTo: assignee.id,
+        assignedToName: assignee.fullName,
         scopeNote: input.scopeNote || null,
         status: 'IN_PROGRESS',
         snapshotAt: toIsoLocal(now),
@@ -149,18 +188,19 @@ export const inventoryCheckRoutes: MockRoute[] = [
         lines,
       }
       db.write('inventoryChecks', [...checks, check])
-      return ok(check, 'Đã chụp tồn và khóa lô, bắt đầu kiểm kê', 201)
+      return ok(check, 'Đã lên lịch kiểm kê, chụp tồn và phân công nhân viên kho', 201)
     },
   },
   {
-    // Lưu nháp kết quả đếm. `countedQty = null` nghĩa là chưa nhập, không phải 0 (luật 32).
+    // Nhân viên kho được phân công lưu nháp số đếm & ghi chú.
     method: 'PUT',
     path: '/inventory-checks/:id/counts',
     permission: 'STOCK_CHECK_CREATE',
-    handler: ({ db, params, body }) => {
+    handler: ({ db, params, body, user }) => {
       const input = parseBody(countsSchema, body)
       const check = findCheck(db, params.id)
       assertStatus(check, ['IN_PROGRESS'], 'STK_CHECK_NOT_IN_PROGRESS', 'Phiếu không còn ở trạng thái đang kiểm')
+      assertAssignedInventoryStaff(check, user?.id)
       for (const entry of input.lines) {
         const line = check.lines.find((l) => l.id === entry.lineId)
         if (!line) throw notFound('STK_CHECK_LINE_NOT_FOUND', `Không tìm thấy dòng kiểm kê ${entry.lineId}`)
@@ -168,23 +208,27 @@ export const inventoryCheckRoutes: MockRoute[] = [
         line.note = entry.note || null
       }
       db.touch('inventoryChecks')
-      return ok(check, 'Đã lưu kết quả kiểm đếm')
+      return ok(check, 'Đã lưu nháp kết quả kiểm đếm')
     },
   },
   {
+    // Nhân viên kho hoàn tất kiểm kê: không cần bước duyệt, tự động điều chỉnh tồn kho nếu có chênh lệch.
     method: 'POST',
     path: '/inventory-checks/:id/submit',
     permission: 'STOCK_CHECK_CREATE',
-    handler: ({ db, params, body, now }) => {
+    handler: ({ db, params, body, now, user }) => {
       const check = findCheck(db, params.id)
       assertStatus(check, ['IN_PROGRESS'], 'STK_CHECK_NOT_IN_PROGRESS', 'Phiếu không còn ở trạng thái đang kiểm')
-      if (body !== undefined && body !== null) parseBody(countsSchema, body).lines.forEach((entry) => {
-        const line = check.lines.find((l) => l.id === entry.lineId)
-        if (line) {
-          line.countedQty = entry.countedQty
-          line.note = entry.note || null
-        }
-      })
+      assertAssignedInventoryStaff(check, user?.id)
+      if (body !== undefined && body !== null) {
+        parseBody(countsSchema, body).lines.forEach((entry) => {
+          const line = check.lines.find((l) => l.id === entry.lineId)
+          if (line) {
+            line.countedQty = entry.countedQty
+            line.note = entry.note || null
+          }
+        })
+      }
       const missing = check.lines.filter((l) => l.countedQty === null)
       if (missing.length > 0) {
         throw new MockHttpError(
@@ -196,33 +240,48 @@ export const inventoryCheckRoutes: MockRoute[] = [
       for (const line of check.lines) line.differenceQty = (line.countedQty as number) - line.snapshotQty
       refreshTotals(check)
       check.submittedAt = toIsoLocal(now)
-      // Gỡ khóa khi gửi duyệt: POS có thể bán tiếp trước khi duyệt nên duyệt cộng phần chênh vào tồn hiện tại.
       unlockBatches(db, check.id)
+
       if (check.differenceLineCount === 0) {
         check.status = 'NO_DIFFERENCE'
         db.touch('inventoryChecks')
-        return ok(check, 'Không có chênh lệch, phiếu tự hoàn tất')
+        return ok(check, 'Không có chênh lệch, phiếu kiểm kê đã hoàn tất')
       }
-      check.status = 'WAITING_APPROVAL'
+
+      for (const line of check.lines) {
+        if (!line.differenceQty) continue
+        applyStockChange(db, {
+          batch: findBatchById(db, line.batchId),
+          change: line.differenceQty,
+          referenceType: 'CHECK_ADJUST',
+          referenceId: check.id,
+          reason: `Điều chỉnh theo phiếu kiểm kê ${check.checkCode}${line.note ? `: ${line.note}` : ''}`,
+          userId: user?.id,
+          now,
+        })
+      }
+      check.status = 'COMPLETED'
+      check.approvedBy = user?.id ?? null
+      check.approvedByName = user?.fullName ?? null
+      check.approvedAt = toIsoLocal(now)
       db.touch('inventoryChecks')
-      return ok(check, 'Đã gửi phiếu chờ duyệt')
+      return ok(check, 'Đã hoàn tất kiểm kê và tự động điều chỉnh tồn kho')
     },
   },
   {
     method: 'POST',
     path: '/inventory-checks/:id/cancel',
-    permission: 'STOCK_CHECK_CREATE',
+    permission: ['STOCK_ADJUST_APPROVE', 'STOCK_CHECK_CREATE'],
     handler: ({ db, params }) => {
       const check = findCheck(db, params.id)
       assertStatus(check, ['IN_PROGRESS'], 'STK_CHECK_NOT_IN_PROGRESS', 'Chỉ hủy được phiếu đang kiểm')
       unlockBatches(db, check.id)
       check.status = 'CANCELLED'
       db.touch('inventoryChecks')
-      return ok(check, 'Đã hủy phiếu kiểm kho, các lô được mở khóa')
+      return ok(check, 'Đã hủy phiếu kiểm kê, các lô được mở khóa')
     },
   },
   {
-    // Duyệt: cộng phần chênh lệch vào tồn hiện tại và ghi thẻ kho CHECK_ADJUST (luật 28, 32).
     method: 'POST',
     path: '/inventory-checks/:id/approve',
     permission: 'STOCK_ADJUST_APPROVE',

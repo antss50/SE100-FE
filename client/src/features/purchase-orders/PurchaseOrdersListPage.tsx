@@ -43,7 +43,7 @@ export function PurchaseOrdersListPage() {
     { key: 'invoice', header: 'Số hóa đơn NCC', render: (o) => o.supplierInvoiceNo ?? '—' },
     { key: 'created', header: 'Ngày tạo', render: (o) => formatDateTime(o.createdAt) },
     { key: 'by', header: 'Người lập', render: (o) => o.createdByName },
-    { key: 'lines', header: 'Số lô', align: 'right', render: (o) => formatNumber(o.lineCount) },
+    { key: 'products', header: 'Số sản phẩm', align: 'right', render: (o) => formatNumber(o.productCount ?? o.lineCount) },
     { key: 'qty', header: 'Số lượng', align: 'right', render: (o) => formatNumber(o.totalQuantity) },
     {
       key: 'total',

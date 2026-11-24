@@ -196,6 +196,7 @@ export function seedStock(today: Date, suppliers: Supplier[], products: ProductI
       createdAt: toIsoLocal(confirmed),
       confirmedAt: toIsoLocal(confirmed),
       lineCount: lines.length,
+      productCount: new Set(lines.map((l) => l.productId)).size,
       totalQuantity: lines.reduce((n, l) => n + l.quantity, 0),
       lines,
     })
@@ -220,6 +221,7 @@ export function seedStock(today: Date, suppliers: Supplier[], products: ProductI
     createdAt: toIsoLocal(draftCreated),
     confirmedAt: null,
     lineCount: draftLines.length,
+    productCount: new Set(draftLines.map((l) => l.productId)).size,
     totalQuantity: draftLines.reduce((n, l) => n + l.quantity, 0),
     lines: draftLines,
   })
@@ -324,25 +326,36 @@ function seedAdjustments(
   }
   const code = (prefix: string, when: Date) => `${prefix}${toDateOnly(when).replaceAll('-', '')}-01`
 
-  // Kiểm kho: 1 đã duyệt (điều chỉnh -1), 1 chờ duyệt, 1 không chênh lệch, 1 bị từ chối.
+  // Kiểm kho: 1 hoàn tất có điều chỉnh (-1), 2 không chênh lệch (trong kho & trưng bày), 1 đã hủy.
   const approvedAt = at(10, 16)
   const aneLines = [checkLine(1, 'LOT-ANE-2501', 30, 29, 'Thiếu 1 chai khi đối chiếu kệ')]
-  move(batchOf('LOT-ANE-2501'), 'CHECK_ADJUST', 1, -1, approvedAt, manager.id, 'Điều chỉnh theo phiếu kiểm kho: thiếu 1 chai')
-  const waitingLines = [checkLine(2, 'LOT-KIE-2502', 18, 17, 'Hộp móp, đã tách riêng chờ kiểm tra')]
+  move(batchOf('LOT-ANE-2501'), 'CHECK_ADJUST', 1, -1, approvedAt, staff.id, 'Điều chỉnh theo phiếu kiểm kho: thiếu 1 chai')
+  const displayNoDiffLines = [checkLine(2, 'LOT-KIE-2502', 18, 18, 'Khớp số lượng trưng bày tại quầy')]
   const noDiffLines = [checkLine(3, 'LOT-EL-2408', 60, 60, null)]
-  const rejectedLines = [checkLine(4, 'LOT-CLI-2503', 3, 2, 'Không tìm thấy 1 chai')]
-  const base = { createdBy: staff.id, createdByName: staff.fullName, approvedBy: null, approvedByName: null, approvedAt: null, rejectReason: null }
+  const cancelledLines = [checkLine(4, 'LOT-CLI-2503', 3, null, null)]
+  const base = {
+    createdBy: manager.id,
+    createdByName: manager.fullName,
+    assignedTo: staff.id,
+    assignedToName: staff.fullName,
+    approvedBy: null,
+    approvedByName: null,
+    approvedAt: null,
+    rejectReason: null,
+  }
   const inventoryChecks: InventoryCheckDetail[] = [
     {
       ...base,
       id: 1,
       checkCode: code('CHK', at(11, 9)),
+      checkType: 'WAREHOUSE',
+      scheduledAt: toIsoLocal(at(11, 9)),
       scopeNote: 'Kiểm kê nhóm chống nắng cuối tháng',
-      status: 'APPROVED',
+      status: 'COMPLETED',
       snapshotAt: toIsoLocal(at(11, 9)),
-      submittedAt: toIsoLocal(at(11, 11)),
-      approvedBy: manager.id,
-      approvedByName: manager.fullName,
+      submittedAt: toIsoLocal(approvedAt),
+      approvedBy: staff.id,
+      approvedByName: staff.fullName,
       approvedAt: toIsoLocal(approvedAt),
       ...totals(aneLines),
       lines: aneLines,
@@ -351,17 +364,21 @@ function seedAdjustments(
       ...base,
       id: 2,
       checkCode: code('CHK', at(4, 9)),
-      scopeNote: 'Kiểm kê nhóm dưỡng da cao cấp',
-      status: 'WAITING_APPROVAL',
+      checkType: 'DISPLAY',
+      scheduledAt: toIsoLocal(at(4, 9)),
+      scopeNote: 'Kiểm kê hàng trưng bày nhóm dưỡng da',
+      status: 'NO_DIFFERENCE',
       snapshotAt: toIsoLocal(at(4, 9)),
       submittedAt: toIsoLocal(at(4, 11)),
-      ...totals(waitingLines),
-      lines: waitingLines,
+      ...totals(displayNoDiffLines),
+      lines: displayNoDiffLines,
     },
     {
       ...base,
       id: 3,
       checkCode: code('CHK', at(20, 9)),
+      checkType: 'WAREHOUSE',
+      scheduledAt: toIsoLocal(at(20, 9)),
       scopeNote: 'Kiểm kê định kỳ lô Estée Lauder',
       status: 'NO_DIFFERENCE',
       snapshotAt: toIsoLocal(at(20, 9)),
@@ -373,16 +390,14 @@ function seedAdjustments(
       ...base,
       id: 4,
       checkCode: code('CHK', at(30, 9)),
+      checkType: 'DISPLAY',
+      scheduledAt: toIsoLocal(at(30, 9)),
       scopeNote: 'Kiểm kê hàng ít tồn',
-      status: 'REJECTED',
+      status: 'CANCELLED',
       snapshotAt: toIsoLocal(at(30, 9)),
-      submittedAt: toIsoLocal(at(30, 10)),
-      approvedBy: manager.id,
-      approvedByName: manager.fullName,
-      approvedAt: toIsoLocal(at(30, 15)),
-      rejectReason: 'Số đếm chưa chắc chắn, kiểm lại trước khi gửi duyệt',
-      ...totals(rejectedLines),
-      lines: rejectedLines,
+      submittedAt: null,
+      ...totals(cancelledLines),
+      lines: cancelledLines,
     },
   ]
 

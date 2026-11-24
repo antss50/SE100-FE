@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Send } from 'lucide-react'
+import { CheckCircle2 } from 'lucide-react'
 import { useState } from 'react'
 import { Button, ConfirmDialog, NumberInput, toast } from '../../components/ui'
 import { queryKeys } from '../../lib/query-keys'
@@ -19,13 +19,14 @@ const parseCount = (value: string): number | null => {
   return Number.isInteger(n) && n >= 0 ? n : null
 }
 
-/** STK-04, bước 2: nhập số đếm từng lô. Ô trống là "chưa nhập", không phải 0 (luật 32). */
+/** Nhân viên kho được phân công nhập số lượng thực tế và ghi chú, bấm Hoàn tất kiểm kê (không cần bước duyệt). */
 export function CheckCountingForm({ check }: { check: InventoryCheckDetail }) {
   const queryClient = useQueryClient()
   const [entries, setEntries] = useState<Record<number, Entry>>(() =>
     Object.fromEntries(check.lines.map((l) => [l.id, { counted: l.countedQty === null ? '' : String(l.countedQty), note: l.note ?? '' }]))
   )
   const [cancelOpen, setCancelOpen] = useState(false)
+  const [completeOpen, setCompleteOpen] = useState(false)
 
   const payload = () => ({
     lines: check.lines.map((l) => ({ lineId: l.id, countedQty: parseCount(entries[l.id].counted), note: entries[l.id].note })),
@@ -48,10 +49,14 @@ export function CheckCountingForm({ check }: { check: InventoryCheckDetail }) {
   const submit = useMutation({
     mutationFn: () => inventoryChecksService.submit(check.id, payload()),
     onSuccess: (res) => {
-      toast.success(res.message ?? 'Đã gửi duyệt')
+      toast.success(res.message ?? 'Đã hoàn tất kiểm kê')
+      setCompleteOpen(false)
       refresh()
     },
-    onError: (e) => toast.error(getErrorMessage(e)),
+    onError: (e) => {
+      setCompleteOpen(false)
+      toast.error(getErrorMessage(e))
+    },
   })
   const cancel = useMutation({
     mutationFn: () => inventoryChecksService.cancel(check.id),
@@ -69,7 +74,7 @@ export function CheckCountingForm({ check }: { check: InventoryCheckDetail }) {
   return (
     <section className="rounded-2xl border border-line bg-white">
       <div className="flex flex-wrap items-center gap-4 border-b border-line p-4">
-        <h2 className="text-sm font-bold text-ink">Kết quả kiểm kê</h2>
+        <h2 className="text-sm font-bold text-ink">Nhập kết quả kiểm kê</h2>
         <div className="flex flex-1 items-center gap-3">
           <div className="h-2 min-w-32 flex-1 overflow-hidden rounded-full bg-accent-soft" role="progressbar" aria-valuenow={filled} aria-valuemax={check.lines.length}>
             <div className="h-full bg-accent" style={{ width: `${(filled / Math.max(1, check.lines.length)) * 100}%` }} />
@@ -88,7 +93,7 @@ export function CheckCountingForm({ check }: { check: InventoryCheckDetail }) {
               <th className="px-4 py-2 text-right">Tồn đã chụp</th>
               <th className="px-4 py-2 text-right">Thực tế</th>
               <th className="px-4 py-2 text-right">Chênh lệch</th>
-              <th className="px-4 py-2">Giải trình</th>
+              <th className="px-4 py-2">Ghi chú</th>
             </tr>
           </thead>
           <tbody>
@@ -124,8 +129,8 @@ export function CheckCountingForm({ check }: { check: InventoryCheckDetail }) {
                     <input
                       value={entries[l.id].note}
                       maxLength={255}
-                      aria-label={`Giải trình lô ${l.lotCode}`}
-                      placeholder={diff ? 'Giải trình chênh lệch' : 'Không bắt buộc'}
+                      aria-label={`Ghi chú lô ${l.lotCode}`}
+                      placeholder="Ghi chú (tùy chọn)"
                       onChange={(e) => set(l.id, { note: e.target.value })}
                       className="w-full rounded-lg border border-line bg-white px-2 py-1.5 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
                     />
@@ -141,7 +146,7 @@ export function CheckCountingForm({ check }: { check: InventoryCheckDetail }) {
       </p>
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line p-4">
         <p className="text-sm text-muted">
-          {complete ? 'Đã nhập đủ số đếm, có thể gửi duyệt.' : `Chưa thể gửi duyệt: còn ${check.lines.length - filled} lô chưa nhập số đếm.`}
+          {complete ? 'Đã nhập đủ số đếm, sẵn sàng hoàn tất kiểm kê.' : `Chưa thể hoàn tất: còn ${check.lines.length - filled} lô chưa nhập số đếm.`}
         </p>
         <div className="flex gap-2">
           <Button variant="danger" onClick={() => setCancelOpen(true)} disabled={busy}>
@@ -150,11 +155,20 @@ export function CheckCountingForm({ check }: { check: InventoryCheckDetail }) {
           <Button variant="secondary" onClick={() => save.mutate()} loading={save.isPending} disabled={busy}>
             Lưu nháp
           </Button>
-          <Button icon={<Send className="size-4" aria-hidden="true" />} onClick={() => submit.mutate()} loading={submit.isPending} disabled={busy || !complete}>
-            Gửi duyệt
+          <Button icon={<CheckCircle2 className="size-4" aria-hidden="true" />} onClick={() => setCompleteOpen(true)} loading={submit.isPending} disabled={busy || !complete}>
+            Hoàn tất kiểm kê
           </Button>
         </div>
       </div>
+      <ConfirmDialog
+        open={completeOpen}
+        title="Hoàn tất kiểm kê?"
+        message="Hệ thống sẽ mở khóa các lô và tự động điều chỉnh tồn kho nếu có chênh lệch. Thao tác này không hoàn tác được."
+        confirmLabel="Hoàn tất kiểm kê"
+        loading={submit.isPending}
+        onConfirm={() => submit.mutate()}
+        onCancel={() => setCompleteOpen(false)}
+      />
       <ConfirmDialog
         open={cancelOpen}
         tone="danger"

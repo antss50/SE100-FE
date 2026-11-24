@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { Boxes, Clock, Layers, ShieldAlert, Plus, PackageMinus, ClipboardCheck, Beaker, TriangleAlert, Lightbulb, RotateCcw } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
@@ -10,13 +10,11 @@ import {
   Pagination,
   StatCard,
   cn,
-  toast,
   type Column,
 } from '../../components/ui'
 import { queryKeys } from '../../lib/query-keys'
 import { productsService } from '../../services/products.service'
 import { stockService } from '../../services/stock.service'
-import { inventoryChecksService } from '../../services/inventory-checks.service'
 import type { StockBatchItem, StockExpiryFilter } from '../../types/stock'
 import { getErrorMessage } from '../../utils/error'
 import { formatCurrency, formatDate, formatNumber } from '../../utils/format'
@@ -29,11 +27,10 @@ const PAGE_SIZE = 10
 /** STK-02 (tồn theo lô) và STK-03 (cận hạn / hết hạn). Thu ngân chỉ thấy tồn khả dụng. */
 export function StockPage() {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   const canFull = useCan(['STOCK_VIEW', 'STOCK_EXPIRY_VIEW'])
   const canExpiry = useCan('STOCK_EXPIRY_VIEW')
-  const canCheck = useCan('STOCK_CHECK_CREATE')
+  const canScheduleCheck = useCan('STOCK_ADJUST_APPROVE')
   const canDispose = useCan('STOCK_DISPOSAL_CREATE')
   const canImport = useCan('STOCK_IMPORT_CREATE')
 
@@ -78,18 +75,9 @@ export function StockPage() {
     setSelected([])
   }
   const toggle = (id: number) => setSelected((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]))
-  const startCheck = useMutation({
-    mutationFn: (batchIds: number[]) => inventoryChecksService.create({ batchIds }),
-    onSuccess: (res) => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.inventoryChecks.all })
-      void queryClient.invalidateQueries({ queryKey: queryKeys.stock.all })
-      navigate(`/inventory-checks/${res.data.id}`)
-    },
-    onError: (error) => toast.error(getErrorMessage(error)),
-  })
 
   const columns: Column<StockBatchItem>[] = [
-    ...(canFull && (canCheck || canDispose)
+    ...(canFull && (canScheduleCheck || canDispose)
       ? [
           {
             key: 'select',
@@ -177,17 +165,16 @@ export function StockPage() {
             align: 'right',
             render: (b) => (
               <div className="flex items-center justify-end gap-2">
-                {canCheck && (
+                {canScheduleCheck && (
                   <Button
                     size="sm"
                     variant="secondary"
-                    loading={startCheck.isPending}
                     onClick={(e) => {
                       e.stopPropagation()
-                      startCheck.mutate([b.id])
+                      navigate('/inventory-checks/new', { state: { batchIds: [b.id] } })
                     }}
                   >
-                    Kiểm kê
+                    Lên lịch kiểm
                   </Button>
                 )}
                 <Link to={`/stock/${b.id}`} className="text-xs font-semibold text-accent hover:underline" onClick={(e) => e.stopPropagation()}>
@@ -356,9 +343,9 @@ export function StockPage() {
                   Tích chọn lô phía trên để thực hiện thao tác hàng loạt.
                 </span>
               )}
-              {canCheck && (
-                <Button size="md" variant="secondary" icon={<ClipboardCheck className="size-4" aria-hidden="true" />} disabled={selected.length === 0 || startCheck.isPending} loading={startCheck.isPending} onClick={() => startCheck.mutate(selected)}>
-                  Kiểm kê các lô đã chọn
+              {canScheduleCheck && (
+                <Button size="md" variant="secondary" icon={<ClipboardCheck className="size-4" aria-hidden="true" />} disabled={selected.length === 0} onClick={() => navigate('/inventory-checks/new', { state: { batchIds: selected } })}>
+                  Lên lịch kiểm kê các lô đã chọn
                 </Button>
               )}
               {canDispose && (

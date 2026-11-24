@@ -1,17 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Ban, CheckCircle2, Lock, Pencil } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { Fragment, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useCan } from '../../app/usePermission'
 import {
   Button,
   ConfirmDialog,
-  DataTable,
   ErrorState,
   LoadingState,
   PageHeader,
   toast,
-  type Column,
 } from '../../components/ui'
 import { queryKeys } from '../../lib/query-keys'
 import { purchaseOrdersService } from '../../services/purchase-orders.service'
@@ -20,6 +18,27 @@ import { getErrorMessage } from '../../utils/error'
 import { formatCurrency, formatDate, formatDateTime, formatNumber } from '../../utils/format'
 import { PurchaseOrderStatusBadge } from './PurchaseOrderStatusBadge'
 import { PurchaseWarningList, usePurchaseWarnings } from './PurchaseWarnings'
+
+interface ProductGroup {
+  productId: number
+  sku: string
+  productName: string
+  lines: PurchaseOrderLine[]
+}
+
+/** Gộp các dòng lô theo từng sản phẩm (giữ thứ tự xuất hiện đầu tiên của sản phẩm). */
+function groupLinesByProduct(lines: PurchaseOrderLine[]): ProductGroup[] {
+  const map = new Map<number, ProductGroup>()
+  for (const l of lines) {
+    const existing = map.get(l.productId)
+    if (existing) {
+      existing.lines.push(l)
+    } else {
+      map.set(l.productId, { productId: l.productId, sku: l.sku, productName: l.productName, lines: [l] })
+    }
+  }
+  return [...map.values()]
+}
 
 /** STK-01: chi tiết phiếu nhập. Phiếu hoàn tất bị khóa sổ, không có nút sửa/xóa (luật 41). */
 export function PurchaseOrderDetailPage() {
@@ -49,6 +68,9 @@ export function PurchaseOrderDetailPage() {
         }))
       : []
   ).data
+
+  const productGroups = useMemo(() => groupLinesByProduct(order?.lines ?? []), [order?.lines])
+  const distinctProductCount = order ? (order.productCount ?? productGroups.length) : 0
 
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
@@ -82,24 +104,6 @@ export function PurchaseOrderDetailPage() {
   if (isLoading) return <LoadingState />
   if (error || !order) return <ErrorState message={getErrorMessage(error, 'Không tìm thấy phiếu nhập')} onRetry={() => void refetch()} />
 
-  const columns: Column<PurchaseOrderLine>[] = [
-    {
-      key: 'product',
-      header: 'Sản phẩm & SKU',
-      render: (l) => (
-        <div>
-          <p className="font-medium">{l.productName}</p>
-          <p className="font-mono text-xs text-muted">{l.sku}</p>
-        </div>
-      ),
-    },
-    { key: 'lot', header: 'Mã lô', render: (l) => <span className="font-mono">{l.lotCode}</span> },
-    { key: 'mfg', header: 'NSX', render: (l) => formatDate(l.mfgDate) },
-    { key: 'exp', header: 'HSD', render: (l) => formatDate(l.expDate) },
-    { key: 'qty', header: 'SL', align: 'right', render: (l) => formatNumber(l.quantity) },
-    { key: 'cost', header: 'Giá nhập', align: 'right', render: (l) => formatCurrency(l.unitCost) },
-    { key: 'total', header: 'Thành tiền', align: 'right', render: (l) => <span className="font-semibold">{formatCurrency(l.lineTotal)}</span> },
-  ]
   const warnings = order.status === 'DRAFT' ? (previewWarnings ?? []) : confirmWarnings
 
   return (
@@ -169,8 +173,8 @@ export function PurchaseOrderDetailPage() {
         <section className="space-y-3 rounded-2xl border border-line bg-white p-5">
           <h2 className="text-sm font-bold text-ink">Giá trị phiếu</h2>
           <div className="flex justify-between text-sm">
-            <span className="text-muted">Số dòng lô</span>
-            <span className="font-semibold">{formatNumber(order.lineCount)}</span>
+            <span className="text-muted">Tổng số sản phẩm</span>
+            <span className="font-semibold">{formatNumber(distinctProductCount)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted">Tổng số lượng</span>
@@ -190,8 +194,59 @@ export function PurchaseOrderDetailPage() {
         </section>
       )}
 
-      <section className="rounded-2xl border border-line bg-white">
-        <DataTable caption="Các dòng lô của phiếu nhập" columns={columns} rows={order.lines} rowKey={(l) => l.id} />
+      <section className="overflow-x-auto rounded-2xl border border-line bg-white">
+        <table className="w-full border-collapse text-sm">
+          <caption className="sr-only">Các dòng lô của phiếu nhập</caption>
+          <thead>
+            <tr className="border-b border-line bg-card text-left text-xs font-semibold uppercase text-muted">
+              <th className="px-4 py-3">Sản phẩm & SKU</th>
+              <th className="px-4 py-3">Mã lô</th>
+              <th className="px-4 py-3">NSX</th>
+              <th className="px-4 py-3">HSD</th>
+              <th className="px-4 py-3 text-right">SL</th>
+              <th className="px-4 py-3 text-right">Giá nhập</th>
+              <th className="px-4 py-3 text-right">Thành tiền</th>
+            </tr>
+          </thead>
+          <tbody>
+            {productGroups.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="px-4 py-8 text-center text-muted">
+                  Chưa có dòng sản phẩm nào.
+                </td>
+              </tr>
+            ) : (
+              productGroups.map((group) => (
+                <Fragment key={group.productId}>
+                  {group.lines.map((l, idx) => (
+                    <tr key={l.id} className="border-t border-line hover:bg-card/40">
+                      {idx === 0 && (
+                        <td
+                          rowSpan={group.lines.length}
+                          className="border-r border-line/60 px-4 py-3 align-top"
+                        >
+                          <p className="font-semibold text-ink">{group.productName}</p>
+                          <p className="font-mono text-xs text-muted">{group.sku}</p>
+                          {group.lines.length > 1 && (
+                            <span className="mt-1 inline-block rounded-md bg-accent-soft px-1.5 py-0.5 text-[11px] font-semibold text-accent">
+                              {group.lines.length} lô
+                            </span>
+                          )}
+                        </td>
+                      )}
+                      <td className="px-4 py-3 font-mono">{l.lotCode}</td>
+                      <td className="px-4 py-3">{formatDate(l.mfgDate)}</td>
+                      <td className="px-4 py-3">{formatDate(l.expDate)}</td>
+                      <td className="px-4 py-3 text-right">{formatNumber(l.quantity)}</td>
+                      <td className="px-4 py-3 text-right">{formatCurrency(l.unitCost)}</td>
+                      <td className="px-4 py-3 text-right font-semibold">{formatCurrency(l.lineTotal)}</td>
+                    </tr>
+                  ))}
+                </Fragment>
+              ))
+            )}
+          </tbody>
+        </table>
       </section>
 
       <ConfirmDialog

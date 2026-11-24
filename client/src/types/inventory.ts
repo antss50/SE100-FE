@@ -1,12 +1,22 @@
 /** Kiểu dữ liệu kiểm kho và xuất kho khác (DATABASE.md mục 14-17). */
 
+export type InventoryCheckType = 'WAREHOUSE' | 'DISPLAY'
+
 export type InventoryCheckStatus =
   | 'IN_PROGRESS'
+  | 'COMPLETED'
   | 'WAITING_APPROVAL'
   | 'APPROVED'
   | 'REJECTED'
   | 'CANCELLED'
   | 'NO_DIFFERENCE'
+
+export interface InventoryCheckAssignee {
+  id: number
+  employeeCode: string
+  fullName: string
+  username: string
+}
 
 export interface InventoryCheckLine {
   id: number
@@ -20,7 +30,7 @@ export interface InventoryCheckLine {
   snapshotQty: number
   /** NULL khi chưa nhập: ô trống không phải là 0 (luật 32). */
   countedQty: number | null
-  /** `countedQty − snapshotQty`; NULL đến khi gửi duyệt. */
+  /** `countedQty − snapshotQty`; NULL đến khi hoàn tất. */
   differenceQty: number | null
   note?: string | null
 }
@@ -28,6 +38,10 @@ export interface InventoryCheckLine {
 export interface InventoryCheck {
   id: number
   checkCode: string
+  checkType: InventoryCheckType
+  scheduledAt?: string | null
+  assignedTo?: number | null
+  assignedToName?: string | null
   scopeNote?: string | null
   status: InventoryCheckStatus
   snapshotAt: string
@@ -39,9 +53,9 @@ export interface InventoryCheck {
   approvedAt?: string | null
   rejectReason?: string | null
   lineCount: number
-  /** Số dòng có chênh lệch (chỉ có nghĩa sau khi gửi duyệt). */
+  /** Số dòng có chênh lệch (chỉ có nghĩa sau khi hoàn tất). */
   differenceLineCount: number
-  /** Tổng chênh lệch (có dấu) sau khi gửi duyệt. */
+  /** Tổng chênh lệch (có dấu) sau khi hoàn tất. */
   totalDifference: number
 }
 
@@ -50,6 +64,9 @@ export interface InventoryCheckDetail extends InventoryCheck {
 }
 
 export interface InventoryCheckCreateInput {
+  checkType: InventoryCheckType
+  scheduledAt: string
+  assignedTo: number
   scopeNote?: string
   batchIds: number[]
 }
@@ -111,6 +128,8 @@ export interface Disposal {
   totalQuantity: number
   /** Σ quantity × unitCost; NULL đến khi duyệt. */
   totalCost: number | null
+  /** Danh sách ID sản phẩm tự động chuyển sang ngừng kinh doanh sau khi phiếu xuất hủy được duyệt. */
+  discontinueProductIds?: number[]
 }
 
 export interface DisposalDetail extends Disposal {

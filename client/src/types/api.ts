@@ -435,6 +435,23 @@ export interface GetProductsParams {
   pageSize?: number
 }
 
+export type DestroyReasonCode = 'EXPIRED' | 'NEAR_EXPIRY' | 'DAMAGED' | 'RECALL'
+
+export interface DeactivateProductPayload {
+  disposal?: {
+    reasonCode: DestroyReasonCode
+    reason: string
+  }
+}
+
+export interface DeactivateProductResult {
+  sku: string
+  status: 'ACTIVE' | 'DISCONTINUED'
+  disposalId?: number
+  disposalCode?: string
+  disposalStatus?: 'WAITING_APPROVAL' | 'APPROVED'
+}
+
 // 7. G10 - HẠNG THẺ VÀ TÍCH ĐIỂM (UC-CUS-09)
 export interface LoyaltyTierThreshold {
   tier: CustomerTierCode

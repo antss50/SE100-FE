@@ -141,6 +141,25 @@ describe('STK-01 nhập kho', () => {
     await expectFail(`/purchase-orders/${po.id}/cancel`, post({}), 409, 'STK_PO_NOT_EDITABLE')
   })
 
+  it('phiếu nhập nhiều lô cùng sản phẩm → productCount đếm tổng số sản phẩm khác nhau từ tạo tới hiển thị', async () => {
+    await loginAs('inventory01')
+    const po = await createPo([
+      line(5, 'LOT-GRP-1', '2029-01-01', 10, 50000),
+      line(5, 'LOT-GRP-2', '2029-06-01', 15, 55000),
+      line(3, 'LOT-GRP-3', '2029-03-01', 5, 380000),
+    ])
+    expect((po as unknown as { lineCount: number }).lineCount).toBe(3)
+    expect((po as unknown as { productCount: number }).productCount).toBe(2)
+
+    const list = await get<Page<{ id: number; productCount: number; lineCount: number }>>('/purchase-orders?pageSize=20')
+    const inList = list.items.find((o) => o.id === po.id)
+    expect(inList?.productCount).toBe(2)
+    expect(inList?.lineCount).toBe(3)
+
+    const confirmed = await confirm(po.id, 'grp-confirm')
+    expect((confirmed.order as unknown as { productCount: number }).productCount).toBe(2)
+  })
+
   it('phân quyền: Manager chỉ xem, thu ngân không thấy, Kho lập được', async () => {
     await loginAs('manager01')
     await get('/purchase-orders')
@@ -153,42 +172,70 @@ describe('STK-01 nhập kho', () => {
   })
 })
 
-describe('STK-04/05 kiểm kho', () => {
-  const start = (ids: number[]) =>
-    send<{ id: number; lines: { id: number; snapshotQty: number }[] }>('/inventory-checks', post({ batchIds: ids }))
+describe('STK-04/05 kiểm kho (Manager lên lịch, Inventory Staff kiểm & hoàn tất không cần duyệt)', () => {
+  const schedule = async (
+    ids: number[],
+    opts: { checkType?: 'WAREHOUSE' | 'DISPLAY'; assignedTo?: number; scheduledAt?: string } = {}
+  ) => {
+    const checkType = opts.checkType ?? 'WAREHOUSE'
+    const scheduledAt = opts.scheduledAt ?? '2026-11-25T09:00:00+07:00'
+    const assignedTo = opts.assignedTo ?? 4 // inventory01
+    return send<{ id: number; checkType: string; assignedTo: number; lines: { id: number; snapshotQty: number }[] }>(
+      '/inventory-checks',
+      post({ checkType, scheduledAt, assignedTo, batchIds: ids })
+    )
+  }
 
-  it('bắt đầu kiểm khóa lô: không bán được, không xuất khác được (luật 32)', async () => {
-    await loginAs('inventory01')
-    await start([15])
+  it('Manager lên lịch kiểm khóa lô: không bán được, không xuất khác được (luật 32)', async () => {
+    await loginAs('manager01')
+    const assignees = await get<{ id: number; username: string }[]>('/inventory-checks/assignees')
+    expect(assignees.some((u) => u.username === 'inventory01')).toBe(true)
+
+    await schedule([15], { checkType: 'WAREHOUSE' })
     const b = await batchOf(15)
     expect(b.lockedByCheckId).not.toBeNull()
     expect(b.availableQty).toBe(0)
+    await expectFail(
+      '/inventory-checks',
+      post({ checkType: 'WAREHOUSE', scheduledAt: '2026-11-25T09:00:00+07:00', assignedTo: 4, batchIds: [15] }),
+      409,
+      'STK_BATCH_LOCKED'
+    )
+
+    await loginAs('inventory01')
     await expectFail(
       '/disposals',
       post({ issueType: 'DESTROY', reasonCode: 'DAMAGED', reason: 'x', lines: [{ batchId: 15, quantity: 1 }] }),
       409,
       'STK_BATCH_LOCKED'
     )
-    await expectFail('/inventory-checks', post({ batchIds: [15] }), 409, 'STK_BATCH_LOCKED')
   })
 
-  it('ô trống không phải 0: lưu nháp giữ null; gửi khi còn ô null → 422 STK_CHECK_INCOMPLETE', async () => {
+  it('ô trống không phải 0: lưu nháp giữ null; hoàn tất khi còn ô null → 422 STK_CHECK_INCOMPLETE', async () => {
+    await loginAs('manager01')
+    const c = await schedule([15, 9], { checkType: 'DISPLAY' })
+    expect(c.checkType).toBe('DISPLAY')
+
     await loginAs('inventory01')
-    const c = await start([15, 9])
     const rows = [
-      { lineId: c.lines[0].id, countedQty: 5 },
+      { lineId: c.lines[0].id, countedQty: 5, note: 'Ghi chú tùy chọn' },
       { lineId: c.lines[1].id, countedQty: null },
     ]
-    const saved = await send<{ lines: { countedQty: number | null }[] }>(`/inventory-checks/${c.id}/counts`, put({ lines: rows }))
+    const saved = await send<{ lines: { countedQty: number | null; note: string | null }[] }>(
+      `/inventory-checks/${c.id}/counts`,
+      put({ lines: rows })
+    )
     expect(saved.lines.map((l) => l.countedQty)).toEqual([5, null])
+    expect(saved.lines[0].note).toBe('Ghi chú tùy chọn')
     await expectFail(`/inventory-checks/${c.id}/submit`, post({ lines: rows }), 422, 'STK_CHECK_INCOMPLETE')
   })
 
   it('không chênh lệch → NO_DIFFERENCE, gỡ khóa, không đổi tồn, không thẻ kho (luật 32)', async () => {
+    await loginAs('manager01')
+    const c = await schedule([15])
     await loginAs('inventory01')
     const b0 = await batchOf(15)
     const m0 = (await detail(15)).movements.length
-    const c = await start([15])
     const res = await send<{ status: string }>(
       `/inventory-checks/${c.id}/submit`,
       post({ lines: [{ lineId: c.lines[0].id, countedQty: c.lines[0].snapshotQty }] })
@@ -200,43 +247,43 @@ describe('STK-04/05 kiểm kho', () => {
     expect((await detail(15)).movements).toHaveLength(m0)
   })
 
-  it('chênh lệch → chờ duyệt, tồn chưa đổi; duyệt cộng chênh lệch vào tồn hiện tại + thẻ CHECK_ADJUST', async () => {
-    await loginAs('inventory01')
+  it('có chênh lệch → hoàn tất ngay (COMPLETED), không cần duyệt, tự động điều chỉnh tồn + thẻ CHECK_ADJUST', async () => {
+    await loginAs('manager01')
     const b0 = await batchOf(15)
-    const c = await start([15])
-    const sub = await send<{ status: string }>(
-      `/inventory-checks/${c.id}/submit`,
-      post({ lines: [{ lineId: c.lines[0].id, countedQty: c.lines[0].snapshotQty - 3 }] })
+    const c = await schedule([15])
+
+    // Manager không được tự điền số đếm kiểm kê
+    await expectFail(
+      `/inventory-checks/${c.id}/counts`,
+      put({ lines: [{ lineId: c.lines[0].id, countedQty: 1 }] }),
+      403,
+      'AUTH_FORBIDDEN'
     )
-    expect(sub.status).toBe('WAITING_APPROVAL')
-    expect((await batchOf(15)).onHandQty).toBe(b0.onHandQty)
-    await expectFail(`/inventory-checks/${c.id}/approve`, post({}), 403, 'AUTH_FORBIDDEN')
-    await loginAs('manager01')
-    const ok = await send<{ status: string }>(`/inventory-checks/${c.id}/approve`, post({}))
-    expect(ok.status).toBe('APPROVED')
-    expect((await batchOf(15)).onHandQty).toBe(b0.onHandQty - 3)
-    expect((await detail(15)).movements[0]).toMatchObject({ referenceType: 'CHECK_ADJUST', quantityChange: -3 })
-    await expectFail(`/inventory-checks/${c.id}/approve`, post({}), 409, 'STK_CHECK_NOT_WAITING')
-  })
 
-  it('từ chối cần lý do và không đổi tồn', async () => {
+    // Inventory Staff được phân công nhập số đếm + ghi chú và hoàn tất kiểm kê trực tiếp
     await loginAs('inventory01')
-    const b0 = await batchOf(15)
-    const c = await start([15])
-    await send(`/inventory-checks/${c.id}/submit`, post({ lines: [{ lineId: c.lines[0].id, countedQty: 1 }] }))
-    await loginAs('manager01')
-    await expectFail(`/inventory-checks/${c.id}/reject`, post({}), 400, 'COMMON_VALIDATION_FAILED')
-    const r = await send<{ status: string }>(`/inventory-checks/${c.id}/reject`, post({ reason: 'Đếm lại' }))
-    expect(r.status).toBe('REJECTED')
-    expect((await batchOf(15)).onHandQty).toBe(b0.onHandQty)
+    const done = await send<{ status: string }>(
+      `/inventory-checks/${c.id}/submit`,
+      post({ lines: [{ lineId: c.lines[0].id, countedQty: c.lines[0].snapshotQty - 3, note: 'Vỡ 3 chai khi kiểm kệ' }] })
+    )
+    expect(done.status).toBe('COMPLETED')
+    const b1 = await batchOf(15)
+    expect(b1.lockedByCheckId).toBeNull()
+    expect(b1.onHandQty).toBe(b0.onHandQty - 3)
+    expect((await detail(15)).movements[0]).toMatchObject({ referenceType: 'CHECK_ADJUST', quantityChange: -3 })
   })
 
-  it('phân quyền: thu ngân không xem phiếu kiểm; Manager xem được nhưng không lập', async () => {
+  it('phân quyền: thu ngân không xem phiếu kiểm; Inventory Staff không được tự tạo lịch kiểm', async () => {
     await loginAs('cashier01')
     await expectFail('/inventory-checks', undefined, 403, 'AUTH_FORBIDDEN')
-    await loginAs('manager01')
+    await loginAs('inventory01')
     await get('/inventory-checks')
-    await expectFail('/inventory-checks', post({ batchIds: [15] }), 403, 'AUTH_FORBIDDEN')
+    await expectFail(
+      '/inventory-checks',
+      post({ checkType: 'WAREHOUSE', scheduledAt: '2026-11-25T09:00:00+07:00', assignedTo: 4, batchIds: [15] }),
+      403,
+      'AUTH_FORBIDDEN'
+    )
   })
 })
 

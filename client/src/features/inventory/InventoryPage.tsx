@@ -18,6 +18,8 @@ import {
   X,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useCan } from '../../app/usePermission'
 import { ApiClientError } from '../../lib/api-client'
 import { productsService } from '../../services/products.service'
 import type { BrandItem, CategoryItem, ProductItem } from '../../types/api'
@@ -25,6 +27,7 @@ import { formatNumber } from '../../utils/format'
 import { CreateBrandModal } from './CreateBrandModal'
 import { CreateCategoryModal } from './CreateCategoryModal'
 import { CreateProductModal } from './CreateProductModal'
+import { DiscontinueProductModal } from './DiscontinueProductModal'
 import { toast } from '../../components/ui'
 import { getErrorMessage } from '../../utils/error'
 
@@ -93,6 +96,9 @@ function ProductThumbnail({ product }: { product: ProductItem }) {
 }
 
 export function InventoryPage() {
+  const navigate = useNavigate()
+  const canImport = useCan('STOCK_IMPORT_CREATE')
+  const canManageProduct = useCan('PRODUCT_MANAGE')
   const [products, setProducts] = useState<ProductItem[]>([])
   const [totalItems, setTotalItems] = useState(0)
   const [categories, setCategories] = useState<CategoryItem[]>([])
@@ -119,6 +125,8 @@ export function InventoryPage() {
 
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null)
+  const [discontinuingProduct, setDiscontinuingProduct] =
+    useState<ProductItem | null>(null)
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(
@@ -214,6 +222,10 @@ export function InventoryPage() {
   const handleToggleProductStatus = async (product: ProductItem) => {
     try {
       if (product.status === 'ACTIVE') {
+        if ((product.currentStock ?? 0) > 0) {
+          setDiscontinuingProduct(product)
+          return
+        }
         const res = await productsService.deactivateProduct(product.sku)
         setReloadTick((t) => t + 1)
         toast.success(`${res.message} (${res.data.sku} → ${res.data.status})`)
@@ -636,9 +648,25 @@ export function InventoryPage() {
 
                     {/* Column 5: Stock */}
                     <td className="py-4 px-4">
-                      <p className="font-bold text-[#221712]">
-                        {prod.currentStock}
-                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-bold text-[#221712]">
+                          {prod.currentStock ?? 0}
+                        </p>
+                        {(prod.currentStock ?? 0) === 0 && canImport && prod.status !== 'DISCONTINUED' && prod.id && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              navigate('/purchase-orders/new', { state: { prefillProductId: prod.id } })
+                            }}
+                            title="Chuyển nhanh sang trang nhập hàng cho sản phẩm này"
+                            className="inline-flex items-center gap-1 rounded-lg bg-[#faece3] hover:bg-[#f4d8c7] border border-[#e5c2ae] px-2 py-1 text-[11px] font-bold text-[#9a3b20] transition cursor-pointer"
+                          >
+                            <span>Nhập hàng</span>
+                            <ArrowRight className="size-3" aria-hidden="true" />
+                          </button>
+                        )}
+                      </div>
                     </td>
 
                     {/* Column 5: Retail Price, VAT */}
@@ -670,29 +698,30 @@ export function InventoryPage() {
                           <Edit3 className="size-3.5" />
                         </button>
 
-                        {prod.status === 'ACTIVE' ? (
-                          <button
-                            type="button"
-                            title="Ngừng kinh doanh sản phẩm"
-                            onClick={() =>
-                              handleToggleProductStatus(prod)
-                            }
-                            className="p-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 transition cursor-pointer"
-                          >
-                            <Ban className="size-3.5" />
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            title="Khôi phục sản phẩm"
-                            onClick={() =>
-                              handleToggleProductStatus(prod)
-                            }
-                            className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition cursor-pointer"
-                          >
-                            <CheckCircle2 className="size-3.5" />
-                          </button>
-                        )}
+                        {canManageProduct &&
+                          (prod.status === 'ACTIVE' ? (
+                            <button
+                              type="button"
+                              title="Ngừng kinh doanh sản phẩm"
+                              onClick={() =>
+                                handleToggleProductStatus(prod)
+                              }
+                              className="p-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 transition cursor-pointer"
+                            >
+                              <Ban className="size-3.5" />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              title="Khôi phục sản phẩm"
+                              onClick={() =>
+                                handleToggleProductStatus(prod)
+                              }
+                              className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition cursor-pointer"
+                            >
+                              <CheckCircle2 className="size-3.5" />
+                            </button>
+                          ))}
                       </div>
                     </td>
                   </tr>
@@ -803,6 +832,17 @@ export function InventoryPage() {
         }}
         onOpenCreateCategory={handleOpenCreateCategory}
         onOpenCreateBrand={handleOpenCreateBrand}
+        onRequestDiscontinueWithStock={(prod) => setDiscontinuingProduct(prod)}
+      />
+
+      <DiscontinueProductModal
+        key={discontinuingProduct?.sku ?? 'discontinue-closed'}
+        product={discontinuingProduct}
+        onClose={() => setDiscontinuingProduct(null)}
+        onSuccess={() => {
+          setDiscontinuingProduct(null)
+          setReloadTick((t) => t + 1)
+        }}
       />
 
       <CreateCategoryModal

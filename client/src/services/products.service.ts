@@ -6,6 +6,8 @@ import type {
   CreateBrandRequest,
   CreateCategoryRequest,
   CreateProductRequest,
+  DeactivateProductPayload,
+  DeactivateProductResult,
   GetBrandsParams,
   GetCategoriesParams,
   GetProductsParams,
@@ -80,8 +82,11 @@ export const productsService = {
   },
 
   /** PROD-01: PATCH /products/{sku}/deactivate */
-  deactivateProduct(sku: string): Promise<ApiSuccessResponse<StatusChange<'sku', 'DISCONTINUED'>>> {
-    return send('PATCH', `/products/${seg(sku)}/deactivate`)
+  deactivateProduct(
+    sku: string,
+    payload?: DeactivateProductPayload
+  ): Promise<ApiSuccessResponse<DeactivateProductResult>> {
+    return send('PATCH', `/products/${seg(sku)}/deactivate`, payload)
   },
 
   /** PROD-01: PATCH /products/{sku}/restore */

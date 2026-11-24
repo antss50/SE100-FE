@@ -70,6 +70,8 @@ export interface PurchaseOrder {
   createdAt: string
   confirmedAt?: string | null
   lineCount: number
+  /** Tổng số sản phẩm khác nhau trong phiếu. */
+  productCount: number
   totalQuantity: number
 }
 

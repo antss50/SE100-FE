@@ -79,7 +79,7 @@ const SUB_ROUTES: { path: string; permission: PermissionRequirement; element: Re
   { path: 'purchase-orders/:purchaseOrderId/edit', permission: 'STOCK_IMPORT_CREATE', element: <PurchaseOrderFormPage /> },
   { path: 'purchase-orders/:purchaseOrderId', permission: 'STOCK_IMPORT_VIEW', element: <PurchaseOrderDetailPage /> },
   { path: 'stock/:batchId', permission: ['STOCK_VIEW', 'STOCK_EXPIRY_VIEW'], element: <StockBatchDetailPage /> },
-  { path: 'inventory-checks/new', permission: 'STOCK_CHECK_CREATE', element: <InventoryCheckCreatePage /> },
+  { path: 'inventory-checks/new', permission: 'STOCK_ADJUST_APPROVE', element: <InventoryCheckCreatePage /> },
   { path: 'inventory-checks/:checkId', permission: 'STOCK_CHECK_VIEW', element: <InventoryCheckDetailPage /> },
   { path: 'disposals/new', permission: 'STOCK_DISPOSAL_CREATE', element: <DisposalCreatePage /> },
   { path: 'disposals/:disposalId', permission: 'STOCK_DISPOSAL_VIEW', element: <DisposalDetailPage /> },

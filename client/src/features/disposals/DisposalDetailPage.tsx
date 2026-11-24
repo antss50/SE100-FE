@@ -39,6 +39,8 @@ export function DisposalDetailPage() {
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: queryKeys.disposals.all })
     void queryClient.invalidateQueries({ queryKey: queryKeys.stock.all })
+    void queryClient.invalidateQueries({ queryKey: queryKeys.pos.all })
+    void queryClient.invalidateQueries({ queryKey: queryKeys.catalog.all })
   }
   const approve = useMutation({
     mutationFn: () => disposalsService.approve(Number(disposalId)),
@@ -115,6 +117,16 @@ export function DisposalDetailPage() {
       {waiting && (
         <div className="rounded-xl border border-warning/30 bg-warning-soft p-3 text-sm text-warning">
           Chờ duyệt: hàng đã được cách ly nhưng chưa ghi nhận giảm tồn. Duyệt sẽ trừ tồn thực tế; từ chối sẽ trả lại phần cách ly.
+          {(disposal.discontinueProductIds?.length ?? 0) > 0 && (
+            <span className="mt-1 block font-semibold">
+              Phiếu xuất hủy này đi kèm yêu cầu ngừng kinh doanh sản phẩm: ngay sau khi duyệt, sản phẩm hết tồn sẽ tự động chuyển sang trạng thái Ngừng kinh doanh.
+            </span>
+          )}
+        </div>
+      )}
+      {disposal.status === 'APPROVED' && (disposal.discontinueProductIds?.length ?? 0) > 0 && (
+        <div className="rounded-xl border border-info/30 bg-info-soft p-3 text-sm text-info">
+          Phiếu xuất hủy đã được duyệt và sản phẩm liên quan đã tự động chuyển sang trạng thái Ngừng kinh doanh.
         </div>
       )}
       {disposal.status === 'REJECTED' && disposal.rejectReason && (

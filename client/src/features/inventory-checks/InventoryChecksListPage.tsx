@@ -9,14 +9,14 @@ import { inventoryChecksService } from '../../services/inventory-checks.service'
 import type { InventoryCheck, InventoryCheckStatus } from '../../types/inventory'
 import { getErrorMessage } from '../../utils/error'
 import { formatDateTime, formatNumber } from '../../utils/format'
-import { InventoryCheckStatusBadge } from './InventoryCheckStatusBadge'
+import { InventoryCheckStatusBadge, InventoryCheckTypeBadge } from './InventoryCheckStatusBadge'
 
 const PAGE_SIZE = 10
 
-/** STK-04, STK-05: danh sách phiếu kiểm kho. */
+/** STK-04: danh sách lịch & phiếu kiểm kê. Manager lên lịch; Inventory Staff kiểm và hoàn tất trực tiếp. */
 export function InventoryChecksListPage() {
   const navigate = useNavigate()
-  const canCreate = useCan('STOCK_CHECK_CREATE')
+  const canSchedule = useCan('STOCK_ADJUST_APPROVE')
   const [keyword, setKeyword] = useState('')
   const [status, setStatus] = useState<InventoryCheckStatus | 'ALL'>('ALL')
   const [page, setPage] = useState(1)
@@ -29,9 +29,10 @@ export function InventoryChecksListPage() {
 
   const columns: Column<InventoryCheck>[] = [
     { key: 'code', header: 'Mã phiếu', render: (c) => <span className="font-mono font-semibold">{c.checkCode}</span> },
+    { key: 'type', header: 'Loại kiểm kê', render: (c) => <InventoryCheckTypeBadge checkType={c.checkType} /> },
+    { key: 'scheduled', header: 'Thời gian kiểm', render: (c) => formatDateTime(c.scheduledAt ?? c.snapshotAt) },
+    { key: 'assignee', header: 'Nhân viên kiểm', render: (c) => c.assignedToName ?? '—' },
     { key: 'scope', header: 'Phạm vi', render: (c) => c.scopeNote ?? '—' },
-    { key: 'by', header: 'Người lập', render: (c) => c.createdByName },
-    { key: 'snapshot', header: 'Chụp tồn lúc', render: (c) => formatDateTime(c.snapshotAt) },
     { key: 'lines', header: 'Số lô', align: 'right', render: (c) => formatNumber(c.lineCount) },
     {
       key: 'diff',
@@ -60,12 +61,12 @@ export function InventoryChecksListPage() {
     <div className="space-y-6">
       <PageHeader
         title="Kiểm kê kho"
-        description="Chụp tồn, khóa lô, nhập số đếm thực tế và gửi quản lý duyệt điều chỉnh."
+        description="Quản lý lên lịch kiểm kê; nhân viên kho được phân công nhập số lượng thực tế và hoàn tất tự động điều chỉnh tồn."
         breadcrumbs={[{ label: 'Kho & hàng hóa' }, { label: 'Kiểm kê kho' }]}
         actions={
-          canCreate && (
+          canSchedule && (
             <Button icon={<Plus className="size-4" aria-hidden="true" />} onClick={() => navigate('/inventory-checks/new')}>
-              Tạo phiếu kiểm kê
+              Lên lịch kiểm kê
             </Button>
           )
         }
@@ -80,7 +81,7 @@ export function InventoryChecksListPage() {
                 setKeyword(e.target.value)
                 setPage(1)
               }}
-              placeholder="Tìm theo mã phiếu hoặc phạm vi..."
+              placeholder="Tìm theo mã phiếu, phạm vi hoặc nhân viên kiểm..."
               className="w-full rounded-xl border border-line bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
             />
           </label>
@@ -96,23 +97,21 @@ export function InventoryChecksListPage() {
             >
               <option value="ALL">Tất cả trạng thái</option>
               <option value="IN_PROGRESS">Đang kiểm kê</option>
-              <option value="WAITING_APPROVAL">Chờ duyệt</option>
-              <option value="APPROVED">Đã duyệt</option>
-              <option value="REJECTED">Từ chối</option>
+              <option value="COMPLETED">Hoàn tất</option>
               <option value="NO_DIFFERENCE">Không chênh lệch</option>
               <option value="CANCELLED">Đã hủy</option>
             </select>
           </label>
         </div>
         <DataTable
-          caption="Danh sách phiếu kiểm kho"
+          caption="Danh sách phiếu kiểm kê"
           columns={columns}
           rows={data?.data.items}
           rowKey={(c) => c.id}
           loading={isLoading}
           error={error ? getErrorMessage(error) : null}
           onRetry={() => void refetch()}
-          emptyTitle="Chưa có phiếu kiểm kho"
+          emptyTitle="Chưa có lịch kiểm kê nào"
           onRowClick={(c) => navigate(`/inventory-checks/${c.id}`)}
         />
         {data && (

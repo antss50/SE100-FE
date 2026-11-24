@@ -3,6 +3,7 @@ import type { ApiSuccessResponse, PaginatedData } from '../types/api'
 import type {
   GetInventoryChecksParams,
   InventoryCheck,
+  InventoryCheckAssignee,
   InventoryCheckCountInput,
   InventoryCheckCreateInput,
   InventoryCheckDetail,
@@ -12,6 +13,10 @@ import { toQueryString } from './query'
 const json = (body: unknown) => JSON.stringify(body)
 
 export const inventoryChecksService = {
+  /** Danh sách nhân viên kho (INVENTORY_STAFF) đang hoạt động để Manager phân công kiểm kê. */
+  assignees(): Promise<ApiSuccessResponse<InventoryCheckAssignee[]>> {
+    return apiRequest<InventoryCheckAssignee[]>('/inventory-checks/assignees', { method: 'GET' })
+  },
   /** STK-04, STK-05: GET /inventory-checks */
   list(params: GetInventoryChecksParams = {}): Promise<ApiSuccessResponse<PaginatedData<InventoryCheck>>> {
     return apiRequest<PaginatedData<InventoryCheck>>(`/inventory-checks${toQueryString(params)}`, { method: 'GET' })
